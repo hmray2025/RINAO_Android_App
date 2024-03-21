@@ -104,7 +104,7 @@ More refer to the release notes." </string>
     <string name="no_product">No product connected</string>
     <string name="wsbridge_ip">WSBridge IP</string>
     <string name="sdk_version">Version: %1$s</string>
-    <string name="product_name">Product Name: %1$s</string>
+    <string name="product_name">Product: %1$s</string>
     <string name="is_sdk_debug">Is SDK Debug: %1$s</string>
     <string name="registration_status">Registration Status: %1$s</string>
     <string name="package_product_category">Package Category: %1$s</string>
@@ -116,7 +116,7 @@ More refer to the release notes." </string>
     <string name="showcase">Showcase &amp; Tools</string>
     <string name="widget_list">Widget List</string>
     <string name="testing_tools">Testing Tools</string>
-    <string name="ws_reconnect" translatable="false">Reconnect Websocket</string>
+    <string name="ws_reconnect" translatable="false">Reconnect Server</string>
     <string name="livestream_shortcut" translatable="false">Livestream Settings</string>
     <string name="flight_settings" translatable="false">RINAO Configuration Settings</string>
     <string name="default_layout">Default Layout</string>
