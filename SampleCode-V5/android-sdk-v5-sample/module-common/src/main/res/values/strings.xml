@@ -120,6 +120,7 @@ More refer to the release notes." </string>
     <string name="livestream_shortcut" translatable="false">Livestream Settings</string>
     <string name="flight_settings" translatable="false">RINAO Configuration Settings</string>
     <string name="default_layout">Default Layout</string>
+    <string name="fly_now" translatable="false">Fly Now</string>
     <string name="sdk_forum">SDK Forum</string>
     <string name="release_nodes">Release Nodes</string>
     <string name="tech_support">Tech Support</string>

@@ -20,6 +20,7 @@ import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.text.set
 import dji.sampleV5.modulecommon.models.BaseMainActivityVm
 import dji.sampleV5.modulecommon.models.MSDKInfoVm
 import dji.sampleV5.modulecommon.util.IStreamManager
@@ -112,24 +113,24 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             setStreamSelection()
         }
 
-        editText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                // not needed, keep here
-            }
-
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                setbitrate.isEnabled = p0.toString().isNotEmpty()
-            }
-
-            override fun afterTextChanged(p0: Editable?) {
-                // not needed, keep here
-            }
-        })
-
-        setbitrate.setOnClickListener {
-            setBitrate(editText.text.toString().toInt())
-            editText.text.clear()
-        }
+//        editText.addTextChangedListener(object : TextWatcher {
+//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                // not needed, keep here
+//            }
+//
+//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                setbitrate.isEnabled = p0.toString().isNotEmpty()
+//            }
+//
+//            override fun afterTextChanged(p0: Editable?) {
+//                // not needed, keep here
+//            }
+//        })
+//
+//        setbitrate.setOnClickListener {
+//            setBitrate(editText.text.toString().toInt())
+//            editText.text.clear()
+//        }
 
         editTextIP.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
@@ -147,7 +148,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
         setIP.setOnClickListener {
             callSetIP(editTextIP.text.toString())
-            editTextIP.text.clear()
+            editTextIP.setText("ws://")
         }
 
 
