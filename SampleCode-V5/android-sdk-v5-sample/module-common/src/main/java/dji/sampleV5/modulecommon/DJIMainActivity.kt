@@ -66,13 +66,17 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        Log.d("debug","Begin debug")
         window.decorView.apply {
             systemUiVisibility =
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
                         View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
+        initOnClickListeners()
+        initMSDKInfoView()
+        checkPermissionAndRequest()
 
+    }
+    private fun initOnClickListeners() {
         // Set onClickListener for wsButton
         reconnect_ws.setOnClickListener {
             Log.d("TuskService", "Button Pressed?")
@@ -113,6 +117,12 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             setStreamSelection()
         }
 
+//        image3.setOnClickListener {
+//            baseMainActivityVm.doPairing {
+//                ToastUtils.showToast(it)
+//            }
+//        }
+
 //        editText.addTextChangedListener(object : TextWatcher {
 //            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 //                // not needed, keep here
@@ -148,7 +158,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
         setIP.setOnClickListener {
             callSetIP(editTextIP.text.toString())
-            editTextIP.setText("ws://")
         }
 
 
@@ -161,10 +170,13 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         close_button.setOnClickListener {
             settings_panel.visibility = View.INVISIBLE
         }
-        initMSDKInfoView()
-        checkPermissionAndRequest()
-    }
 
+        repair_button.setOnClickListener {
+            baseMainActivityVm.doPairing {
+                ToastUtils.showToast(it)
+            }
+        }
+    }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (checkPermission()) {
@@ -177,7 +189,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 //        addSettingsPageOverlay()
         if (checkPermission()) {
             handleAfterPermissionPermitted()
-            setStreamSelection()
+//            setStreamSelection()
         }
     }
 
@@ -185,6 +197,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         registerApp()
         prepareTestingToolsActivity()
         startStatusCheck()
+//        initMSDKInfoView() // needed to keep pairing?
     }
 
     @SuppressLint("SetTextI18n")
@@ -220,9 +233,9 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 //            Helper.startBrowser(this, StringUtils.getResStr(R.string.tech_support_url))
 //        }
 //        view_base_info.setOnClickListener {
-            baseMainActivityVm.doPairing {
-                ToastUtils.showToast(it)
-            }
+//            baseMainActivityVm.doPairing {
+//                ToastUtils.showToast(it)
+//            }
 //        }
     }
 
@@ -339,7 +352,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     override fun onPause() {
         super.onPause()
-//        stopStatusCheck() // Stop the status checking coroutine when the activity is paused
+        stopStatusCheck() // Stop the status checking coroutine when the activity is paused
         removeSettingsPageOverlay()
     }
 
