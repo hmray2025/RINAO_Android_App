@@ -36,7 +36,7 @@ import kotlin.math.sqrt
 
 class PachKeyManager() {
     // Initialize necessary classes
-    private val telemService = TuskServiceWebsocket()
+    val telemService = TuskServiceWebsocket()
     private var controller = VirtualStickControl()
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
     val mainScope = CoroutineScope(Dispatchers.Main)
@@ -117,6 +117,7 @@ class PachKeyManager() {
 
                 if (fiveDDown) {
 //                    streamer.startStream()
+//                    sendStreamURL(this@PachKeyManager, streamer.getStreamURL())
                     sendStreamURL(streamer.getStreamURL())
 //                    streamer.initChannelStateListener()
 //                    controller.startLanding()
@@ -161,6 +162,11 @@ class PachKeyManager() {
         Log.v("PachKeyManager", "Stream URL: $url")
     }
 
+//    companion object {
+//        fun sendStreamURL(instance: PachKeyManager, url: String) {
+//            instance.telemService.postStreamURL(StreamInfo(url))
+//        }
+//    }
     private fun sendControllerStatus(status: TuskControllerStatus) {
         telemService.postControllerStatus(status)
     }

@@ -1,8 +1,6 @@
 package dji.sampleV5.aircraft.video
 import android.util.Log
-import androidx.fragment.app.activityViewModels
-import dji.sampleV5.modulecommon.models.LiveStreamVM
-import dji.sampleV5.modulecommon.pages.DJIFragment
+import dji.sampleV5.modulecommon.util.IStreamManager
 import dji.v5.common.callback.CommonCallbacks
 import dji.v5.manager.datacenter.MediaDataCenter
 import dji.v5.common.error.IDJIError
@@ -17,8 +15,9 @@ import dji.v5.manager.datacenter.livestream.settings.RtspSettings
 import dji.v5.utils.common.ToastUtils
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import dji.v5.manager.datacenter.livestream.StreamQuality
 
-class StreamManager() {
+class StreamManager() : IStreamManager{
     private val manager = MediaDataCenter.getInstance().liveStreamManager
     private val listener = this.manager.addLiveStreamStatusListener(streamer)
     private var isStreaming: Boolean = this.manager.isStreaming
@@ -26,7 +25,6 @@ class StreamManager() {
     val password = "unicorn"
     val port = 8554
     var streamSettings = this.manager.liveStreamSettings
-
 
     object streamer : LiveStreamStatusListener {
         override fun onLiveStreamStatusUpdate(status: LiveStreamStatus?) {
@@ -40,11 +38,11 @@ class StreamManager() {
 
     }
 
-    fun isStreaming(): Boolean {
+    override fun isStreaming(): Boolean {
         return this.isStreaming
     }
 
-    fun startStream() {
+    override fun startStream() {
         Log.v("StreamManager", "Start stream")
         //If the stream is not already started, start it
         if (!isStreaming) {
@@ -131,7 +129,7 @@ class StreamManager() {
 
         return null
     }
-    fun getStreamURL(): String {
+    override fun getStreamURL(): String {
         val ip = getLocalIPAddress()
         val port = manager.liveStreamSettings?.rtspSettings?.port
         val username = manager.liveStreamSettings?.rtspSettings?.userName
@@ -140,4 +138,39 @@ class StreamManager() {
         return "rtsp://$username:$password@$ip:$port/streaming/live/1"
     }
 
+
+    override fun setStreamQuality(choice: Int) {
+        when (choice) {
+            0 -> {
+                manager.liveStreamQuality = StreamQuality.FULL_HD
+                Log.d("Livestream", "StreamManager set quality to ${StreamQuality.FULL_HD}")
+            }
+            1 -> {
+                manager.liveStreamQuality = StreamQuality.HD
+                Log.d("Livestream", "StreamManager set quality to ${StreamQuality.HD}")
+            }
+            2 -> {
+                manager.liveStreamQuality = StreamQuality.SD
+                Log.d("Livestream", "StreamManager set quality to ${StreamQuality.SD}")
+            }
+        }
+    }
+
+    override fun setBitrate(rate: Int) {
+        try {
+            manager.liveVideoBitrate = rate
+        }
+        catch (e: NumberFormatException) {
+            ToastUtils.showToast("Bitrate value is invalid - keeping current value.")
+        }
+    }
+
+    override fun getStreamQuality(): StreamQuality {
+//        return manager.liveStreamQuality
+        return manager.liveStreamQuality
+    }
+
+    override fun getBitrate(): Int {
+        return manager.liveVideoBitrate
+    }
 }

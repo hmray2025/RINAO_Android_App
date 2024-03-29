@@ -2,6 +2,7 @@ package dji.sampleV5.aircraft.telemetry
 import android.util.Log
 import com.google.gson.Gson
 import dji.sampleV5.modulecommon.util.ITuskServiceCallback
+import dji.v5.utils.common.ToastUtils
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
@@ -22,7 +23,7 @@ class TuskServiceWebsocket{
     var dwellTime = 0
 
     // Establish WebSocket connection
-    private val defaultIP: String = "ws://192.168.0.102:8084"
+    private val defaultIP: String = "ws://192.168.0.101:8084"
     private var currentIP: String = defaultIP
     private var connectionStatus: Boolean = false
 
@@ -41,10 +42,19 @@ class TuskServiceWebsocket{
     }
     fun connectWebSocket() {
 //        val request = Request.Builder().url("ws://192.168.20.169:8084").build()
-        val request = Request.Builder().url(currentIP).build()
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
+        var request: Request? = null
+        try {
+            request = Request.Builder().url(currentIP).build()
+        }
+        catch (e: Exception) {
+            request = Request.Builder().url(defaultIP).build()
+            ToastUtils.showToast("IP address invalid - resorting to default IP: $defaultIP")
+            currentIP = defaultIP
+        }
+        webSocket = client.newWebSocket(request!!, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d("TuskService", "WebSocket connection opened")
+                setConnectionStatus(true)
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -58,10 +68,12 @@ class TuskServiceWebsocket{
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("TuskService", "WebSocket closing: $code $reason")
+                setConnectionStatus(false)
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e("TuskService", "WebSocket connection failure: ${t.message}")
+                setConnectionStatus(false)
             }
         })
     }

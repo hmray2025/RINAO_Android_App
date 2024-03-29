@@ -23,8 +23,8 @@
 
 package dji.sampleV5.aircraft.defaultlayout;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -71,13 +71,13 @@ import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget;
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget;
 import dji.v5.ux.map.MapWidget;
 import dji.v5.ux.mapkit.core.maps.DJIMap;
-import dji.v5.ux.mapkit.core.maps.DJIUiSettings;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
 import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
 import dji.v5.ux.visualcamera.zoom.FocalZoomWidget;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+//import dji.sampleV5.aircraft.control.PachKeyManager;
 
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
@@ -118,6 +118,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private VideoChannelStateChangeListener secondaryChannelStateListener = null;
     private Button liveStreamButton;
     private Button mapExpand;
+
+//    private PachKeyManager pachManager;
     //endregion
 
     //region Lifecycle
@@ -125,7 +127,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.uxsdk_activity_default_layout);
-
+        Intent intent = getIntent();
 //        mDrawerLayout = findViewById(R.id.root_view);
         topBarPanel = findViewById(R.id.panel_top_bar);
 //        settingWidget = topBarPanel.getSettingWidget();
@@ -156,7 +158,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         mapExpand = (Button) findViewById(R.id.button_expand_map);
         liveStreamButton = (Button) findViewById(R.id.myLiveStream) ;
         streamManager = new StreamManager();
-
+//        streamManager.setStreamSettings(SOME STREAM SETTINGS DEFINED IN MAIN ACT HERE);
+//        streamManager.set()
         initClickListener();
         MediaDataCenter.getInstance().getVideoStreamManager().addStreamSourcesListener(sources -> runOnUiThread(() -> updateFPVWidgetSource(sources)));
         primaryFpvWidget.setOnFPVStreamSourceListener((devicePosition, lensType) -> {
@@ -204,6 +207,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     streamManager.startStream();
+//                    pachManager.sendStreamURL(streamManager.getStreamURL());
                     if (streamManager.isStreaming()) {
                         liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
                     }
