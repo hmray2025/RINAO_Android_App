@@ -35,6 +35,38 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class PachKeyManager() {
+    /*
+    * The companion object brackets are used to essentially create a singleton object,
+    * where when the PachKeyManager class is called the first time, it creates an instance
+    * of the class. But, when PachKeyManager is called again, it will return the same
+    * instance of that object, effectively making it so that there is only one instance
+    * of PachKeyManager running at anytime, and can be referenced from any activity.
+    *
+    * Explanation of code:
+    * - @Volitile indicates that when something about the object is changed, it is reflected
+    * in all other threads.
+    * - getInstance() initially checks if the instance is null, and if it's not,
+    * create an instance.
+    *
+    * - synchronized(this){} prevents multiple threads from excecuting the block of code at
+    * at the same time. That means, only one thread can create the instance.
+    *
+    * - inside the synchronized block it checks again if instance is null, and if not, creates
+    * an instance of PachKeyManager, and sets instance equal to it.
+    *
+    * This code was a ChatGPT suggestion - while it works for the testing I've done with it,
+    * I'm wondering if this is in accordance with some of the best practices for android dev.
+    *
+    * */
+    companion object {
+        @Volatile
+        private var instance: PachKeyManager? = null
+        fun getInstance(): PachKeyManager {
+            return instance ?: synchronized(this) {
+                instance ?: PachKeyManager().also { instance = it }
+            }
+        }
+    }
     // Initialize necessary classes
     val telemService = TuskServiceWebsocket()
     private var controller = VirtualStickControl()
@@ -156,7 +188,7 @@ class PachKeyManager() {
         telemService.postAutonomyStatus(Event(status))
     }
 
-    private fun sendStreamURL(url: String) {
+    fun sendStreamURL(url: String) {
         telemService.postStreamURL(StreamInfo(url))
         Log.v("PachKeyManager", "Stream URL: $url")
     }

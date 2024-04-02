@@ -20,7 +20,6 @@ import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.text.set
 import dji.sampleV5.modulecommon.models.BaseMainActivityVm
 import dji.sampleV5.modulecommon.models.MSDKInfoVm
 import dji.sampleV5.modulecommon.util.IStreamManager
@@ -34,6 +33,8 @@ import dji.v5.utils.common.PermissionUtil
 import dji.v5.utils.common.StringUtils
 import dji.v5.utils.common.ToastUtils
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.Serializable
+
 /**
  * Class Description
  *
@@ -167,6 +168,10 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             settings_panel.visibility = View.VISIBLE
         }
 
+        settings_panel.setOnClickListener {
+            // do nothing, leave here so that touch events are absorbed
+        }
+
         close_button.setOnClickListener {
             settings_panel.visibility = View.INVISIBLE
         }
@@ -279,6 +284,9 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     }
 
 
+    fun <T> enableDefaultLayout(cl: Class<T>, obj: Any) {
+        enableShowCaseButton(default_layout_button, cl)
+    }
     fun <T> enableDefaultLayout(cl: Class<T>) {
         enableShowCaseButton(default_layout_button, cl)
     }
@@ -304,6 +312,18 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         view.setOnClickListener {
             Intent(this, cl).also {
                 startActivity(it)
+            }
+        }
+    }
+
+    // overloaded function needed to pass Pach instance to defaultLayout
+    private fun <T> enableShowCaseButton(view: View, cl: Class<T>, obj: Serializable) {
+        view.isEnabled = true
+        view.setOnClickListener {
+            Intent(view.context, cl).also { intent ->
+                intent.putExtra("objectKey", obj)
+                Log.d("PachKeyManager", "About to start DefaultLayout")
+                view.context.startActivity(intent)
             }
         }
     }
@@ -368,6 +388,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     private val statusCheckRunnable = object : Runnable {
         override fun run() {
+            Log.d("TuskService", "Status Panel Height: ${status_panel.height}")
             if (callGetConnectionStatus()) {
                 setStatus(1, serverStatus)
             }

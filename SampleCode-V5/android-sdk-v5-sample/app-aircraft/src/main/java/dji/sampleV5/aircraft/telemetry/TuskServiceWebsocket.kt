@@ -6,8 +6,9 @@ import dji.v5.utils.common.ToastUtils
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
+import java.io.Serializable
 
-class TuskServiceWebsocket{
+class TuskServiceWebsocket {
     private val client: OkHttpClient = OkHttpClient()
     private lateinit var webSocket: WebSocket
     private val gson: Gson = Gson()
