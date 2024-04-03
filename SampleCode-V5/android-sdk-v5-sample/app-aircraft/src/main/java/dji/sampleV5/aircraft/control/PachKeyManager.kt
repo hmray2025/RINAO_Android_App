@@ -186,6 +186,7 @@ class PachKeyManager() {
 
     private fun sendAutonomyStatus(status: String) {
         telemService.postAutonomyStatus(Event(status))
+        Log.v("PachKeyManager", "Autonomy Status: $status")
     }
 
     fun sendStreamURL(url: String) {
@@ -705,16 +706,16 @@ class PachKeyManager() {
         while (distance > pidController.posTolerance) {
             // ((distance > pidController.posTolerance) and (stateData.velocityX!! > pidController.velTolerance))
             //What if we overshoot the target location? Will the aircraft back up or turn around?
-            Log.v("PachKeyManager", "Distance: $distance")
+            Log.v("PachControlAction", "Distance: $distance")
             xVel = pidController.getControl(distance)
             val clippedXvel = xVel.coerceIn(-pidController.maxVelocity, pidController.maxVelocity)
-            Log.v("PachKeyManager", "Commanded X Velocity: $xVel, Clipped Velocity  $clippedXvel")
+            Log.v("PachControlAction", "Commanded X Velocity: $xVel, Clipped Velocity  $clippedXvel")
             distance = computeLatLonDistance(lat, lon)
 
             // Update Yaw
             yawAngle = computeYawAngle(lat, lon)
 
-            Log.v("PachKeyManager", "Commanded Yaw: $yawAngle | Commanded Altitude: $alt | xvel: $xVel | clippedXvel: $clippedXvel")
+            Log.v("PachControlAction", "Commanded Yaw: $yawAngle | Commanded Altitude: $alt | xvel: $xVel | clippedXvel: $clippedXvel")
 
             // command drone x velocity to move to target location
             if (decisionChecks()) {
@@ -742,16 +743,16 @@ class PachKeyManager() {
         while (distance > pidController.posTolerance) {
             // ((distance > pidController.posTolerance) and (stateData.velocityX!! > pidController.velTolerance))
             //What if we overshoot the target location? Will the aircraft back up or turn around?
-            Log.v("PachKeyManager", "Distance: $distance")
+            Log.v("PachControlAction", "Distance: $distance")
             val yError = computeLatDistance(lat)
             val xError = computeLonDistance(lon)
-            Log.v("PachKeyManager", "Y Error: $yError | X Error: $xError | Distance: $distance")
+            Log.v("PachControlAction", "Y Error: $yError | X Error: $xError | Distance: $distance")
             val xVel = pidController.getControl(xError)
             val yVel = pidController.getControl(yError)
             val clippedXvel = xVel.coerceIn(-pidController.maxVelocity, pidController.maxVelocity)
             val clippedYvel = yVel.coerceIn(-pidController.maxVelocity, pidController.maxVelocity)
 
-            Log.v("PachKeyManager", "Commanded Yaw: $yaw | Commanded Altitude: $alt | xvel: $xVel | yvel: $yVel")
+            Log.v("PachControlAction", "Commanded Yaw: $yaw | Commanded Altitude: $alt | xvel: $xVel | yvel: $yVel")
             // command drone x & y velocity to move to target location with a defined yaw
             if (!telemService.isAlertAction) {
                 if (safetyChecks()) {
@@ -795,6 +796,7 @@ class PachKeyManager() {
         controller.ensureAdvancedVirtualStickMode()
 
         while (safetyChecks()) {
+            // Handle logic for action execution
             if (decisionChecks()) {
                 Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
                 go2LocationForward(
@@ -835,15 +837,15 @@ class PachKeyManager() {
             else {
                 if (telemService.plannerAction == "stay" && telemService.isStayAction){
                     Log.v("PachKeyManagerHIPPO", "Staying at Waypoint: $waypoint")
-                    sendAutonomyStatus("waypoint-reached")
+//                    sendAutonomyStatus("waypoint-reached")
                     delay(telemService.dwellTime.toLong())
                     telemService.isStayAction = false // reset flag to false so stay action is not taken
                 }
                 else if (waypointID != telemService.nextWaypointID) {
+                    sendAutonomyStatus("waypoint-reached")
                     waypoint = getNewDirection()
                     waypointID = telemService.nextWaypointID
-                    sendAutonomyStatus("waypoint-reached")
-                    Log.v("PachKeyManagerHIPPO", "Waypoint Updated")
+                    Log.v("PachKeyManagerHIPPO", "Waypoint Updated: ID$waypointID with action ${telemService.plannerAction}")
 //                    delay(100L)
                 } else {
                     delay(100L)
