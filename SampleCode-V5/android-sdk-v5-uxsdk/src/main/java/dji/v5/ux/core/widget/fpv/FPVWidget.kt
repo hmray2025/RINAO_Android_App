@@ -60,6 +60,7 @@ import dji.v5.ux.core.util.RxUtil
 import dji.v5.ux.core.widget.fpv.FPVWidget.ModelState
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.functions.Consumer
+import kotlinx.android.synthetic.main.uxsdk_view_widget.view.textview_aspect_ratio
 
 private const val TAG = "FPVWidget"
 private const val ORIGINAL_SCALE = 1f
@@ -98,7 +99,7 @@ open class FPVWidget @JvmOverloads constructor(
     /**
      * Whether the video feed source's camera name is visible on the video feed.
      */
-    var isCameraSourceNameVisible = true
+    var isCameraSourceNameVisible = false
         set(value) {
             field = value
             checkAndUpdateCameraName()
@@ -108,7 +109,7 @@ open class FPVWidget @JvmOverloads constructor(
      * Whether the video feed source's camera side is visible on the video feed.
      * Only shown on aircraft that support multiple gimbals.
      */
-    var isCameraSourceSideVisible = true
+    var isCameraSourceSideVisible = false
         set(value) {
             field = value
             checkAndUpdateCameraSide()
@@ -362,6 +363,7 @@ open class FPVWidget @JvmOverloads constructor(
     //region Customization
     override fun getIdealDimensionRatioString(): String {
         return getString(R.string.uxsdk_widget_fpv_ratio)
+//        return fpvSurfaceView.textview_aspect_ratio.toString()
     }
 
     fun updateVideoSource(source: StreamSource, channelType: VideoChannelType) {
@@ -428,7 +430,7 @@ open class FPVWidget @JvmOverloads constructor(
     private fun updateCameraName(cameraName: String) {
         cameraNameTextView.text = cameraName
         if (cameraName.isNotEmpty() && isCameraSourceNameVisible) {
-            cameraNameTextView.visibility = View.VISIBLE
+            cameraNameTextView.visibility = View.INVISIBLE
         } else {
             cameraNameTextView.visibility = View.INVISIBLE
         }
@@ -437,7 +439,7 @@ open class FPVWidget @JvmOverloads constructor(
     private fun updateCameraSide(cameraSide: String) {
         cameraSideTextView.text = cameraSide
         if (cameraSide.isNotEmpty() && isCameraSourceSideVisible) {
-            cameraSideTextView.visibility = View.VISIBLE
+            cameraSideTextView.visibility = View.INVISIBLE
         } else {
             cameraSideTextView.visibility = View.INVISIBLE
         }
