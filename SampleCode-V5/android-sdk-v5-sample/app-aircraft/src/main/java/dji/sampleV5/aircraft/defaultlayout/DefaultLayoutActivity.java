@@ -182,7 +182,6 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 //            }
 //        });
         mapWidget.onCreate(savedInstanceState);
-        Log.d("PachKeyManager", "We got to DefaultLayout");
         pachManager = new PachKeyManager(); // points to object created in DJIAircraftMainActivity
         streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
     }
