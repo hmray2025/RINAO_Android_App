@@ -20,7 +20,6 @@ import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.text.set
 import dji.sampleV5.modulecommon.models.BaseMainActivityVm
 import dji.sampleV5.modulecommon.models.MSDKInfoVm
 import dji.sampleV5.modulecommon.util.IStreamManager
@@ -34,6 +33,8 @@ import dji.v5.utils.common.PermissionUtil
 import dji.v5.utils.common.StringUtils
 import dji.v5.utils.common.ToastUtils
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.Serializable
+
 /**
  * Class Description
  *
@@ -58,7 +59,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     protected val msdkInfoVm: MSDKInfoVm by viewModels()
     private val handler: Handler = Handler(Looper.getMainLooper())
 
-    //    private val reconnectStream: Button = reconnect_ws
     abstract fun prepareUxActivity()
 
     abstract fun prepareTestingToolsActivity()
@@ -79,7 +79,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     private fun initOnClickListeners() {
         // Set onClickListener for wsButton
         reconnect_ws.setOnClickListener {
-            Log.d("TuskService", "Button Pressed?")
             setStatus(1, serverStatus)
             callReconnectWebsocket()
             if (callGetConnectionStatus()) {
@@ -91,7 +90,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         }
 
         reconnect_ws_settings.setOnClickListener {
-            Log.d("TuskService", "Button Pressed?")
             setStatus(1, serverStatus)
             callReconnectWebsocket()
             if (callGetConnectionStatus()) {
@@ -167,6 +165,10 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             settings_panel.visibility = View.VISIBLE
         }
 
+        settings_panel.setOnClickListener {
+            // do nothing, leave here so that touch events are absorbed
+        }
+
         close_button.setOnClickListener {
             settings_panel.visibility = View.INVISIBLE
         }
@@ -197,7 +199,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         registerApp()
         prepareTestingToolsActivity()
         startStatusCheck()
-//        initMSDKInfoView() // needed to keep pairing?
     }
 
     @SuppressLint("SetTextI18n")
@@ -213,30 +214,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         baseMainActivityVm.registerState.observe(this) {
             text_view_registered.text = StringUtils.getResStr(R.string.registration_status, it)
         }
-//        baseMainActivityVm.sdkNews.observe(this) {
-//            item_news_msdk.setTitle(StringUtils.getResStr(it.title))
-//            item_news_msdk.setDescription(StringUtils.getResStr(it.description))
-//            item_news_msdk.setDate(it.date)
-//
-//            item_news_uxsdk.setTitle(StringUtils.getResStr(it.title))
-//            item_news_uxsdk.setDescription(StringUtils.getResStr(it.description))
-//            item_news_uxsdk.setDate(it.date)
-//        }
-//
-//        icon_sdk_forum.setOnClickListener {
-//            Helper.startBrowser(this, StringUtils.getResStr(R.string.sdk_forum_url))
-//        }
-//        icon_release_node.setOnClickListener {
-//            Helper.startBrowser(this, StringUtils.getResStr(R.string.release_node_url))
-//        }
-//        icon_tech_support.setOnClickListener {
-//            Helper.startBrowser(this, StringUtils.getResStr(R.string.tech_support_url))
-//        }
-//        view_base_info.setOnClickListener {
-//            baseMainActivityVm.doPairing {
-//                ToastUtils.showToast(it)
-//            }
-//        }
     }
 
     private fun registerApp() {
@@ -279,6 +256,9 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     }
 
 
+    fun <T> enableDefaultLayout(cl: Class<T>, obj: Any) {
+        enableShowCaseButton(default_layout_button, cl)
+    }
     fun <T> enableDefaultLayout(cl: Class<T>) {
         enableShowCaseButton(default_layout_button, cl)
     }
@@ -304,6 +284,18 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         view.setOnClickListener {
             Intent(this, cl).also {
                 startActivity(it)
+            }
+        }
+    }
+
+    // overloaded function needed to pass Pach instance to defaultLayout
+    private fun <T> enableShowCaseButton(view: View, cl: Class<T>, obj: Serializable) {
+        view.isEnabled = true
+        view.setOnClickListener {
+            Intent(view.context, cl).also { intent ->
+                intent.putExtra("objectKey", obj)
+                Log.d("PachKeyManager", "About to start DefaultLayout")
+                view.context.startActivity(intent)
             }
         }
     }
@@ -368,6 +360,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     private val statusCheckRunnable = object : Runnable {
         override fun run() {
+            Log.d("TuskService", "Status Panel Height: ${status_panel.height}")
             if (callGetConnectionStatus()) {
                 setStatus(1, serverStatus)
             }

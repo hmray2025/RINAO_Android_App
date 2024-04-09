@@ -4,7 +4,6 @@ import android.util.Log
 import android.widget.Toast
 import dji.sampleV5.aircraft.control.PachKeyManager
 import dji.sampleV5.aircraft.defaultlayout.DefaultLayoutActivity
-import dji.sampleV5.aircraft.telemetry.TuskServiceWebsocket
 import dji.sampleV5.modulecommon.DJIMainActivity
 import dji.v5.common.utils.GeoidManager
 import dji.v5.manager.datacenter.livestream.StreamQuality
@@ -22,13 +21,19 @@ import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
  * Copyright (c) 2022, DJI All Rights Reserved.
  */
 class DJIAircraftMainActivity : DJIMainActivity() {
-    private val TuskManger = PachKeyManager()
+    val TuskManger = PachKeyManager()
     override fun prepareUxActivity() {
         UxSharedPreferencesUtil.initialize(this)
         GlobalPreferencesManager.initialize(DefaultGlobalPreferences(this))
         GeoidManager.getInstance().init(this)
 
-        enableDefaultLayout(DefaultLayoutActivity::class.java) // important
+        if (TuskManger != null) {
+            enableDefaultLayout(DefaultLayoutActivity::class.java) // important
+        }
+        else {
+            enableDefaultLayout(DefaultLayoutActivity::class.java) // important
+        }
+
         enableWidgetList(WidgetsActivity::class.java)
         this.TuskManger.runTesting()
 //        prepareConfigurationTools()

@@ -25,17 +25,18 @@ package dji.sampleV5.aircraft.defaultlayout;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import dji.sampleV5.aircraft.BuildConfig;
+import dji.sampleV5.aircraft.control.PachKeyManager;
 import dji.sampleV5.aircraft.video.StreamManager;
 import dji.sdk.keyvalue.value.common.CameraLensType;
 import dji.sdk.keyvalue.value.common.ComponentIndexType;
@@ -77,7 +78,6 @@ import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
 import dji.v5.ux.visualcamera.zoom.FocalZoomWidget;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-//import dji.sampleV5.aircraft.control.PachKeyManager;
 
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
@@ -118,8 +118,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private VideoChannelStateChangeListener secondaryChannelStateListener = null;
     private Button liveStreamButton;
     private Button mapExpand;
-
-//    private PachKeyManager pachManager;
+    private PachKeyManager pachManager;
     //endregion
 
     //region Lifecycle
@@ -150,16 +149,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
         mapWidget = findViewById(R.id.widget_map);
         cameraControlsWidget.getExposureSettingsIndicatorWidget().setStateChangeResourceId(R.id.panel_camera_controls_exposure_settings);
-
 //        ViewStub stub = findViewById(R.id.manual_right_nav_setting_stub);
 //        if (stub != null) {
 //            mSettingPanelWidget = (SettingPanelWidget) stub.inflate();
 //        }
         mapExpand = (Button) findViewById(R.id.button_expand_map);
         liveStreamButton = (Button) findViewById(R.id.myLiveStream) ;
-        streamManager = new StreamManager();
-//        streamManager.setStreamSettings(SOME STREAM SETTINGS DEFINED IN MAIN ACT HERE);
-//        streamManager.set()
         initClickListener();
         MediaDataCenter.getInstance().getVideoStreamManager().addStreamSourcesListener(sources -> runOnUiThread(() -> updateFPVWidgetSource(sources)));
         primaryFpvWidget.setOnFPVStreamSourceListener((devicePosition, lensType) -> {
@@ -181,6 +176,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 //            }
 //        });
         mapWidget.onCreate(savedInstanceState);
+        pachManager = new PachKeyManager(); // points to object created in DJIAircraftMainActivity
+        streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
     }
 
     private void initClickListener() {
@@ -207,7 +204,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     streamManager.startStream();
-//                    pachManager.sendStreamURL(streamManager.getStreamURL());
+//                    sendStreamURL(streamManager.getStreamURL())
+                    pachManager.sendStreamURL(streamManager.getStreamURL());
                     if (streamManager.isStreaming()) {
                         liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
                     }
