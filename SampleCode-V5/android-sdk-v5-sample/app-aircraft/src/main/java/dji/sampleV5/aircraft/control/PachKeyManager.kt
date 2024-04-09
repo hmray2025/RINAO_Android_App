@@ -78,7 +78,6 @@ class PachKeyManager() {
 
     var backyardSingleCoordinate = listOf(Coordinate(40.010819889488076, -105.244268000203, 30.0))
 
-    var HIPPOWaypoints = listOf<Coordinate>()
     // Create variables here
     private var keyDisposables: CompositeDisposable? = null
 
@@ -125,11 +124,11 @@ class PachKeyManager() {
                 }
                 if (fiveDPress) {
                     Log.v("PachKeyManager", "FiveD Pressed")
+                    engageAutonomy()
 //                    followWaypoints(backyardCoordinatesComplexChangingAlt)
 //                    Log.v("PachKeyManager", "Following Waypoint List: $HIPPOWaypoints")
 //                    HIPPOWaypoints = telemService.waypointList
 //                    followWaypoints(HIPPOWaypoints)
-                    flyHippo()
 //                    flyOrbitPath(
 //                        Coordinate(stateData.latitude!!, stateData.longitude!!,stateData.altitude!!),
 //                        10.0)
@@ -142,6 +141,25 @@ class PachKeyManager() {
         }
         registerKeys()
 
+    }
+    private suspend fun engageAutonomy() {
+        // Function evaluates the current received flight mode and engages the appropriate
+        // autonomy mode.
+        // If the flight mode is "Waypoint", the function will follow the received waypoint list
+        // If the flight mode is "Path", the function will follow the received path
+
+        // If drone is not flying, then takeoff
+        if (stateData.isFlying!=true){
+            controller.startTakeOff()
+        }
+
+        when (telemService.flightMode) {
+            "Waypoint" -> followWaypoints(telemService.waypointList)
+            "Path" -> flyHippo()
+            else -> {
+                Log.v("PachKeyManager", "No valid flight mode detected")
+            }
+        }
     }
 
     private fun sendState(telemetry: TuskAircraftState) {
@@ -742,18 +760,13 @@ class PachKeyManager() {
         // Function will fly using the HIPPO decision making framework.
         // This will fly to a given waypoint and continue along to the following waypoint unless
         // a specific decision making flag has been raised.
-        // When called, this function will make the aircraft go to a certain location
+        // When called, this function will make the aircraft go to a series of locations
         // Edge Cases:
         // What if drone is already flying?
         // What if drone loses connection or GPS signal?
         // What if remote controller is disconnected?
         // What if drone is already at the location?
         // What if the operator takes control of the aircraft?
-
-        // If drone is not flying, then takeoff
-        if (stateData.isFlying!=true){
-            controller.startTakeOff()
-        }
 
         // compute distance to target location using lat and lon
         var waypoint = getNewDirection()
@@ -843,11 +856,6 @@ class PachKeyManager() {
     private suspend fun followWaypoints(wpList: List<Coordinate>){
         // When called, this function will make the aircraft follow a list of waypoints
         // Figure out if the latest state is given
-
-        // If drone is not flying, then takeoff
-        if (stateData.isFlying!=true){
-            controller.startTakeOff()
-        }
 
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()

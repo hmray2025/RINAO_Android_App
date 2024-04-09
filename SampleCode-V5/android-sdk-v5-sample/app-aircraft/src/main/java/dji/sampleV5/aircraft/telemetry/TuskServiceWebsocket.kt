@@ -21,6 +21,7 @@ class TuskServiceWebsocket{
     var nextWaypointID = 0
     var plannerAction = "idle"
     var dwellTime = 0
+    var flightMode = "idle"
 
     // Establish WebSocket connection
     private val defaultIP: String = "ws://192.168.0.101:8084"
@@ -86,8 +87,6 @@ class TuskServiceWebsocket{
             val action = jsonObject.optString("action")
             val args = jsonObject.opt("args")
             when (action) {
-                "AllAircraftStatus" -> handleGetAllAircraftStatus(args) //Unused
-                "NewControllerStatus" -> handleNewControllerStatus(args) //Unused
                 "FollowWaypoints" -> handleWaypointSet(args as JSONObject?)
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
                 "FlightStatus" -> handleFlightStatusUpdate(args as JSONObject?)
@@ -144,6 +143,7 @@ class TuskServiceWebsocket{
         try {
             if (args is JSONObject) {
                 val flightPathArray = args.optJSONArray("flightPath")
+                flightMode = "Path"
                 if (flightPathArray != null) {
                     for (i in 0 until flightPathArray.length()) {
                         val waypointArray = flightPathArray.optJSONArray(i)
@@ -155,7 +155,6 @@ class TuskServiceWebsocket{
                             // Add the waypoint to the waypoint list
                             waypointList += Coordinate(lat, long, 50.0)
                         }
-
                     }
                 }
             } else {
@@ -178,6 +177,7 @@ class TuskServiceWebsocket{
                 nextWaypointID = args.getInt("waypointID")
                 plannerAction = args.getString("plannerAction")
                 dwellTime = args.getInt("dwellTime")
+                flightMode = "Waypoint"
 
                 Log.d(
                     "WaypointService",
