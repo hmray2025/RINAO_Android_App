@@ -59,7 +59,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     protected val msdkInfoVm: MSDKInfoVm by viewModels()
     private val handler: Handler = Handler(Looper.getMainLooper())
 
-    //    private val reconnectStream: Button = reconnect_ws
     abstract fun prepareUxActivity()
 
     abstract fun prepareTestingToolsActivity()
@@ -80,7 +79,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     private fun initOnClickListeners() {
         // Set onClickListener for wsButton
         reconnect_ws.setOnClickListener {
-            Log.d("TuskService", "Button Pressed?")
             setStatus(1, serverStatus)
             callReconnectWebsocket()
             if (callGetConnectionStatus()) {
@@ -92,7 +90,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         }
 
         reconnect_ws_settings.setOnClickListener {
-            Log.d("TuskService", "Button Pressed?")
             setStatus(1, serverStatus)
             callReconnectWebsocket()
             if (callGetConnectionStatus()) {
@@ -202,7 +199,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         registerApp()
         prepareTestingToolsActivity()
         startStatusCheck()
-//        initMSDKInfoView() // needed to keep pairing?
     }
 
     @SuppressLint("SetTextI18n")
@@ -218,30 +214,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         baseMainActivityVm.registerState.observe(this) {
             text_view_registered.text = StringUtils.getResStr(R.string.registration_status, it)
         }
-//        baseMainActivityVm.sdkNews.observe(this) {
-//            item_news_msdk.setTitle(StringUtils.getResStr(it.title))
-//            item_news_msdk.setDescription(StringUtils.getResStr(it.description))
-//            item_news_msdk.setDate(it.date)
-//
-//            item_news_uxsdk.setTitle(StringUtils.getResStr(it.title))
-//            item_news_uxsdk.setDescription(StringUtils.getResStr(it.description))
-//            item_news_uxsdk.setDate(it.date)
-//        }
-//
-//        icon_sdk_forum.setOnClickListener {
-//            Helper.startBrowser(this, StringUtils.getResStr(R.string.sdk_forum_url))
-//        }
-//        icon_release_node.setOnClickListener {
-//            Helper.startBrowser(this, StringUtils.getResStr(R.string.release_node_url))
-//        }
-//        icon_tech_support.setOnClickListener {
-//            Helper.startBrowser(this, StringUtils.getResStr(R.string.tech_support_url))
-//        }
-//        view_base_info.setOnClickListener {
-//            baseMainActivityVm.doPairing {
-//                ToastUtils.showToast(it)
-//            }
-//        }
     }
 
     private fun registerApp() {

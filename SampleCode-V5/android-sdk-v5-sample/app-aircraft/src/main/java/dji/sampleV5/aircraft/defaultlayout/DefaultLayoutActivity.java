@@ -32,8 +32,6 @@ import android.widget.Button;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -80,7 +78,6 @@ import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
 import dji.v5.ux.visualcamera.zoom.FocalZoomWidget;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import dji.sampleV5.aircraft.DJIAircraftMainActivity;
 
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
@@ -158,9 +155,6 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 //        }
         mapExpand = (Button) findViewById(R.id.button_expand_map);
         liveStreamButton = (Button) findViewById(R.id.myLiveStream) ;
-//        streamManager = new StreamManager();
-//        streamManager.setStreamSettings(SOME STREAM SETTINGS DEFINED IN MAIN ACT HERE);
-//        streamManager.set()
         initClickListener();
         MediaDataCenter.getInstance().getVideoStreamManager().addStreamSourcesListener(sources -> runOnUiThread(() -> updateFPVWidgetSource(sources)));
         primaryFpvWidget.setOnFPVStreamSourceListener((devicePosition, lensType) -> {
