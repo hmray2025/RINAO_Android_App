@@ -69,9 +69,8 @@
                     android:id="@+id/widget_fpv_interaction"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    tools:layout_editor_absoluteX="0dp"
-                    tools:layout_editor_absoluteY="0dp" >
-                </dji.v5.ux.cameracore.widget.fpvinteraction.FPVInteractionWidget>
+                    tools:layout_editor_absoluteX="16dp"
+                    tools:layout_editor_absoluteY="16dp"></dji.v5.ux.cameracore.widget.fpvinteraction.FPVInteractionWidget>
             </dji.v5.ux.core.widget.fpv.FPVWidget>
 
             <dji.v5.ux.core.widget.fpv.FPVWidget
@@ -287,8 +286,7 @@
                 android:id="@+id/button_expand_map"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:background="@drawable/uxsdk_ic_spinner_cell_expand"
-                android:rotation="180"
+                android:background="@drawable/arrow_line_up_left"
                 android:elevation="10dp"
                 android:foreground="?selectableItemBackground"
                 android:padding="8dp"
@@ -316,9 +314,9 @@
 
         <Button
             android:id="@+id/myLiveStream"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginLeft="10dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginLeft="25dp"
             android:layout_marginTop="60dp"
             android:background="@drawable/uxsdk_livestream_start"
             android:elevation="10dp"

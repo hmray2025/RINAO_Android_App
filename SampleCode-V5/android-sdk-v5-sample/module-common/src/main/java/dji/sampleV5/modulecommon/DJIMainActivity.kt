@@ -367,6 +367,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             else {
                 setStatus(-1, serverStatus)
             }
+            setStreamSelection()
             streambitrate.text = "Stream Bitrate: ${getBitrate()}"
             streamquality.text = "Stream Quality: ${getStreamQuality()}"
             streamurl.text = "Stream URL: ${getStreamURL()}"

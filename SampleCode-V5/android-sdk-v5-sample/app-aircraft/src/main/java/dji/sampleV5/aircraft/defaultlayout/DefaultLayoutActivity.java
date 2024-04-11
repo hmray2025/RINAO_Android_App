@@ -119,6 +119,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private Button liveStreamButton;
     private Button mapExpand;
     private PachKeyManager pachManager;
+    private Button mMediaManagerBtn;
     //endregion
 
     //region Lifecycle
@@ -178,6 +179,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         mapWidget.onCreate(savedInstanceState);
         pachManager = new PachKeyManager(); // points to object created in DJIAircraftMainActivity
         streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
+
+//        mMediaManagerBtn = (Button)findViewById(R.id.btn_mediaManager); // where to put this?
+//        mMediaManagerBtn.setOnClickListener(this);
     }
 
     private void initClickListener() {
@@ -225,12 +229,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     if (params.width == mapWidth) {
                         params.height = primaryFpvWidget.getHeight() - (topBarPanel.getBottom() + getResources().getDimensionPixelSize(R.dimen.uxsdk_12_dp));
                         params.width = primaryFpvWidget.getWidth() - getResources().getDimensionPixelSize(R.dimen.uxsdk_24_dp);
-                        mapExpand.setRotation(0);
+                        mapExpand.setBackgroundResource(R.drawable.arrow_line_down_right);
                     }
                     else {
                         params.height = mapHeight;
                         params.width = mapWidth;
-                        mapExpand.setRotation(180);
+                        mapExpand.setBackgroundResource(R.drawable.arrow_line_up_left);
                     }
                     mapWidget.setLayoutParams(params);
                 }
