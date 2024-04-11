@@ -52,13 +52,25 @@
                 app:uxsdk_cameraNameTextSize="14dp"
                 app:uxsdk_cameraSideTextSize="14dp"
                 app:uxsdk_videoChannelType="primaryStreamChannel">
+                <ImageView
+                    android:id="@+id/uxsdk_imageview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/uxsdk_ic_centerpoint_cross"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:rotation="45"
+                    android:alpha="0.5"
+                    />
 
                 <dji.v5.ux.cameracore.widget.fpvinteraction.FPVInteractionWidget
                     android:id="@+id/widget_fpv_interaction"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    tools:layout_editor_absoluteX="0dp"
-                    tools:layout_editor_absoluteY="0dp" />
+                    tools:layout_editor_absoluteX="16dp"
+                    tools:layout_editor_absoluteY="16dp"></dji.v5.ux.cameracore.widget.fpvinteraction.FPVInteractionWidget>
             </dji.v5.ux.core.widget.fpv.FPVWidget>
 
             <dji.v5.ux.core.widget.fpv.FPVWidget
@@ -274,8 +286,7 @@
                 android:id="@+id/button_expand_map"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:background="@drawable/uxsdk_ic_spinner_cell_expand"
-                android:rotation="180"
+                android:background="@drawable/arrow_line_up_left"
                 android:elevation="10dp"
                 android:foreground="?selectableItemBackground"
                 android:padding="8dp"
@@ -303,9 +314,9 @@
 
         <Button
             android:id="@+id/myLiveStream"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_marginLeft="10dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginLeft="25dp"
             android:layout_marginTop="60dp"
             android:background="@drawable/uxsdk_livestream_start"
             android:elevation="10dp"

@@ -117,10 +117,10 @@ open class LensControlWidget @JvmOverloads constructor(
 
     private fun updateBtnBackground(button: Button, source: CameraVideoStreamSourceType) {
         if (source == widgetModel.cameraVideoStreamSourceProcessor.value) {
-            button.setBackgroundResource(R.color.uxsdk_dic_color_c10_light_sea_blue)
+            button.setBackgroundResource(R.drawable.uxsdk_bg_rtk_guidance_step_next)
         }
         else {
-            button.setBackgroundResource(R.color.uxsdk_black_70_percent)
+            button.setBackgroundResource(R.drawable.uxsdk_bg_rtk_guidance_transparentbg)
         }
     }
     private fun updateBtnText(button: Button, source: CameraVideoStreamSourceType) {

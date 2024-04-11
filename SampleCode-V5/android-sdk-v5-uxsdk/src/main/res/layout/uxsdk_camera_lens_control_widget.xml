@@ -16,7 +16,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/second_len_btn"
         app:layout_constraintDimensionRatio="1:1"
-        android:background="#80000000"
+        android:background="@drawable/uxsdk_bg_rtk_guidance_transparentbg"
+        android:backgroundTintMode="add"
         android:text="first"
         android:textColor="@color/uxsdk_white"
         android:textSize="@dimen/uxsdk_text_size_normal_medium" />
@@ -30,7 +31,7 @@
         app:layout_constraintTop_toBottomOf="@id/first_len_btn"
         app:layout_constraintBottom_toBottomOf="@id/third_len_btn"
         app:layout_constraintDimensionRatio="1:1"
-        android:background="#80000000"
+        android:background="@drawable/uxsdk_bg_rtk_guidance_transparentbg"
         android:text="second"
         android:textColor="@color/uxsdk_white"
         android:textSize="@dimen/uxsdk_text_size_normal_medium" />
@@ -44,7 +45,7 @@
         app:layout_constraintTop_toBottomOf="@id/second_len_btn"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
-        android:background="@color/uxsdk_black_70_percent"
+        android:background="@drawable/uxsdk_bg_rtk_guidance_transparentbg"
         android:text="third"
         android:textColor="@color/uxsdk_white"
         android:textSize="@dimen/uxsdk_text_size_normal_medium" />
