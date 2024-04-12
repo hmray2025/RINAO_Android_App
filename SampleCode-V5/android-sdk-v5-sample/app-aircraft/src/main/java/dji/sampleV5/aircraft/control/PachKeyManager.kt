@@ -180,14 +180,14 @@ class PachKeyManager() {
         // If the flight mode is "Waypoint", the function will follow the received waypoint list
         // If the flight mode is "Path", the function will follow the received path
 
-        // If drone is not flying, then takeoff
+//        // If drone is not flying, then takeoff
         if (stateData.isFlying!=true){
             controller.startTakeOff()
         }
 
         when (telemService.flightMode) {
-            "Waypoint" -> followWaypoints(telemService.waypointList)
-            "Path" -> flyHippo()
+            "Waypoint" -> flyHippo()
+            "Path" -> followWaypoints(telemService.waypointList)
             else -> {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }

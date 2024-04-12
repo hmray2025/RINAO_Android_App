@@ -152,7 +152,7 @@ class TuskServiceWebsocket {
                             val lat = waypointArray.optDouble(0)
                             val long = waypointArray.optDouble(1)
                             val alt = waypointArray.optDouble(2)
-                            Log.d("WaypointService", "Waypoint $i - Latitude: $lat, Longitude: $long,  Altitude: $alt")
+                            Log.d("TuskService", "Waypoint $i - Latitude: $lat, Longitude: $long,  Altitude: $alt")
                             // Add the waypoint to the waypoint list
                             waypointList += Coordinate(lat, long, 50.0)
                         }
