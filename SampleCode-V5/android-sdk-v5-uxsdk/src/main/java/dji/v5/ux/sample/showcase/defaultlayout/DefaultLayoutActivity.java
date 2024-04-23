@@ -24,6 +24,7 @@
 package dji.v5.ux.sample.showcase.defaultlayout;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import java.util.List;
@@ -378,6 +379,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
      * Swap the video sources of the FPV and secondary FPV widgets.
      */
     private void swapVideoSource() {
+        Log.d("ADITYA", "swapping video source");
         VideoChannelType primaryVideoChannel = primaryFpvWidget.getVideoChannelType();
         StreamSource primaryStreamSource = primaryFpvWidget.getStreamSource();
         VideoChannelType secondaryVideoChannel = secondaryFPVWidget.getVideoChannelType();

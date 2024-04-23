@@ -73,6 +73,7 @@ class PachKeyManager() {
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
     val mainScope = CoroutineScope(Dispatchers.Main)
     val streamer = StreamManager()
+    private var waypointListener: OnWaypointListener? = null
     var stateData = TuskAircraftState( 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0, windDirection = null, false)
     var statusData = TuskAircraftStatus( connected = false, battery = 0, gpsSignal = 0, gps = 0,
@@ -179,12 +180,11 @@ class PachKeyManager() {
         // autonomy mode.
         // If the flight mode is "Waypoint", the function will follow the received waypoint list
         // If the flight mode is "Path", the function will follow the received path
-
+        setUpdatedCoordinates()
         // If drone is not flying, then takeoff
         if (stateData.isFlying!=true){
             controller.startTakeOff()
         }
-
         when (telemService.flightMode) {
             "Waypoint" -> followWaypoints(telemService.waypointList)
             "Path" -> flyHippo()
@@ -856,6 +856,8 @@ class PachKeyManager() {
                 }
                 else if (waypointID != telemService.nextWaypointID) {
                     sendAutonomyStatus("waypoint-reached")
+                    // call remove waypoint function here.
+                    setReachedWaypoint()
                     waypoint = getNewDirection()
                     waypointID = telemService.nextWaypointID
                     Log.v("PachKeyManagerHIPPO", "Waypoint Updated: ID$waypointID with action ${telemService.plannerAction}")
@@ -1024,6 +1026,28 @@ class PachKeyManager() {
         }else{
             return 90-res
         }
+    }
+
+    fun setReachedWaypointListener(listener: OnWaypointListener) {
+        waypointListener = listener
+    }
+
+    fun setReachedWaypoint() {
+        waypointListener?.onReachedWaypoint()
+    }
+
+    interface OnWaypointListener {
+        fun onReachedWaypoint()
+        fun onUpdatedWaypoints()
+        fun onUpdateConnectionStatus(connection: Boolean)
+    }
+
+    fun setUpdatedCoordinates() {
+        waypointListener?.onUpdatedWaypoints()
+    }
+
+    fun setConnectionStatus(connection: Boolean) {
+        waypointListener?.onUpdateConnectionStatus(connection)
     }
 }
 

@@ -24,8 +24,8 @@
 package dji.sampleV5.aircraft.defaultlayout;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import dji.sampleV5.aircraft.BuildConfig;
 import dji.sampleV5.aircraft.control.PachKeyManager;
+import dji.sampleV5.aircraft.telemetry.Coordinate;
 import dji.sampleV5.aircraft.video.StreamManager;
 import dji.sdk.keyvalue.value.common.CameraLensType;
 import dji.sdk.keyvalue.value.common.ComponentIndexType;
@@ -72,6 +73,8 @@ import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget;
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget;
 import dji.v5.ux.map.MapWidget;
 import dji.v5.ux.mapkit.core.maps.DJIMap;
+import dji.v5.ux.mapkit.core.models.DJILatLng;
+import dji.v5.ux.mapkit.core.models.annotations.DJIMarker;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
 import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
@@ -82,7 +85,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
  */
-public class DefaultLayoutActivity extends AppCompatActivity {
+public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyManager.OnWaypointListener {
 
     //region Fields
     private final String TAG = LogUtils.getTag(this);
@@ -120,6 +123,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private Button mapExpand;
     private PachKeyManager pachManager;
     private Button mMediaManagerBtn;
+
+    private Drawable statusindicator;
     //endregion
 
     //region Lifecycle
@@ -452,6 +457,35 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         fpvInteractionWidget.setInteractionEnabled(false);
         if (newPrimaryStreamSource != null) {
             fpvInteractionWidget.setInteractionEnabled(newPrimaryStreamSource.getPhysicalDevicePosition() != PhysicalDevicePosition.NOSE);
+        }
+    }
+// Handle incoming waypoints from the Safari app (Updated once the drone is set to flight mode)
+    @Override
+    public void onReachedWaypoint() {
+        Coordinate wp = pachManager.getTelemService().getNextWaypoint();
+        // find the corresponding DJIMarker
+        for (DJIMarker marker : mapWidget.tuskMarkers) {
+            if (marker.getPosition().latitude == wp.getLat() &&
+            marker.getPosition().longitude == wp.getLon()) {
+                mapWidget.removeTuskWaypoint(marker);
+            }
+        }
+    }
+
+    @Override
+    public void onUpdatedWaypoints() {
+        for (Coordinate wp : pachManager.getTelemService().getWaypointList()) {
+            mapWidget.addTuskWaypointOnMap(new DJILatLng(wp.getLat(), wp.getLon()));
+        }
+    }
+
+    public void onUpdateConnectionStatus(boolean connection) {
+        // logic
+        if (connection) {
+            statusindicator = getDrawable(R.drawable.uxsdk_ic_alert_good);
+        }
+        else {
+            statusindicator = getDrawable(R.drawable.uxsdk_cancel_landing_selector);
         }
     }
 

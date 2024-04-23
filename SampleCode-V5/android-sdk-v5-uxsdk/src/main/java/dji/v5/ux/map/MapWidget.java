@@ -85,7 +85,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * includes aircraft location, home location, aircraft trail path, aircraft
  * heading, and No Fly Zones. It also provides the user with options to unlock some Fly Zones.
  */
-public class MapWidget extends ConstraintLayoutWidget<Object> implements View.OnTouchListener, FlyZoneActionListener {
+public class MapWidget extends ConstraintLayoutWidget<Object> implements View.OnTouchListener, FlyZoneActionListener, ITuskWaypoint {
 
     //region  Constants
     private static final int COUNTER_REFRESH_THRESHOLD = 200;
@@ -98,6 +98,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     private static final int DO_NOT_UPDATE_ZOOM = -1;
     private static final String TAG = "MapWidget";
     private static final String HOME_MARKER = "homemarker";
+    private static final String TUSK_MARKER = "tuskmarker";
     private static final String AIRCRAFT_MARKER = "aircraftmarker";
     private static final String GIMBAL_YAW_MARKER = "gimbalyawmarker";
 
@@ -137,7 +138,9 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     //region Aircraft Marker Fields
     private float aircraftMarkerHeading;
     private DJIMarker aircraftMarker;
+    public ArrayList<DJIMarker> tuskMarkers;
     private Drawable aircraftIcon;
+    private Drawable TuskWaypointIcon;
     private boolean aircraftMarkerEnabled;
     private float aircraftIconAnchorX = 0.5f;
     private float aircraftIconAnchorY = 0.5f;
@@ -360,6 +363,12 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                 setGimbalMarkerIcon(drawable);
             }
             setGimbalAttitudeEnabled(typedArray.getBoolean(R.styleable.MapWidget_uxsdk_gimbalAttitudeEnabled, true));
+
+            drawable = context.getDrawable(R.drawable.uxsdk_bg_rtk_guidance_step_oval_blue_solid);
+            if (drawable != null) {
+                setTuskWaypointIcon(drawable);
+            }
+//            setAircraftMarkerEnabled(typedArray.getBoolean(R.styleable.MapWidget_uxsdk_aircraftMarkerEnabled, true));
         }
 
         mapCenterLockMode = MapCenterLock.find(typedArray.getInt(R.styleable.MapWidget_uxsdk_mapCenterLock,
@@ -443,6 +452,38 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                         + homePosition.getLongitude()
                         + ")");
         setMapCenter(mapCenterLockMode, DEFAULT_ZOOM, false);
+    }
+    @Override
+    public void addTuskWaypointOnMap(DJILatLng wp) {
+        if (tuskMarkers == null) {
+            tuskMarkers = new ArrayList<DJIMarker>();
+        }
+        if (map == null || !wp.isAvailable()) return;
+        // Draw marker
+        DJIMarkerOptions wpOptions = new DJIMarkerOptions()
+                .position(wp)
+                .icon(DJIBitmapDescriptorFactory.fromBitmap(ViewUtil.getBitmapFromVectorDrawable(aircraftIcon)))
+                .title(TUSK_MARKER)
+                .anchor(homeIconAnchorX, homeIconAnchorY)
+                .zIndex(HOME_MARKER_ELEVATION)
+                .visible(true);
+        tuskMarkers.add(map.addMarker(wpOptions));
+        LogUtils.d(TAG,
+                "added waypoint to map at ("
+                        + wp.getLatitude()
+                        + ","
+                        + wp.getLongitude()
+                        + ")");
+    }
+    @Override
+    public void removeTuskWaypoint(DJIMarker wp) {
+        if (map == null || !wp.getPosition().isAvailable()) return;
+        for (DJIMarker marker : tuskMarkers) {
+            if (marker.equals(wp)) {
+                marker.remove();
+                break; // Assuming you want to remove only the first occurrence
+            }
+        }
     }
 
     /**
@@ -1183,6 +1224,14 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         if (aircraftMarker != null) {
             aircraftMarker.setIcon(DJIBitmapDescriptorFactory.fromBitmap(ViewUtil.getBitmapFromVectorDrawable(
                     aircraftIcon)));
+        }
+    }
+
+    public void setTuskWaypointIcon(@NonNull Drawable drawable) {
+        TuskWaypointIcon = drawable;
+        if (tuskMarkers != null) {
+            for (DJIMarker marker : tuskMarkers) marker.setIcon(DJIBitmapDescriptorFactory.fromBitmap(ViewUtil.getBitmapFromVectorDrawable(
+                    TuskWaypointIcon)));
         }
     }
 

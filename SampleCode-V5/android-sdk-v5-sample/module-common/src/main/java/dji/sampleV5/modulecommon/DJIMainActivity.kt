@@ -360,7 +360,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     private val statusCheckRunnable = object : Runnable {
         override fun run() {
-            Log.d("TuskService", "Status Panel Height: ${status_panel.height}")
+//            Log.d("TuskService", "Status Panel Height: ${status_panel.height}")
             if (callGetConnectionStatus()) {
                 setStatus(1, serverStatus)
             }

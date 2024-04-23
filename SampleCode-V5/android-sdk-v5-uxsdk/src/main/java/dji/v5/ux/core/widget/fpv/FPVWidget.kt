@@ -27,6 +27,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
@@ -312,6 +313,8 @@ open class FPVWidget @JvmOverloads constructor(
     override fun surfaceCreated(holder: SurfaceHolder?) {
         LogUtils.i(logTag, "surfaceCreated", videoChannelType, videoDecoder == null)
         if (videoDecoder == null) {
+            Log.d("ADITYA", "${fpvSurfaceView.width} ${fpvSurfaceView.height}")
+            //TODO: Aditya this seems interesting
             videoDecoder = VideoDecoder(
                 context,
                 videoChannelType,
@@ -328,6 +331,7 @@ open class FPVWidget @JvmOverloads constructor(
 
     override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
         if (videoDecoder == null) {
+            Log.d("ADITYA", "${fpvSurfaceView.width} ${fpvSurfaceView.height}")
             videoDecoder = VideoDecoder(
                 context,
                 videoChannelType,
@@ -398,6 +402,7 @@ open class FPVWidget @JvmOverloads constructor(
     //endregion
     //region Helpers
     private fun setViewDimensions() {
+        Log.d("ADITYA", "setViewDimens")
         viewWidth = measuredWidth
         viewHeight = measuredHeight
     }
@@ -405,7 +410,9 @@ open class FPVWidget @JvmOverloads constructor(
     /**
      * This method should not to be called until the size of `TextureView` is fixed.
      */
+    //TODO: Aditya this seems interesting
     public fun changeView(width: Int, height: Int, relativeWidth: Int, relativeHeight: Int) {
+        Log.d("ADITYA", "something????")
         val lp = fpvSurfaceView.layoutParams
         lp.width = width
         lp.height = height
