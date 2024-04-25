@@ -26,10 +26,11 @@ package dji.sampleV5.aircraft.defaultlayout;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-
+import android.os.Handler;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.List;
@@ -85,7 +86,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
  */
-public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyManager.OnWaypointListener {
+public class DefaultLayoutActivity extends AppCompatActivity {
 
     //region Fields
     private final String TAG = LogUtils.getTag(this);
@@ -125,6 +126,9 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
     private Button mMediaManagerBtn;
 
     private Drawable statusindicator;
+
+    private Handler statusCheckerHandler = new Handler();
+    private Runnable statusCheckerRunnable;
     //endregion
 
     //region Lifecycle
@@ -187,8 +191,20 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
 
 //        mMediaManagerBtn = (Button)findViewById(R.id.btn_mediaManager); // where to put this?
 //        mMediaManagerBtn.setOnClickListener(this);
+
+        statusCheckerRunnable = new Runnable() {
+            @Override
+            public void run() {
+                checkStatus();
+                statusCheckerHandler.postDelayed(this, 1000);
+            }
+        };
     }
 
+    private void checkStatus() {
+        // Implement your status checking logic here
+
+    }
     private void initClickListener() {
         secondaryFPVWidget.setOnClickListener(v -> swapVideoSource());
         initChannelStateListener();
@@ -287,6 +303,7 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
                 .subscribeOn(SchedulerProvider.io())
                 .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
         );
+        statusCheckerHandler.post(statusCheckerRunnable);
     }
 
     @Override
@@ -297,6 +314,7 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
         }
         mapWidget.onPause();
         super.onPause();
+        statusCheckerHandler.removeCallbacks(statusCheckerRunnable);
     }
     //endregion
 
@@ -463,6 +481,7 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
     @Override
     public void onReachedWaypoint() {
         Coordinate wp = pachManager.getTelemService().getNextWaypoint();
+        Log.d("Tusk", "Recieved waypoint: " + wp.getLat() + ", " + wp.getLon());
         // find the corresponding DJIMarker
         for (DJIMarker marker : mapWidget.tuskMarkers) {
             if (marker.getPosition().latitude == wp.getLat() &&
@@ -474,7 +493,9 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
 
     @Override
     public void onUpdatedWaypoints() {
+        Log.d("JAKEDEBUG", "Running onUpdatedWaypoints() in DefaultLayoutActivity.java");
         for (Coordinate wp : pachManager.getTelemService().getWaypointList()) {
+            Log.d("JAKEDEBUG", "Recieved waypoint: " + wp.getLat() + ", " + wp.getLon());
             mapWidget.addTuskWaypointOnMap(new DJILatLng(wp.getLat(), wp.getLon()));
         }
     }

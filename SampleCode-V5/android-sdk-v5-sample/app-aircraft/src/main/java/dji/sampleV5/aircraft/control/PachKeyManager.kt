@@ -66,6 +66,7 @@ class PachKeyManager() {
                 instance ?: PachKeyManager().also { instance = it }
             }
         }
+
     }
     // Initialize necessary classes
     val telemService = TuskServiceWebsocket()
@@ -186,8 +187,12 @@ class PachKeyManager() {
         }
 
         when (telemService.flightMode) {
-            "Waypoint" -> flyHippo()
-            "Path" -> followWaypoints(telemService.waypointList)
+            "Waypoint" -> flyHippo().also {
+                Log.v("JAKEDEBUG1", "Flying hippo")
+            }
+            "Path" -> followWaypoints(telemService.waypointList).also {
+                Log.v("JAKEDEBUG1", "Flying waypoints")
+            }
             else -> {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }

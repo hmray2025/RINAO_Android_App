@@ -477,7 +477,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     }
     @Override
     public void removeTuskWaypoint(DJIMarker wp) {
-        if (map == null || !wp.getPosition().isAvailable()) return;
+        if (map == null || !wp.getPosition().isAvailable()) return; // may not even want to have this check
         for (DJIMarker marker : tuskMarkers) {
             if (marker.equals(wp)) {
                 marker.remove();
