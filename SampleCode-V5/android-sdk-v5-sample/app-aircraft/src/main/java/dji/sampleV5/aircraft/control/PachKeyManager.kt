@@ -69,6 +69,7 @@ class PachKeyManager() {
 
     }
     // Initialize necessary classes
+    private var listener: WaypointListener? = null
     val telemService = TuskServiceWebsocket()
     private var controller = VirtualStickControl()
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
@@ -129,7 +130,13 @@ class PachKeyManager() {
 //        streamer.startStream()
     }
 
+    fun setWaypointListener(listener: WaypointListener) {
+        this.listener = listener
+    }
 
+    fun isWaypointListenerSet(): Boolean {
+        return this.listener != null
+    }
     fun runTesting() {
         KeyManager.getInstance().listen(fiveDKey, this) { _, newValue ->
             mainScope.launch {
@@ -182,6 +189,7 @@ class PachKeyManager() {
         // If the flight mode is "Path", the function will follow the received path
 
 //        // If drone is not flying, then takeoff
+        Log.d("JAKEDEBUG1", "Engaging Autonomy")
         if (stateData.isFlying!=true){
             controller.startTakeOff()
         }
@@ -189,10 +197,9 @@ class PachKeyManager() {
         when (telemService.flightMode) {
             "Waypoint" -> flyHippo().also {
                 Log.v("JAKEDEBUG1", "Flying hippo")
+
             }
-            "Path" -> followWaypoints(telemService.waypointList).also {
-                Log.v("JAKEDEBUG1", "Flying waypoints")
-            }
+            "Path" -> followWaypoints(telemService.waypointList)
             else -> {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }
@@ -806,6 +813,10 @@ class PachKeyManager() {
         // What if the operator takes control of the aircraft?
 
         // compute distance to target location using lat and lon
+        Log.d("JAKEDEBUG1", "Flying hippo")
+        listener?.onUpdatedWaypoints().also {
+            Log.d("JAKEDEBUG1", "Run onUpdatedWaypoints")
+        }
         var waypoint = getNewDirection()
         var waypointID = telemService.nextWaypointID
         sendAutonomyStatus("waypoint-reached")
@@ -1029,6 +1040,11 @@ class PachKeyManager() {
         }else{
             return 90-res
         }
+    }
+
+    interface WaypointListener {
+        fun onReachedWaypoint()
+        fun onUpdatedWaypoints()
     }
 }
 

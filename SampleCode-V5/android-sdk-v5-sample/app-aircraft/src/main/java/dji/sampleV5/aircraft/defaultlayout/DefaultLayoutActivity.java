@@ -86,7 +86,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
  */
-public class DefaultLayoutActivity extends AppCompatActivity {
+public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyManager.WaypointListener {
 
     //region Fields
     private final String TAG = LogUtils.getTag(this);
@@ -199,6 +199,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 statusCheckerHandler.postDelayed(this, 1000);
             }
         };
+        pachManager.setWaypointListener(this);
+        if (pachManager.isWaypointListenerSet()) {
+            Log.d("ListenerCheck", "WaypointListener is set");
+        } else {
+            Log.d("ListenerCheck", "WaypointListener is not set");
+        }
     }
 
     private void checkStatus() {
@@ -480,24 +486,29 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 // Handle incoming waypoints from the Safari app (Updated once the drone is set to flight mode)
     @Override
     public void onReachedWaypoint() {
-        Coordinate wp = pachManager.getTelemService().getNextWaypoint();
-        Log.d("Tusk", "Recieved waypoint: " + wp.getLat() + ", " + wp.getLon());
-        // find the corresponding DJIMarker
-        for (DJIMarker marker : mapWidget.tuskMarkers) {
-            if (marker.getPosition().latitude == wp.getLat() &&
-            marker.getPosition().longitude == wp.getLon()) {
-                mapWidget.removeTuskWaypoint(marker);
+        runOnUiThread(() -> {
+            Coordinate wp = pachManager.getTelemService().getNextWaypoint();
+            Log.d("JAKEDEBUG1", "Recieved waypoint: " + wp.getLat() + ", " + wp.getLon());
+            // find the corresponding DJIMarker
+            for (DJIMarker marker : mapWidget.tuskMarkers) {
+                if (marker.getPosition().latitude == wp.getLat() &&
+                        marker.getPosition().longitude == wp.getLon()) {
+                    mapWidget.removeTuskWaypoint(marker);
+                }
             }
-        }
+        });
     }
 
     @Override
     public void onUpdatedWaypoints() {
-        Log.d("JAKEDEBUG", "Running onUpdatedWaypoints() in DefaultLayoutActivity.java");
-        for (Coordinate wp : pachManager.getTelemService().getWaypointList()) {
-            Log.d("JAKEDEBUG", "Recieved waypoint: " + wp.getLat() + ", " + wp.getLon());
-            mapWidget.addTuskWaypointOnMap(new DJILatLng(wp.getLat(), wp.getLon()));
-        }
+        Log.d("JAKEDEBUG1", "Running onUpdatedWaypoints() in DefaultLayoutActivity.java");
+        runOnUiThread(() -> {
+            Log.d("JAKEDEBUG1", "Running onUpdatedWaypoints() in DefaultLayoutActivity.java");
+            for (Coordinate wp : pachManager.getTelemService().getWaypointList()) {
+                Log.d("JAKEDEBUG1", "Recieved waypoint: " + wp.getLat() + ", " + wp.getLon());
+                mapWidget.addTuskWaypointOnMap(new DJILatLng(wp.getLat(), wp.getLon()));
+            }
+        });
     }
 
     public void onUpdateConnectionStatus(boolean connection) {
