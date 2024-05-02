@@ -155,7 +155,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 //            mSettingPanelWidget = (SettingPanelWidget) stub.inflate();
 //        }
         mapExpand = (Button) findViewById(R.id.button_expand_map);
-        liveStreamButton = (Button) findViewById(R.id.myLiveStream) ;
+        liveStreamButton = (Button) findViewById(R.id.myLiveStream);
         initClickListener();
         MediaDataCenter.getInstance().getVideoStreamManager().addStreamSourcesListener(sources -> runOnUiThread(() -> updateFPVWidgetSource(sources)));
         primaryFpvWidget.setOnFPVStreamSourceListener((devicePosition, lensType) -> {
@@ -282,6 +282,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 .subscribeOn(SchedulerProvider.io())
                 .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
         );
+        if (streamManager.isStreaming()) {
+            liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
+        }
+        else {
+            liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_start);
+        }
     }
 
     @Override
