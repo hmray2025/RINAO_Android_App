@@ -1,12 +1,14 @@
 package dji.sampleV5.aircraft.telemetry
 import android.util.Log
 import com.google.gson.Gson
-import dji.sampleV5.modulecommon.util.ITuskServiceCallback
 import dji.v5.utils.common.ToastUtils
-import okhttp3.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import okio.ByteString
 import org.json.JSONObject
-import java.io.Serializable
 
 class TuskServiceWebsocket {
     private val client: OkHttpClient = OkHttpClient()

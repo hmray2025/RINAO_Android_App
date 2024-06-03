@@ -291,7 +291,14 @@
                 android:foreground="?selectableItemBackground"
                 android:padding="8dp"
                 tools:layout_editor_absoluteY="1387dp" />
-    </dji.v5.ux.map.MapWidget>
+         </dji.v5.ux.map.MapWidget>
+
+        <dji.v5.ux.pachWidget.PachWidget
+            android:id="@+id/pach_widget"
+            android:layout_width="@dimen/uxsdk_150_dp"
+            android:layout_height="@dimen/uxsdk_100_dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <dji.v5.ux.core.panel.systemstatus.SystemStatusListPanelWidget
             android:id="@+id/widget_panel_system_status_list"

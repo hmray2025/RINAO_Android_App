@@ -9,7 +9,14 @@ import dji.sampleV5.aircraft.telemetry.TuskAircraftStatus
 import dji.sampleV5.aircraft.telemetry.TuskControllerStatus
 import dji.sampleV5.aircraft.telemetry.TuskServiceWebsocket
 import dji.sampleV5.aircraft.video.StreamManager
-import dji.sdk.keyvalue.key.*
+import dji.sdk.keyvalue.key.AirLinkKey
+import dji.sdk.keyvalue.key.BatteryKey
+import dji.sdk.keyvalue.key.CameraKey
+import dji.sdk.keyvalue.key.DJIKey
+import dji.sdk.keyvalue.key.FlightControllerKey
+import dji.sdk.keyvalue.key.GimbalKey
+import dji.sdk.keyvalue.key.KeyTools
+import dji.sdk.keyvalue.key.RemoteControllerKey
 import dji.sdk.keyvalue.value.camera.CameraVideoStreamSourceType
 import dji.sdk.keyvalue.value.camera.ThermalAreaMetersureTemperature
 import dji.sdk.keyvalue.value.camera.ThermalTemperatureMeasureMode
@@ -22,11 +29,13 @@ import dji.v5.common.callback.CommonCallbacks
 import dji.v5.common.error.IDJIError
 import dji.v5.common.utils.RxUtil
 import dji.v5.manager.KeyManager
+import dji.v5.ux.pachWidget.IPachWidgetModel
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.functions.Consumer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -34,7 +43,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class PachKeyManager() {
+class PachKeyManager() : IPachWidgetModel {
     /*
     * The companion object brackets are used to essentially create a singleton object,
     * where when the PachKeyManager class is called the first time, it creates an instance
@@ -71,6 +80,8 @@ class PachKeyManager() {
     // Initialize necessary classes
     private var listener: WaypointListener? = null
     val telemService = TuskServiceWebsocket()
+    private var safetyFailures: Array<Int> = arrayOf(0,0,0,0,0)
+    private var action: String = "MANUAL"
     private var controller = VirtualStickControl()
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
     val mainScope = CoroutineScope(Dispatchers.Main)
@@ -128,6 +139,17 @@ class PachKeyManager() {
         initializeFlightParameters()
         keyDisposables = CompositeDisposable()
 //        streamer.startStream()
+    }
+
+    fun checkForWaypoints() {
+        // Function checks if there are any waypoints in the waypoint list
+        // If there are, it will follow the waypoints
+        mainScope.launch {
+            while(isActive) {
+                setActionInfo()
+                delay(1000)
+            }
+        }
     }
 
     fun setWaypointListener(listener: WaypointListener) {
@@ -189,6 +211,7 @@ class PachKeyManager() {
         // If the flight mode is "Path", the function will follow the received path
 
 //        // If drone is not flying, then takeoff
+        this@PachKeyManager.action = "AUTONOMOUS"
         Log.d("JAKEDEBUG1", "Engaging Autonomy")
         if (stateData.isFlying!=true){
             controller.startTakeOff()
@@ -204,6 +227,7 @@ class PachKeyManager() {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }
         }
+        this@PachKeyManager.action = "MANUAL"
     }
 
     private fun sendState(telemetry: TuskAircraftState) {
@@ -222,6 +246,14 @@ class PachKeyManager() {
     fun sendStreamURL(url: String) {
         telemService.postStreamURL(StreamInfo(url))
         Log.v("PachKeyManager", "Stream URL: $url")
+    }
+
+    private fun setActionInfo() {
+        if (this.action != "AUTONOMOUS") {
+            if (telemService.waypointList.isNotEmpty()) {
+                this.action = "INFO RECEIVED"
+            }
+        }
     }
 
 //    companion object {
@@ -656,29 +688,34 @@ class PachKeyManager() {
         // Function checks all safety information before returning a boolean for proceeding.
         // Checks:
         // 1. Is the aircraft flying?
-
+        // ** will need eventual fixing, as safety failures are not being reset
         if (!stateData.isFlying!!){
             Log.v("PachKeyManager", "Aircraft is not flying")
+            safetyFailures[0] = 1
             return false
         }
         if (controllerStatus.goHomeButton!!){
             Log.v("PachKeyManager", "Go Home Button is pressed")
+            safetyFailures[1] = 1
             return false
         }
         if (controllerStatus.pauseButton!!){
             Log.v("PachKeyManager", "Pause Button is pressed")
+            safetyFailures[2] = 1
             return false
         }
         if (statusData.gps!! <3){
             Log.v("PachKeyManager", "GPS Signal is weak")
+            safetyFailures[3] = 1
             return false
         }
         // Add check to see if it's in IDLE State
         if (statusData.goHomeStatus != "IDLE"){
             Log.v("PachKeyManager", "Aircraft is IDLE")
+            safetyFailures[4] = 1
             return false
         }
-
+        safetyFailures = arrayOf(0,0,0,0,0)
         return true
     }
     suspend fun goToAltitude(alt: Double){
@@ -1045,6 +1082,18 @@ class PachKeyManager() {
     interface WaypointListener {
         fun onReachedWaypoint()
         fun onUpdatedWaypoints()
+    }
+
+    override fun getConnectionStatus(): Boolean {
+        return this.telemService.getConnectionStatus()
+    }
+
+    override fun getFailedSafetyCheck(): Array<Int> {
+        return this.safetyFailures
+    }
+
+    override fun getAction(): String {
+        return this.action
     }
 }
 

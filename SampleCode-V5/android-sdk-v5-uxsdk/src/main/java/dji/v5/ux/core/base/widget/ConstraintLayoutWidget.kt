@@ -42,7 +42,6 @@ abstract class ConstraintLayoutWidget<T> @JvmOverloads constructor(
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
-
     protected val logTag = LogUtils.getTag(this)
     //region Properties
     private var reactionDisposables: CompositeDisposable? = null

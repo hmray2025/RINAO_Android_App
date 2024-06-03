@@ -33,6 +33,8 @@ import android.widget.Button;
 import android.os.Handler;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -76,6 +78,8 @@ import dji.v5.ux.map.MapWidget;
 import dji.v5.ux.mapkit.core.maps.DJIMap;
 import dji.v5.ux.mapkit.core.models.DJILatLng;
 import dji.v5.ux.mapkit.core.models.annotations.DJIMarker;
+import dji.v5.ux.pachWidget.PachWidget;
+import dji.v5.ux.pachWidget.PachWidgetModel;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
 import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
@@ -111,6 +115,7 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
     protected MapWidget mapWidget;
     protected TopBarPanelWidget topBarPanel;
     protected StreamManager streamManager;
+    protected PachWidget pachWidget;
 //    private SettingPanelWidget mSettingPanelWidget;
 //    private DrawerLayout mDrawerLayout;
 
@@ -136,6 +141,7 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.uxsdk_activity_default_layout);
+
         Intent intent = getIntent();
 //        mDrawerLayout = findViewById(R.id.root_view);
         topBarPanel = findViewById(R.id.panel_top_bar);
@@ -156,7 +162,7 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
         focalZoomWidget = findViewById(R.id.widget_focal_zoom);
         cameraControlsWidget = findViewById(R.id.widget_camera_controls);
         horizontalSituationIndicatorWidget = findViewById(R.id.widget_horizontal_situation_indicator);
-
+        pachWidget = findViewById(R.id.pach_widget);
         mapWidget = findViewById(R.id.widget_map);
         cameraControlsWidget.getExposureSettingsIndicatorWidget().setStateChangeResourceId(R.id.panel_camera_controls_exposure_settings);
 //        ViewStub stub = findViewById(R.id.manual_right_nav_setting_stub);
@@ -205,6 +211,8 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
         } else {
             Log.d("ListenerCheck", "WaypointListener is not set");
         }
+
+        pachWidget.onCreate(pachManager);
     }
 
     private void checkStatus() {
