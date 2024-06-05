@@ -146,6 +146,7 @@ class PachKeyManager() : IPachWidgetModel {
         // If there are, it will follow the waypoints
         mainScope.launch {
             while(isActive) {
+                getConnectionStatus()
                 setActionInfo()
                 delay(1000)
             }
@@ -1085,6 +1086,7 @@ class PachKeyManager() : IPachWidgetModel {
     }
 
     override fun getConnectionStatus(): Boolean {
+        Log.d("JAKEDEBUG1", "Getting Connection Status: ${this.telemService.getConnectionStatus()}")
         return this.telemService.getConnectionStatus()
     }
 

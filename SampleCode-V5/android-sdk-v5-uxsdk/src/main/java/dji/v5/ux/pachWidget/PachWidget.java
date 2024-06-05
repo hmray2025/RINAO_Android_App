@@ -16,12 +16,15 @@ import dji.v5.ux.R;
 import dji.v5.ux.core.base.DJISDKModel;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.rxjava3.core.Flowable;
 
 public class PachWidget extends ConstraintLayoutWidget<Object> {
     private PachWidgetModel pachWidgetModel;
     private IPachWidgetModel pach;
     private TextView msg;
     private ImageView connection;
+//    private Flowable<String> msgDataFlowable;
     public PachWidget(@NonNull Context context) {
         super(context);
     }
@@ -41,19 +44,26 @@ public class PachWidget extends ConstraintLayoutWidget<Object> {
                 ObservableInMemoryKeyedStore.getInstance());
         msg = findViewById(R.id.status_msg);
         connection = findViewById(R.id.connection_icon);
+//        msgDataFlowable = Flowable.create(emitter -> {
+//            pachWidgetModel.getMsgData().observe((LifecycleOwner) context, msgData -> {
+//                if (!emitter.isCancelled()) {
+//                    emitter.onNext(msgData);
+//                }
+//            });
+//        }, BackpressureStrategy.BUFFER);
     }
 
     @Override
     protected void reactToModelChanges() {
-//        pachWidgetModel.getConnectionData().observe((LifecycleOwner) this, isConnected -> {
-//            if (!isConnected) {
-//                pachWidgetModel.fetchData();
-//            }
-//        });
-//        pachWidgetModel.getMsgData().observe((LifecycleOwner) this, message -> {
-//            // Update your UI based on the new message
-//            msg.setText(message);
-//        });
+        pachWidgetModel.getMsgData().observe((LifecycleOwner) getContext(), message -> {
+            // Update your UI based on the new message
+            msg.setText(message);
+        });
+        Log.d("JAKEDEBUG1", "pachWidgetModel context: " + getContext());
+        pachWidgetModel.getConnectionData().observe((LifecycleOwner) getContext(), connected -> {
+            // Update your UI based on the new connection status
+            connection.setImageResource(connected ? R.drawable.uxsdk_ic_alert_good : R.drawable.uxsdk_ic_alert_error);
+        });
     }
 
     public void onCreate(IPachWidgetModel pach) {

@@ -1,5 +1,7 @@
 package dji.v5.ux.pachWidget;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -29,9 +31,12 @@ public class PachWidgetModel extends WidgetModel {
     }
 
     public LiveData<String> getMsgData() {
+        msgdata.postValue(pachKeyManager.getAction());
         return msgdata;
     }
     public LiveData<Boolean> getConnectionData() {
+        Log.d("JAKEDEBUG1", "LiveDataConnectionStatus: " + pachKeyManager.getConnectionStatus());
+        connectiondata.postValue(pachKeyManager.getConnectionStatus());
         return connectiondata;
     }
     public void fetchData() {
@@ -41,5 +46,8 @@ public class PachWidgetModel extends WidgetModel {
 
     public void setPach(IPachWidgetModel pach) {
         this.pachKeyManager = pach;
+//        if (this.pachKeyManager != null) {
+//            fetchData();
+//        }
     }
 }
