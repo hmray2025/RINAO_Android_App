@@ -1,48 +1,47 @@
 package dji.v5.ux.pachWidget;
 
-import android.util.Log;
-
-import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
 
-import dji.v5.ux.core.base.DJISDKModel;
-import dji.v5.ux.core.base.WidgetModel;
-import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-
-public class PachWidgetModel extends WidgetModel {
+public class PachWidgetModel extends ViewModel{
+    private static PachWidgetModel instance = null;
     private IPachWidgetModel pachKeyManager;
-    private MutableLiveData<String> msgdata;
-    private MutableLiveData<Boolean> connectiondata;
-    protected PachWidgetModel(@NonNull DJISDKModel djiSdkModel, @NonNull ObservableInMemoryKeyedStore uxKeyManager) {
-        super(djiSdkModel, uxKeyManager);
-        msgdata = new MutableLiveData<>();
-        connectiondata = new MutableLiveData<>();
+    private MutableLiveData<String> _msgdata;
+    protected LiveData<String> msgdata;
+    private MutableLiveData<Boolean> _connectiondata;
+    protected LiveData<Boolean> connectiondata;
+    private PachWidgetModel() {
+        _msgdata = new MutableLiveData<>();
+        _connectiondata = new MutableLiveData<>();
+        msgdata = _msgdata;
+        connectiondata = _connectiondata;
     }
 
-    @Override
-    protected void inSetup() {
-
-    }
-
-    @Override
-    protected void inCleanup() {
-
+    public static synchronized PachWidgetModel getInstance() {
+        if (instance == null) {
+            instance = new PachWidgetModel();
+        }
+        return instance;
     }
 
     public LiveData<String> getMsgData() {
-        msgdata.postValue(pachKeyManager.getAction());
         return msgdata;
     }
     public LiveData<Boolean> getConnectionData() {
-        Log.d("JAKEDEBUG1", "LiveDataConnectionStatus: " + pachKeyManager.getConnectionStatus());
-        connectiondata.postValue(pachKeyManager.getConnectionStatus());
         return connectiondata;
     }
-    public void fetchData() {
-        msgdata.postValue(pachKeyManager.getAction());
-        connectiondata.postValue(pachKeyManager.getConnectionStatus());
+
+    public void updateMsg(String msg) {
+        _msgdata.setValue(msg);
     }
+    public void updateConnection(Boolean connection) {
+        _connectiondata.setValue(connection);
+    }
+//    public void fetchData() {
+//        msgdata.postValue(pachKeyManager.getAction());
+//        connectiondata.postValue(pachKeyManager.getConnectionStatus());
+//    }
 
     public void setPach(IPachWidgetModel pach) {
         this.pachKeyManager = pach;

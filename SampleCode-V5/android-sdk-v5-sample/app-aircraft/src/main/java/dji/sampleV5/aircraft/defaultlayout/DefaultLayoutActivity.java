@@ -192,7 +192,7 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
 //            }
 //        });
         mapWidget.onCreate(savedInstanceState);
-        pachManager = new PachKeyManager(); // points to object created in DJIAircraftMainActivity
+        pachManager = PachKeyManager.Companion.getInstance();; // points to object created in DJIAircraftMainActivity
         streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
 
 //        mMediaManagerBtn = (Button)findViewById(R.id.btn_mediaManager); // where to put this?

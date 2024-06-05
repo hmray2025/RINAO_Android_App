@@ -298,8 +298,7 @@
             android:layout_width="@dimen/uxsdk_150_dp"
             android:layout_height="@dimen/uxsdk_100_dp"
             app:layout_constraintBottom_toBottomOf="@+id/widget_map"
-            app:layout_constraintEnd_toStartOf="@+id/widget_horizontal_situation_indicator"
-            tools:context=".DJIMainActivity"/>
+            app:layout_constraintEnd_toStartOf="@+id/widget_horizontal_situation_indicator" />
 
         <dji.v5.ux.core.panel.systemstatus.SystemStatusListPanelWidget
             android:id="@+id/widget_panel_system_status_list"

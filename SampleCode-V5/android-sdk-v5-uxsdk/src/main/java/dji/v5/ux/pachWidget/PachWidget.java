@@ -40,8 +40,7 @@ public class PachWidget extends ConstraintLayoutWidget<Object> {
     @Override
     protected void initView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         inflate(context, R.layout.uxsdk_widget_pach, this);
-        pachWidgetModel = new PachWidgetModel(DJISDKModel.getInstance(),
-                ObservableInMemoryKeyedStore.getInstance());
+        pachWidgetModel = pachWidgetModel.getInstance();
         msg = findViewById(R.id.status_msg);
         connection = findViewById(R.id.connection_icon);
 //        msgDataFlowable = Flowable.create(emitter -> {
@@ -55,14 +54,15 @@ public class PachWidget extends ConstraintLayoutWidget<Object> {
 
     @Override
     protected void reactToModelChanges() {
-        pachWidgetModel.getMsgData().observe((LifecycleOwner) getContext(), message -> {
-            // Update your UI based on the new message
-            msg.setText(message);
+        pachWidgetModel.msgdata.observe((LifecycleOwner) getContext(), msgData -> {
+            msg.setText(msgData);
         });
-        Log.d("JAKEDEBUG1", "pachWidgetModel context: " + getContext());
-        pachWidgetModel.getConnectionData().observe((LifecycleOwner) getContext(), connected -> {
-            // Update your UI based on the new connection status
-            connection.setImageResource(connected ? R.drawable.uxsdk_ic_alert_good : R.drawable.uxsdk_ic_alert_error);
+        pachWidgetModel.connectiondata.observe((LifecycleOwner) getContext(), connectionData -> {
+            if (connectionData) {
+                connection.setImageResource(R.drawable.uxsdk_ic_alert_good);
+            } else {
+                connection.setImageResource(R.drawable.uxsdk_ic_alert_error);
+            }
         });
     }
 

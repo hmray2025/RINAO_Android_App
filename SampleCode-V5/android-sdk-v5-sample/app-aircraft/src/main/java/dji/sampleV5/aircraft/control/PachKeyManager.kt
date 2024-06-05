@@ -30,6 +30,7 @@ import dji.v5.common.error.IDJIError
 import dji.v5.common.utils.RxUtil
 import dji.v5.manager.KeyManager
 import dji.v5.ux.pachWidget.IPachWidgetModel
+import dji.v5.ux.pachWidget.PachWidgetModel
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.functions.Consumer
 import kotlinx.coroutines.CoroutineScope
@@ -42,7 +43,6 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-
 class PachKeyManager() : IPachWidgetModel {
     /*
     * The companion object brackets are used to essentially create a singleton object,
@@ -78,10 +78,12 @@ class PachKeyManager() : IPachWidgetModel {
 
     }
     // Initialize necessary classes
+    private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
     private var listener: WaypointListener? = null
     val telemService = TuskServiceWebsocket()
     private var safetyFailures: Array<Int> = arrayOf(0,0,0,0,0)
     private var action: String = "MANUAL"
+    private var autonomous: Boolean = false
     private var controller = VirtualStickControl()
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
     val mainScope = CoroutineScope(Dispatchers.Main)
@@ -146,8 +148,21 @@ class PachKeyManager() : IPachWidgetModel {
         // If there are, it will follow the waypoints
         mainScope.launch {
             while(isActive) {
-                getConnectionStatus()
-                setActionInfo()
+                if (this@PachKeyManager.statusData.goHomeStatus == "Going Home") {
+                    this@PachKeyManager.action = "RETURNING HOME"
+                }
+                if (this@PachKeyManager.telemService.nextWaypoint != Coordinate(0.0,0.0,0.0) && !this@PachKeyManager.autonomous) {
+                    this@PachKeyManager.action = "FLIGHT INFO RECEIVED"
+                }
+                if (this@PachKeyManager.telemService.nextWaypoint == Coordinate(0.0,0.0,0.0) && !this@PachKeyManager.autonomous) {
+                    this@PachKeyManager.action = "MANUAL"
+                }
+                if (this@PachKeyManager.autonomous) {
+                    this@PachKeyManager.action = "AUTONOMOUS"
+                }
+                pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
+                pachModel.updateMsg(this@PachKeyManager.action)
+                Log.d("JAKEDEBUG1", "Connection status ${this@PachKeyManager.telemService.getConnectionStatus()}")
                 delay(1000)
             }
         }
@@ -212,7 +227,7 @@ class PachKeyManager() : IPachWidgetModel {
         // If the flight mode is "Path", the function will follow the received path
 
 //        // If drone is not flying, then takeoff
-        this@PachKeyManager.action = "AUTONOMOUS"
+        this@PachKeyManager.autonomous = true
         Log.d("JAKEDEBUG1", "Engaging Autonomy")
         if (stateData.isFlying!=true){
             controller.startTakeOff()
@@ -228,7 +243,10 @@ class PachKeyManager() : IPachWidgetModel {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }
         }
-        this@PachKeyManager.action = "MANUAL"
+        // Once we have finished the mission, reset telemService values
+        telemService.nextWaypoint = Coordinate(0.0,0.0,0.0)
+        telemService.waypointList = listOf()
+        this@PachKeyManager.autonomous = false // terminate autonomous flying
     }
 
     private fun sendState(telemetry: TuskAircraftState) {
