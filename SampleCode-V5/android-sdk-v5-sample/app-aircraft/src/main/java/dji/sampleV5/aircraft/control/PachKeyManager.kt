@@ -84,6 +84,7 @@ class PachKeyManager() : IPachWidgetModel {
     private var safetyFailures: Array<Int> = arrayOf(0,0,0,0,0)
     private var action: String = "MANUAL"
     private var autonomous: Boolean = false
+    private var endOfFlight: Boolean = false
     private var controller = VirtualStickControl()
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
     val mainScope = CoroutineScope(Dispatchers.Main)
@@ -244,8 +245,7 @@ class PachKeyManager() : IPachWidgetModel {
             }
         }
         // Once we have finished the mission, reset telemService values
-        telemService.nextWaypoint = Coordinate(0.0,0.0,0.0)
-        telemService.waypointList = listOf()
+        this@PachKeyManager.endOfFlight = true
         this@PachKeyManager.autonomous = false // terminate autonomous flying
     }
 
