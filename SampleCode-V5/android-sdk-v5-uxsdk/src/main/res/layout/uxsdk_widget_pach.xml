@@ -1,22 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/uxsdk_white">
+    android:background="@drawable/uxsdk_background_black_rectangle">
     <ImageView
         android:id="@+id/connection_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:src="@drawable/uxsdk_fpv_hsi_compass_home_point"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/status_msg"
+        android:paddingRight="@dimen/uxsdk_10_dp"
+        android:paddingLeft="@dimen/uxsdk_10_dp"/>
     <TextView
         android:id="@+id/status_msg"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:maxLines="1"
+        android:scrollHorizontally="true"
         android:text="somemessage"
-        android:textColor="@color/uxsdk_black"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/connection_icon"/>
+        android:textSize="14sp"
+        android:textColor="@color/uxsdk_white"
+        app:layout_constraintLeft_toRightOf="@id/connection_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:paddingRight="@dimen/uxsdk_10_dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

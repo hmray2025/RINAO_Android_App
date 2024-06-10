@@ -142,13 +142,15 @@
             android:paddingRight="2dp"
             app:layout_constraintBottom_toBottomOf="@+id/widget_focus_exposure_switch"
             app:layout_constraintEnd_toStartOf="@+id/widget_auto_exposure_lock"
-            app:layout_constraintTop_toTopOf="@+id/widget_focus_exposure_switch" />
+            app:layout_constraintTop_toTopOf="@+id/widget_focus_exposure_switch"
+            android:visibility="invisible"/>
 
         <dji.v5.ux.cameracore.widget.autoexposurelock.AutoExposureLockWidget
             android:id="@+id/widget_auto_exposure_lock"
             android:layout_width="@dimen/uxsdk_camera_bar_height"
             android:layout_height="@dimen/uxsdk_camera_bar_height"
             android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
             android:padding="@dimen/uxsdk_camera_bar_padding"
             app:layout_constraintBottom_toBottomOf="@+id/widget_focus_exposure_switch"
             app:layout_constraintEnd_toStartOf="@+id/widget_focus_mode"
@@ -295,10 +297,12 @@
 
         <dji.v5.ux.pachWidget.PachWidget
             android:id="@+id/pach_widget"
-            android:layout_width="@dimen/uxsdk_150_dp"
-            android:layout_height="@dimen/uxsdk_100_dp"
-            app:layout_constraintBottom_toBottomOf="@+id/widget_map"
-            app:layout_constraintEnd_toStartOf="@+id/widget_horizontal_situation_indicator" />
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/uxsdk_35_dp"
+            app:layout_constraintBottom_toBottomOf="@+id/widget_auto_exposure_lock"
+            app:layout_constraintEnd_toStartOf="@+id/widget_auto_exposure_lock"
+            android:padding="@dimen/uxsdk_0_6_dp"
+            android:layout_marginEnd="@dimen/uxsdk_8_dp"/>
 
         <dji.v5.ux.core.panel.systemstatus.SystemStatusListPanelWidget
             android:id="@+id/widget_panel_system_status_list"

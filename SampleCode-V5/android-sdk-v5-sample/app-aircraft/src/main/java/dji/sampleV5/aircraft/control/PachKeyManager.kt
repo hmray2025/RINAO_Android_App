@@ -85,6 +85,13 @@ class PachKeyManager() : IPachWidgetModel {
     private var action: String = "MANUAL"
     private var autonomous: Boolean = false
     private var endOfFlight: Boolean = false
+    private val safetyWarnings = mapOf(
+        0 to "Aircraft Not Flying",
+        1 to "Go Home Button is pressed",
+        2 to "Pause Button is pressed",
+        3 to "GPS Signal is weak",
+        4 to "Aircraft is IDLE"
+    )
     private var controller = VirtualStickControl()
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
     val mainScope = CoroutineScope(Dispatchers.Main)
@@ -148,18 +155,28 @@ class PachKeyManager() : IPachWidgetModel {
         // Function checks if there are any waypoints in the waypoint list
         // If there are, it will follow the waypoints
         mainScope.launch {
+            var prevAction = action
+            var prevWaypoint = Coordinate(0.0,0.0,0.0)
             while(isActive) {
-                if (this@PachKeyManager.statusData.goHomeStatus == "Going Home") {
-                    this@PachKeyManager.action = "RETURNING HOME"
+                this@PachKeyManager.safetyChecks()
+                var warnings = ""
+                for (i in safetyFailures.indices) {
+                    if (safetyFailures[i] == 1) {
+                        warnings += safetyWarnings[i] + "; "
+                    }
                 }
-                if (this@PachKeyManager.telemService.nextWaypoint != Coordinate(0.0,0.0,0.0) && !this@PachKeyManager.autonomous) {
-                    this@PachKeyManager.action = "FLIGHT INFO RECEIVED"
+                if (this@PachKeyManager.statusData.goHomeStatus == "RETURNING_TO_HOME") {
+                    this@PachKeyManager.action = "Returning Home"
                 }
-                if (this@PachKeyManager.telemService.nextWaypoint == Coordinate(0.0,0.0,0.0) && !this@PachKeyManager.autonomous) {
-                    this@PachKeyManager.action = "MANUAL"
+                if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint && !this@PachKeyManager.autonomous) {
+                    this@PachKeyManager.action = if (warnings.isNotEmpty()) "Flight Info Received | $warnings" else "Flight Info Received"
+                }
+                if (this@PachKeyManager.telemService.nextWaypoint == prevWaypoint && !this@PachKeyManager.autonomous) {
+                    this@PachKeyManager.action = if (warnings.isNotEmpty()) "Manual | $warnings" else "Manual"
                 }
                 if (this@PachKeyManager.autonomous) {
-                    this@PachKeyManager.action = "AUTONOMOUS"
+                    this@PachKeyManager.action = "Autonomous"
+                    prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
                 pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
                 pachModel.updateMsg(this@PachKeyManager.action)
@@ -432,7 +449,7 @@ class PachKeyManager() : IPachWidgetModel {
             Log.d("PachTelemetry", "GimbalPitch $it")
         }
         registerKey(
-                KeyTools.createKey(FlightControllerKey.KeyGoHomeState)
+                KeyTools.createKey(FlightControllerKey.KeyGoHomeStatus) // FlightControllerKey.KeyGoHomeState
         ){
             statusData = statusData.copy(goHomeStatus = it.toString())
             sendStatus(statusData)
@@ -707,34 +724,22 @@ class PachKeyManager() : IPachWidgetModel {
         // Function checks all safety information before returning a boolean for proceeding.
         // Checks:
         // 1. Is the aircraft flying?
-        // ** will need eventual fixing, as safety failures are not being reset
-        if (!stateData.isFlying!!){
-            Log.v("PachKeyManager", "Aircraft is not flying")
-            safetyFailures[0] = 1
-            return false
+        safetyFailures[0] = (if (!stateData.isFlying!!) 1.also {
+            Log.v("PachKeyManager", safetyWarnings[0])} else 0)
+        safetyFailures[1] = (if (controllerStatus.goHomeButton!!) 1.also {
+            Log.v("PachKeyManager", safetyWarnings[1])} else 0)
+        safetyFailures[2] = (if (controllerStatus.pauseButton!!) 1.also {
+            Log.v("PachKeyManager", safetyWarnings[2])} else 0)
+        safetyFailures[3] = (if (statusData.gps!! <3) 1.also {
+            Log.v("PachKeyManager", safetyWarnings[3])} else 0)
+        safetyFailures[4] = (if (statusData.goHomeStatus != "IDLE") 1.also {
+            Log.v("PachKeyManager", safetyWarnings[4])} else 0)
+
+        for (i in safetyFailures){
+            if (i == 1){
+                return false
+            }
         }
-        if (controllerStatus.goHomeButton!!){
-            Log.v("PachKeyManager", "Go Home Button is pressed")
-            safetyFailures[1] = 1
-            return false
-        }
-        if (controllerStatus.pauseButton!!){
-            Log.v("PachKeyManager", "Pause Button is pressed")
-            safetyFailures[2] = 1
-            return false
-        }
-        if (statusData.gps!! <3){
-            Log.v("PachKeyManager", "GPS Signal is weak")
-            safetyFailures[3] = 1
-            return false
-        }
-        // Add check to see if it's in IDLE State
-        if (statusData.goHomeStatus != "IDLE"){
-            Log.v("PachKeyManager", "Aircraft is IDLE")
-            safetyFailures[4] = 1
-            return false
-        }
-        safetyFailures = arrayOf(0,0,0,0,0)
         return true
     }
     suspend fun goToAltitude(alt: Double){
