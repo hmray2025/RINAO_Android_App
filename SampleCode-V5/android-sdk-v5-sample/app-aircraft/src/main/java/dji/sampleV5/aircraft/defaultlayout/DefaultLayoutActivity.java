@@ -510,13 +510,11 @@ public class DefaultLayoutActivity extends AppCompatActivity implements PachKeyM
 
     @Override
     public void onUpdatedWaypoints() {
-        Log.d("JAKEDEBUG1", "Running onUpdatedWaypoints() in DefaultLayoutActivity.java");
         runOnUiThread(() -> {
             Log.d("JAKEDEBUG1", "Running onUpdatedWaypoints() in DefaultLayoutActivity.java");
-            for (Coordinate wp : pachManager.getTelemService().getWaypointList()) {
-                Log.d("JAKEDEBUG1", "Recieved waypoint: " + wp.getLat() + ", " + wp.getLon());
-                mapWidget.addTuskWaypointOnMap(new DJILatLng(wp.getLat(), wp.getLon()));
-            }
+            Coordinate wp = pachManager.getTelemService().getNextWaypoint();
+            mapWidget.clearTuskWaypoints(null);
+            mapWidget.addTuskWaypointOnMap(new DJILatLng(wp.getLat(), wp.getLon()));
         });
     }
 

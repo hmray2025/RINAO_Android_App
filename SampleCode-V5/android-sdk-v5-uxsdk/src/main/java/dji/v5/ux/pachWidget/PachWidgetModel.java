@@ -34,9 +34,11 @@ public class PachWidgetModel extends ViewModel{
 
     public void updateMsg(String msg) {
         _msgdata.setValue(msg);
+        msgdata = _msgdata;
     }
     public void updateConnection(Boolean connection) {
         _connectiondata.setValue(connection);
+        connectiondata = _connectiondata;
     }
 //    public void fetchData() {
 //        msgdata.postValue(pachKeyManager.getAction());
