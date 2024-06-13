@@ -36,6 +36,7 @@ class DJIAircraftMainActivity : DJIMainActivity() {
 
         enableWidgetList(WidgetsActivity::class.java)
         this.TuskManger.runTesting()
+        this.TuskManger.checkForWaypoints()
 //        prepareConfigurationTools()
 //
 

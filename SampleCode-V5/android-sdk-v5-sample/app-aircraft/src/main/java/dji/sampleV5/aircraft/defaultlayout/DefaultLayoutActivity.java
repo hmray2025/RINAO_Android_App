@@ -72,6 +72,8 @@ import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget;
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget;
 import dji.v5.ux.map.MapWidget;
 import dji.v5.ux.mapkit.core.maps.DJIMap;
+import dji.v5.ux.pachWidget.PachWidget;
+import dji.v5.ux.pachWidget.PachWidgetModel;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
 import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
@@ -107,6 +109,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     protected MapWidget mapWidget;
     protected TopBarPanelWidget topBarPanel;
     protected StreamManager streamManager;
+    protected PachWidget pachWidget;
 //    private SettingPanelWidget mSettingPanelWidget;
 //    private DrawerLayout mDrawerLayout;
 
@@ -147,7 +150,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         focalZoomWidget = findViewById(R.id.widget_focal_zoom);
         cameraControlsWidget = findViewById(R.id.widget_camera_controls);
         horizontalSituationIndicatorWidget = findViewById(R.id.widget_horizontal_situation_indicator);
-
+        pachWidget = findViewById(R.id.pach_widget);
         mapWidget = findViewById(R.id.widget_map);
         cameraControlsWidget.getExposureSettingsIndicatorWidget().setStateChangeResourceId(R.id.panel_camera_controls_exposure_settings);
 //        ViewStub stub = findViewById(R.id.manual_right_nav_setting_stub);

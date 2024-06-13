@@ -397,7 +397,7 @@
                 android:enabled="true"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="Pair Drone"
+                android:text="Piar Drone"
                 android:textColor="@color/selector_enable_button" />
 <!--            <Button-->
 <!--                android:id="@+id/live_stream_shortcut"-->
