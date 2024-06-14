@@ -439,6 +439,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
         //只在部分len下显示
         ndviCameraPanel.setVisibility(CameraUtil.isSupportForNDVI(lensType) ? View.VISIBLE : View.INVISIBLE);
+        visualCameraPanel.setVisibility(View.INVISIBLE);
     }
 
     /**

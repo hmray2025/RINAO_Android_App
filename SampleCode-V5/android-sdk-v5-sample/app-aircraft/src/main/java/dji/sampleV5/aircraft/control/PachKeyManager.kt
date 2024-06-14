@@ -80,7 +80,7 @@ class PachKeyManager() {
     var listener: WaypointListener? = null
     val telemService = TuskServiceWebsocket()
     private var safetyFailures: Array<Int> = arrayOf(0,0,0,0,0)
-    private var action: String = "MANUAL"
+    private var action: String = ""
     private var autonomous: Boolean = false
     private var endOfFlight: Boolean = false
     private val safetyWarnings = mapOf(
@@ -176,12 +176,10 @@ class PachKeyManager() {
                     status = if (warnings.isNotEmpty()) "Manual | $warnings" else "Manual"
                 }
                 if (this@PachKeyManager.autonomous) {
-                    this@PachKeyManager.action = "Autonomous"
-                    status = "Autonomous"
+                    status = if (this@PachKeyManager.action != "") "Autonomous | ${this@PachKeyManager.action}" else "Autonomous"
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
                 pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
-//                pachModel.updateMsg(this@PachKeyManager.action)
                 pachModel.updateMsg(status)
                 delay(1000)
             }
@@ -250,7 +248,7 @@ class PachKeyManager() {
         if (stateData.isFlying!=true){
             controller.startTakeOff()
         }
-
+        this@PachKeyManager.autonomous = true
         when (telemService.flightMode) {
             "Waypoint" -> flyHippo()
             "Path" -> followWaypoints(telemService.waypointList)
@@ -258,6 +256,7 @@ class PachKeyManager() {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }
         }
+        this@PachKeyManager.autonomous = false
     }
 
     private fun sendState(telemetry: TuskAircraftState) {
@@ -879,6 +878,7 @@ class PachKeyManager() {
             // Handle logic for action execution
             if (decisionChecks()) {
                 Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
+                this@PachKeyManager.action = "Following waypoints"
                 go2LocationForward(
                     waypoint.lat,
                     waypoint.lon,
@@ -887,11 +887,13 @@ class PachKeyManager() {
                 // Alert action stops the aircraft's movement
                 telemService.isAlertAction = false
                 Log.v("PachKeyManagerHIPPO", "Alert Action")
+                this@PachKeyManager.action = "Flight Paused - person?"
                 sendAutonomyStatus("AlertedOperator")
                 break
             } else if (telemService.isGatherAction) {
                 // Send Gather Confirmation
                 Log.v("PachKeyManagerHIPPO", "Gather Action")
+                this@PachKeyManager.action = "Gathering Info"
                 sendAutonomyStatus("GatheringInfo")
                 diveAndYaw(waypoint.alt-10, 30.0)
 //                flyOrbitPath(
@@ -903,6 +905,7 @@ class PachKeyManager() {
                 Log.v("PachKeyManagerHIPPO", "Unknown Decision Check Failed")
                 break
             }
+            this@PachKeyManager.action = ""
 
             // Handle logic for updating waypoint
             if (telemService.isGatherAction){
@@ -917,6 +920,7 @@ class PachKeyManager() {
             else {
                 if (telemService.plannerAction == "stay" && telemService.isStayAction){
                     Log.v("PachKeyManagerHIPPO", "Staying at Waypoint: $waypoint")
+                    this@PachKeyManager.action = "Holding position"
 //                    sendAutonomyStatus("waypoint-reached")
                     delay(telemService.dwellTime.toLong())
                     telemService.isStayAction = false // reset flag to false so stay action is not taken
@@ -932,6 +936,7 @@ class PachKeyManager() {
                     Log.v("PachKeyManagerHIPPO", "Waypoint Not Updated")
                 }
             }
+            this@PachKeyManager.action = ""
         }
         controller.endVirtualStick()
     }
