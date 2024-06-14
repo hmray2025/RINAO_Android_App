@@ -44,6 +44,8 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LifecycleOwner;
+
 import dji.sdk.keyvalue.value.common.LocationCoordinate2D;
 import dji.sdk.keyvalue.value.common.LocationCoordinate3D;
 import dji.v5.manager.aircraft.flysafe.info.FlyZoneInformation;
@@ -78,7 +80,9 @@ import dji.v5.ux.mapkit.gmap.provider.GoogleProvider;
 import dji.v5.ux.mapkit.maplibre.provider.MaplibreProvider;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * MapWidget displays the aircraft's state and information on the map. This
@@ -98,6 +102,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     private static final int DO_NOT_UPDATE_ZOOM = -1;
     private static final String TAG = "MapWidget";
     private static final String HOME_MARKER = "homemarker";
+    private static final String TUSK_MARKER = "tuskmarker";
     private static final String AIRCRAFT_MARKER = "aircraftmarker";
     private static final String GIMBAL_YAW_MARKER = "gimbalyawmarker";
 
@@ -137,7 +142,10 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     //region Aircraft Marker Fields
     private float aircraftMarkerHeading;
     private DJIMarker aircraftMarker;
+    public DJIMarker tuskMarker;
     private Drawable aircraftIcon;
+    private CompositeDisposable disposables;
+    private Drawable TuskWaypointIcon;
     private boolean aircraftMarkerEnabled;
     private float aircraftIconAnchorX = 0.5f;
     private float aircraftIconAnchorY = 0.5f;
@@ -187,6 +195,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         if (attrs != null) {
             initAttributes(context, attrs);
         }
+        disposables = new CompositeDisposable();
     }
 
     @Override
@@ -203,6 +212,10 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
             }
         }));
         addReaction(widgetModel.flyZoneInformationDataProcessor.toFlowable().observeOn(SchedulerProvider.ui()).subscribe(this::onFlyZoneListUpdate));
+//        widgetModel.tuskTelemetryWaypoint.observe((LifecycleOwner) getContext(), tuskData -> {
+//            addTuskWaypointOnMap(tuskData);
+////            clearEverythingBut(tuskMarkers.contains());
+//        });
     }
 
     @Override
@@ -360,6 +373,12 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                 setGimbalMarkerIcon(drawable);
             }
             setGimbalAttitudeEnabled(typedArray.getBoolean(R.styleable.MapWidget_uxsdk_gimbalAttitudeEnabled, true));
+
+            drawable = context.getDrawable(R.drawable.uxsdk_bg_rtk_guidance_step_oval_blue_solid);
+            if (drawable != null) {
+                setTuskWaypointIcon(drawable);
+            }
+//            setAircraftMarkerEnabled(typedArray.getBoolean(R.styleable.MapWidget_uxsdk_aircraftMarkerEnabled, true));
         }
 
         mapCenterLockMode = MapCenterLock.find(typedArray.getInt(R.styleable.MapWidget_uxsdk_mapCenterLock,
@@ -444,6 +463,62 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                         + ")");
         setMapCenter(mapCenterLockMode, DEFAULT_ZOOM, false);
     }
+
+    public void subscribeToDataSource(Flowable<DJILatLng> dataFlowable) {
+        disposables.add(
+                dataFlowable
+                        .distinctUntilChanged()
+                        .observeOn(Schedulers.io()) // Or another appropriate thread
+                        .subscribe(this::updateTuskTelemetryWaypoint, Throwable::printStackTrace)
+        );
+    }
+
+    protected void updateTuskTelemetryWaypoint(DJILatLng waypoint) {
+        Log.d("JAKEDEBUG2","map got the thing");
+        if (tuskMarker != null) {
+            homeMarker.setPosition(waypoint);
+        } else {
+            addTuskWaypointOnMap(waypoint);
+        }
+
+    }
+    @Nullable
+    public void addTuskWaypointOnMap(DJILatLng wp) {
+        if (map == null || !wp.isAvailable()) return;
+        // Draw marker
+        DJIMarkerOptions wpOptions = new DJIMarkerOptions()
+                .position(wp)
+                .icon(DJIBitmapDescriptorFactory.fromBitmap(ViewUtil.getBitmapFromVectorDrawable(aircraftIcon)))
+                .title(TUSK_MARKER)
+                .anchor(homeIconAnchorX, homeIconAnchorY)
+                .zIndex(HOME_MARKER_ELEVATION)
+                .visible(true);
+        tuskMarker = map.addMarker(wpOptions);
+        LogUtils.d(TAG,
+                "added waypoint to map at ("
+                        + wp.getLatitude()
+                        + ","
+                        + wp.getLongitude()
+                        + ")");
+    }
+//    public void removeTuskWaypoint(DJIMarker wp) {
+//        if (map == null) return;
+//        for (DJIMarker marker : tuskMarkers) {
+//            if (marker.equals(wp)) {
+//                marker.remove();
+//                break; // Assuming you want to remove only the first occurrence
+//            }
+//        }
+//    }
+
+//    public void clearEverythingBut(DJIMarker whiteList) {
+//        if (map == null) return;
+//        for (DJIMarker marker : tuskMarkers) {
+//            if (whiteList == null || whiteList != marker) {
+//                marker.remove();
+//            }
+//        }
+//    }
 
     /**
      * Updates the aircraft's home location on the map
@@ -1186,6 +1261,14 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         }
     }
 
+    public void setTuskWaypointIcon(@NonNull Drawable drawable) {
+        TuskWaypointIcon = drawable;
+        if (tuskMarker != null) {
+            tuskMarker.setIcon(DJIBitmapDescriptorFactory.fromBitmap(ViewUtil.getBitmapFromVectorDrawable(
+                    TuskWaypointIcon)));
+        }
+    }
+
     /**
      * Changes the icon of the home marker.
      * Note: When using HERE Maps, the anchor point does not rotate with the marker.
@@ -1436,4 +1519,8 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
          */
         void onMapReady(@NonNull DJIMap map);
     }
+
+//    public getPachData(){
+//        return pachData;
+//    }
 }

@@ -28,9 +28,12 @@ import dji.v5.common.callback.CommonCallbacks
 import dji.v5.common.error.IDJIError
 import dji.v5.common.utils.RxUtil
 import dji.v5.manager.KeyManager
+import dji.v5.ux.mapkit.core.models.DJILatLng
 import dji.v5.ux.pachWidget.PachWidgetModel
+import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.functions.Consumer
+import io.reactivex.rxjava3.processors.PublishProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -77,7 +80,7 @@ class PachKeyManager() {
     }
     // Initialize necessary classes
     private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
-    var listener: WaypointListener? = null
+    private val waypointDataProcessor = PublishProcessor.create<DJILatLng>()
     val telemService = TuskServiceWebsocket()
     private var safetyFailures: Array<Int> = arrayOf(0,0,0,0,0)
     private var action: String = ""
@@ -155,6 +158,7 @@ class PachKeyManager() {
         mainScope.launch {
             var status = ""
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
+            var nextWaypoint = this@PachKeyManager.telemService.nextWaypoint
             while(isActive) {
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
@@ -177,6 +181,10 @@ class PachKeyManager() {
                 }
                 if (this@PachKeyManager.autonomous) {
                     status = if (this@PachKeyManager.action != "") "Autonomous | ${this@PachKeyManager.action}" else "Autonomous"
+                    if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
+                        var wp = DJILatLng(nextWaypoint.lat, nextWaypoint.lon)
+                        this@PachKeyManager.sendWaypointToMap(wp)
+                    }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
                 pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
@@ -186,13 +194,6 @@ class PachKeyManager() {
         }
     }
 
-    fun setWaypointListener(listener: WaypointListener) {
-        this.listener = listener
-    }
-
-    fun isWaypointListenerSet(): Boolean {
-        return this.listener != null
-    }
     fun runTesting() {
         KeyManager.getInstance().listen(fiveDKey, this) { _, newValue ->
             mainScope.launch {
@@ -1098,9 +1099,13 @@ class PachKeyManager() {
         }
     }
 
-    interface WaypointListener {
-        fun onReachedWaypoint()
-        fun onUpdatedWaypoints()
+    fun getDataFlowable(): Flowable<DJILatLng> {
+        return waypointDataProcessor
+    }
+
+    fun sendWaypointToMap(data: DJILatLng?) {
+        Log.d("JAKEDEBUG2","Sending waypoint to map")
+        waypointDataProcessor.onNext(data)
     }
 
 //    override fun getConnectionStatus(): Boolean {

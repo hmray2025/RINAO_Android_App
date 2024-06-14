@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 import dji.sdk.keyvalue.key.FlightControllerKey;
 import dji.sdk.keyvalue.key.GimbalKey;
 import dji.sdk.keyvalue.key.KeyTools;
@@ -48,7 +51,10 @@ import dji.v5.ux.core.base.DJISDKModel;
 import dji.v5.ux.core.base.WidgetModel;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
 import dji.v5.ux.core.util.DataProcessor;
+import dji.v5.ux.mapkit.core.models.DJILatLng;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * Map Widget Model
