@@ -103,7 +103,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     protected ExposureSettingsPanel exposureSettingsPanel;
     protected PrimaryFlightDisplayWidget pfvFlightDisplayWidget;
     protected CameraNDVIPanelWidget ndviCameraPanel;
-    protected CameraVisiblePanelWidget visualCameraPanel;
+//    protected CameraVisiblePanelWidget visualCameraPanel;
     protected FocalZoomWidget focalZoomWidget;
     protected SettingWidget settingWidget;
     protected MapWidget mapWidget;
@@ -141,7 +141,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         simulatorControlWidget = findViewById(R.id.widget_simulator_control);
         lensControlWidget = findViewById(R.id.widget_lens_control);
         ndviCameraPanel = findViewById(R.id.panel_ndvi_camera);
-        visualCameraPanel = findViewById(R.id.panel_visual_camera);
+//        visualCameraPanel = findViewById(R.id.panel_visual_camera);
         autoExposureLockWidget = findViewById(R.id.widget_auto_exposure_lock);
         focusModeWidget = findViewById(R.id.widget_focus_mode);
         focusExposureSwitchWidget = findViewById(R.id.widget_focus_exposure_switch);
@@ -391,9 +391,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         if (ndviCameraPanel.getVisibility() == View.VISIBLE) {
             ndviCameraPanel.updateCameraSource(cameraIndex, lensType);
         }
-        if (visualCameraPanel.getVisibility() == View.VISIBLE) {
-            visualCameraPanel.updateCameraSource(cameraIndex, lensType);
-        }
+//        if (visualCameraPanel.getVisibility() == View.VISIBLE) {
+//            visualCameraPanel.updateCameraSource(cameraIndex, lensType);
+//        }
         if (autoExposureLockWidget.getVisibility() == View.VISIBLE) {
             autoExposureLockWidget.updateCameraSource(cameraIndex, lensType);
         }
@@ -424,7 +424,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         //fpv下不显示
         lensControlWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         ndviCameraPanel.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
-        visualCameraPanel.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
+//        visualCameraPanel.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         autoExposureLockWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         focusModeWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         focusExposureSwitchWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
@@ -439,7 +439,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
         //只在部分len下显示
         ndviCameraPanel.setVisibility(CameraUtil.isSupportForNDVI(lensType) ? View.VISIBLE : View.INVISIBLE);
-        visualCameraPanel.setVisibility(View.INVISIBLE);
+//        visualCameraPanel.setVisibility(View.INVISIBLE);
     }
 
     /**

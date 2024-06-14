@@ -149,7 +149,7 @@ class PachKeyManager() {
 //        streamer.startStream()
     }
 
-    fun checkForWaypoints() {
+    fun updateStatusWidget() {
         // Function checks if there are any waypoints in the waypoint list
         // If there are, it will follow the waypoints
         mainScope.launch {
