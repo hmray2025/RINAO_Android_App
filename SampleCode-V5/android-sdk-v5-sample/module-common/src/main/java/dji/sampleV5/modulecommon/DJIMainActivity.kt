@@ -344,7 +344,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     override fun onPause() {
         super.onPause()
-        stopStatusCheck() // Stop the status checking coroutine when the activity is paused
+//        stopStatusCheck() // Stop the status checking coroutine when the activity is paused
         removeSettingsPageOverlay()
     }
 

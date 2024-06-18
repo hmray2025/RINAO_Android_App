@@ -72,6 +72,8 @@ import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget;
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget;
 import dji.v5.ux.map.MapWidget;
 import dji.v5.ux.mapkit.core.maps.DJIMap;
+import dji.v5.ux.pachWidget.PachWidget;
+import dji.v5.ux.pachWidget.PachWidgetModel;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
 import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
@@ -101,12 +103,13 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     protected ExposureSettingsPanel exposureSettingsPanel;
     protected PrimaryFlightDisplayWidget pfvFlightDisplayWidget;
     protected CameraNDVIPanelWidget ndviCameraPanel;
-    protected CameraVisiblePanelWidget visualCameraPanel;
+//    protected CameraVisiblePanelWidget visualCameraPanel;
     protected FocalZoomWidget focalZoomWidget;
     protected SettingWidget settingWidget;
     protected MapWidget mapWidget;
     protected TopBarPanelWidget topBarPanel;
     protected StreamManager streamManager;
+    protected PachWidget pachWidget;
 //    private SettingPanelWidget mSettingPanelWidget;
 //    private DrawerLayout mDrawerLayout;
 
@@ -138,7 +141,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         simulatorControlWidget = findViewById(R.id.widget_simulator_control);
         lensControlWidget = findViewById(R.id.widget_lens_control);
         ndviCameraPanel = findViewById(R.id.panel_ndvi_camera);
-        visualCameraPanel = findViewById(R.id.panel_visual_camera);
+//        visualCameraPanel = findViewById(R.id.panel_visual_camera);
         autoExposureLockWidget = findViewById(R.id.widget_auto_exposure_lock);
         focusModeWidget = findViewById(R.id.widget_focus_mode);
         focusExposureSwitchWidget = findViewById(R.id.widget_focus_exposure_switch);
@@ -147,7 +150,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         focalZoomWidget = findViewById(R.id.widget_focal_zoom);
         cameraControlsWidget = findViewById(R.id.widget_camera_controls);
         horizontalSituationIndicatorWidget = findViewById(R.id.widget_horizontal_situation_indicator);
-
+        pachWidget = findViewById(R.id.pach_widget);
         mapWidget = findViewById(R.id.widget_map);
         cameraControlsWidget.getExposureSettingsIndicatorWidget().setStateChangeResourceId(R.id.panel_camera_controls_exposure_settings);
 //        ViewStub stub = findViewById(R.id.manual_right_nav_setting_stub);
@@ -388,9 +391,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         if (ndviCameraPanel.getVisibility() == View.VISIBLE) {
             ndviCameraPanel.updateCameraSource(cameraIndex, lensType);
         }
-        if (visualCameraPanel.getVisibility() == View.VISIBLE) {
-            visualCameraPanel.updateCameraSource(cameraIndex, lensType);
-        }
+//        if (visualCameraPanel.getVisibility() == View.VISIBLE) {
+//            visualCameraPanel.updateCameraSource(cameraIndex, lensType);
+//        }
         if (autoExposureLockWidget.getVisibility() == View.VISIBLE) {
             autoExposureLockWidget.updateCameraSource(cameraIndex, lensType);
         }
@@ -421,7 +424,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         //fpv下不显示
         lensControlWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         ndviCameraPanel.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
-        visualCameraPanel.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
+//        visualCameraPanel.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         autoExposureLockWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         focusModeWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
         focusExposureSwitchWidget.setVisibility(devicePosition == PhysicalDevicePosition.NOSE ? View.INVISIBLE : View.VISIBLE);
@@ -436,6 +439,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
         //只在部分len下显示
         ndviCameraPanel.setVisibility(CameraUtil.isSupportForNDVI(lensType) ? View.VISIBLE : View.INVISIBLE);
+//        visualCameraPanel.setVisibility(View.INVISIBLE);
     }
 
     /**
