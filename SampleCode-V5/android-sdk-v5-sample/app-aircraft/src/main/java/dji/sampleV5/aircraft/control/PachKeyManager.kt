@@ -77,12 +77,17 @@ class PachKeyManager() {
     }
     // Initialize necessary classes
     private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
-    var listener: WaypointListener? = null
+//    var listener: WaypointListener? = null
     val telemService = TuskServiceWebsocket()
+
+    /**
+     * Safety Failures, action, autonomous, and safety warnings are all used for the PachWidget
+     * to display the current status of the aircraft. These need to be moved to the datastructures
+     * file, in order to keep the code consistent and clean.
+     */
     private var safetyFailures: Array<Int> = arrayOf(0,0,0,0,0)
     private var action: String = ""
     private var autonomous: Boolean = false
-    private var endOfFlight: Boolean = false
     private val safetyWarnings = mapOf(
         0 to "Aircraft Not Flying",
         1 to "Go Home Button is pressed",
@@ -150,8 +155,8 @@ class PachKeyManager() {
     }
 
     fun updateStatusWidget() {
-        // Function checks if there are any waypoints in the waypoint list
-        // If there are, it will follow the waypoints
+        // Function updates the status widget with the current status of the aircraft, including
+        // connection status, autonomous/manual status, and any warnings that may be present
         mainScope.launch {
             var status = ""
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
@@ -186,13 +191,13 @@ class PachKeyManager() {
         }
     }
 
-    fun setWaypointListener(listener: WaypointListener) {
-        this.listener = listener
-    }
-
-    fun isWaypointListenerSet(): Boolean {
-        return this.listener != null
-    }
+//    fun setWaypointListener(listener: WaypointListener) {
+//        this.listener = listener
+//    }
+//
+//    fun isWaypointListenerSet(): Boolean {
+//        return this.listener != null
+//    }
     fun runTesting() {
         KeyManager.getInstance().listen(fiveDKey, this) { _, newValue ->
             mainScope.launch {
@@ -905,7 +910,7 @@ class PachKeyManager() {
                 Log.v("PachKeyManagerHIPPO", "Unknown Decision Check Failed")
                 break
             }
-            this@PachKeyManager.action = ""
+            this@PachKeyManager.action = "" // if no action is taken, reset action to empty string
 
             // Handle logic for updating waypoint
             if (telemService.isGatherAction){
@@ -936,7 +941,7 @@ class PachKeyManager() {
                     Log.v("PachKeyManagerHIPPO", "Waypoint Not Updated")
                 }
             }
-            this@PachKeyManager.action = ""
+            this@PachKeyManager.action = "" // if no action is taken, reset action to empty string
         }
         controller.endVirtualStick()
     }
@@ -1098,10 +1103,10 @@ class PachKeyManager() {
         }
     }
 
-    interface WaypointListener {
-        fun onReachedWaypoint()
-        fun onUpdatedWaypoints()
-    }
+//    interface WaypointListener {
+//        fun onReachedWaypoint()
+//        fun onUpdatedWaypoints()
+//    }
 
 //    override fun getConnectionStatus(): Boolean {
 //        return this.telemService.getConnectionStatus()
