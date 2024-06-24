@@ -63,3 +63,38 @@ data class StreamInfo(
 )
 
 data class Coordinate(val lat: Double, val lon: Double, var alt: Double)
+
+data class AircraftAction(
+    var action: String,
+    var autonomous: Boolean
+)
+
+data class SafetyState(
+    val warnings: Map<Int, String> = mapOf(
+        0 to "Aircraft Not Flying",
+        1 to "Go Home Button is pressed",
+        2 to "Pause Button is pressed",
+        3 to "GPS Signal is weak",
+        4 to "Aircraft is IDLE"
+    ), var failures: Array<Boolean> = arrayOf(false, false, false, false, false)
+) {
+    operator fun get(i: Int): String {
+        return warnings[i] ?: "Unknown Warning"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SafetyState
+
+        if (warnings != other.warnings) return false
+        return failures.contentEquals(other.failures)
+    }
+
+    override fun hashCode(): Int {
+        var result = warnings.hashCode()
+        result = 31 * result + failures.contentHashCode()
+        return result
+    }
+}
