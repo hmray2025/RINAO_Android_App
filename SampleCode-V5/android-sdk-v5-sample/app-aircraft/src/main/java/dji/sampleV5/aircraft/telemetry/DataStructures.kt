@@ -76,25 +76,10 @@ data class SafetyState(
         2 to "Pause Button is pressed",
         3 to "GPS Signal is weak",
         4 to "Aircraft is IDLE"
-    ), var failures: Array<Boolean> = arrayOf(false, false, false, false, false)
+    ),
+    var failures: Array<Boolean> = arrayOf(false, false, false, false, false)
 ) {
     operator fun get(i: Int): String {
         return warnings[i] ?: "Unknown Warning"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as SafetyState
-
-        if (warnings != other.warnings) return false
-        return failures.contentEquals(other.failures)
-    }
-
-    override fun hashCode(): Int {
-        var result = warnings.hashCode()
-        result = 31 * result + failures.contentHashCode()
-        return result
     }
 }
