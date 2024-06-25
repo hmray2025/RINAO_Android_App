@@ -1,7 +1,9 @@
 package dji.sampleV5.aircraft.control
 import android.util.Log
+import dji.sampleV5.aircraft.telemetry.AircraftAction
 import dji.sampleV5.aircraft.telemetry.Coordinate
 import dji.sampleV5.aircraft.telemetry.Event
+import dji.sampleV5.aircraft.telemetry.SafetyState
 import dji.sampleV5.aircraft.telemetry.StreamInfo
 import dji.sampleV5.aircraft.telemetry.TuskAircraftState
 import dji.sampleV5.aircraft.telemetry.TuskAircraftStatus
@@ -82,17 +84,14 @@ class PachKeyManager() {
     private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
     private val waypointDataProcessor = PublishProcessor.create<DJILatLng>()
     val telemService = TuskServiceWebsocket()
-    private var safetyFailures: Array<Int> = arrayOf(0,0,0,0,0)
-    private var action: String = ""
-    private var autonomous: Boolean = false
-    private var endOfFlight: Boolean = false
-    private val safetyWarnings = mapOf(
-        0 to "Aircraft Not Flying",
-        1 to "Go Home Button is pressed",
-        2 to "Pause Button is pressed",
-        3 to "GPS Signal is weak",
-        4 to "Aircraft is IDLE"
-    )
+
+    /**
+     * Safety Failures, action, autonomous, and safety warnings are all used for the PachWidget
+     * to display the current status of the aircraft. These need to be moved to the datastructures
+     * file, in order to keep the code consistent and clean.
+     */
+    private val safetyState = SafetyState()
+    private var actionState = AircraftAction("", false)
     private var controller = VirtualStickControl()
     private var pidController = PidController(0.4f, 0.05f, 0.9f)
     val mainScope = CoroutineScope(Dispatchers.Main)
@@ -153,8 +152,8 @@ class PachKeyManager() {
     }
 
     fun updateStatusWidget() {
-        // Function checks if there are any waypoints in the waypoint list
-        // If there are, it will follow the waypoints
+        // Function updates the status widget with the current status of the aircraft, including
+        // connection status, autonomous/manual status, and any warnings that may be present
         mainScope.launch {
             var status = ""
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
@@ -162,25 +161,22 @@ class PachKeyManager() {
             while(isActive) {
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
-                for (i in safetyFailures.indices) {
-                    if (safetyFailures[i] == 1) {
-                        warnings += safetyWarnings[i] + "; "
+                for (i in safetyState.failures.indices) {
+                    if (safetyState.failures[i]) {
+                        warnings += safetyState[i] + "; "
                     }
                 }
                 if (this@PachKeyManager.statusData.goHomeStatus == "RETURNING_TO_HOME") {
-//                    this@PachKeyManager.action = "Returning Home"
                     status = "Returning Home"
                 }
-                if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint && !this@PachKeyManager.autonomous) {
-//                    this@PachKeyManager.action = if (warnings.isNotEmpty()) "Manual | Flight Info Received | $warnings" else "Manual | Flight Info Received"
+                if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | Flight Info Received | $warnings" else "Manual | Flight Info Received"
                 }
-                if (this@PachKeyManager.telemService.nextWaypoint == prevWaypoint && !this@PachKeyManager.autonomous) {
-//                    this@PachKeyManager.action = if (warnings.isNotEmpty()) "Manual | $warnings" else "Manual"
+                if (this@PachKeyManager.telemService.nextWaypoint == prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | $warnings" else "Manual"
                 }
-                if (this@PachKeyManager.autonomous) {
-                    status = if (this@PachKeyManager.action != "") "Autonomous | ${this@PachKeyManager.action}" else "Autonomous"
+                if (this@PachKeyManager.actionState.autonomous) {
+                    status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
                     if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
                         var wp = DJILatLng(nextWaypoint.lat, nextWaypoint.lon)
                         this@PachKeyManager.sendWaypointToMap(wp)
@@ -194,6 +190,13 @@ class PachKeyManager() {
         }
     }
 
+//    fun setWaypointListener(listener: WaypointListener) {
+//        this.listener = listener
+//    }
+//
+//    fun isWaypointListenerSet(): Boolean {
+//        return this.listener != null
+//    }
     fun runTesting() {
         KeyManager.getInstance().listen(fiveDKey, this) { _, newValue ->
             mainScope.launch {
@@ -249,7 +252,7 @@ class PachKeyManager() {
         if (stateData.isFlying!=true){
             controller.startTakeOff()
         }
-        this@PachKeyManager.autonomous = true
+        this@PachKeyManager.actionState.autonomous = true
         when (telemService.flightMode) {
             "Waypoint" -> flyHippo()
             "Path" -> followWaypoints(telemService.waypointList)
@@ -257,7 +260,7 @@ class PachKeyManager() {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }
         }
-        this@PachKeyManager.autonomous = false
+        this@PachKeyManager.actionState.autonomous = false
     }
 
     private fun sendState(telemetry: TuskAircraftState) {
@@ -279,9 +282,9 @@ class PachKeyManager() {
     }
 
     private fun setActionInfo() {
-        if (this.action != "AUTONOMOUS") {
+        if (this.actionState.action != "AUTONOMOUS") {
             if (telemService.waypointList.isNotEmpty()) {
-                this.action = "INFO RECEIVED"
+                this.actionState.action = "INFO RECEIVED"
             }
         }
     }
@@ -718,19 +721,19 @@ class PachKeyManager() {
         // Function checks all safety information before returning a boolean for proceeding.
         // Checks:
         // 1. Is the aircraft flying?
-        safetyFailures[0] = (if (!stateData.isFlying!!) 1.also {
-            Log.v("PachKeyManager", safetyWarnings[0])} else 0)
-        safetyFailures[1] = (if (controllerStatus.goHomeButton!!) 1.also {
-            Log.v("PachKeyManager", safetyWarnings[1])} else 0)
-        safetyFailures[2] = (if (controllerStatus.pauseButton!!) 1.also {
-            Log.v("PachKeyManager", safetyWarnings[2])} else 0)
-        safetyFailures[3] = (if (statusData.gps!! <3) 1.also {
-            Log.v("PachKeyManager", safetyWarnings[3])} else 0)
-        safetyFailures[4] = (if (statusData.goHomeStatus != "IDLE") 1.also {
-            Log.v("PachKeyManager", safetyWarnings[4])} else 0)
+        safetyState.failures[0] = (if (!stateData.isFlying!!) true.also {
+            Log.v("PachKeyManager", safetyState[0])} else false)
+        safetyState.failures[1] = (if (controllerStatus.goHomeButton!!) true.also {
+            Log.v("PachKeyManager", safetyState[1])} else false)
+        safetyState.failures[2] = (if (controllerStatus.pauseButton!!) true.also {
+            Log.v("PachKeyManager", safetyState[2])} else false)
+        safetyState.failures[3] = (if (statusData.gps!! <3) true.also {
+            Log.v("PachKeyManager", safetyState[3])} else false)
+        safetyState.failures[4] = (if (statusData.goHomeStatus != "IDLE") true.also {
+            Log.v("PachKeyManager", safetyState[4])} else false)
 
-        for (i in safetyFailures){
-            if (i == 1){
+        for (i in safetyState.failures){
+            if (i){
                 return false
             }
         }
@@ -879,7 +882,7 @@ class PachKeyManager() {
             // Handle logic for action execution
             if (decisionChecks()) {
                 Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
-                this@PachKeyManager.action = "Following waypoints"
+                this@PachKeyManager.actionState.action = "Following waypoints"
                 go2LocationForward(
                     waypoint.lat,
                     waypoint.lon,
@@ -888,13 +891,13 @@ class PachKeyManager() {
                 // Alert action stops the aircraft's movement
                 telemService.isAlertAction = false
                 Log.v("PachKeyManagerHIPPO", "Alert Action")
-                this@PachKeyManager.action = "Flight Paused - person?"
+                this@PachKeyManager.actionState.action = "Flight Paused - person?"
                 sendAutonomyStatus("AlertedOperator")
                 break
             } else if (telemService.isGatherAction) {
                 // Send Gather Confirmation
                 Log.v("PachKeyManagerHIPPO", "Gather Action")
-                this@PachKeyManager.action = "Gathering Info"
+                this@PachKeyManager.actionState.action = "Gathering Info"
                 sendAutonomyStatus("GatheringInfo")
                 diveAndYaw(waypoint.alt-10, 30.0)
 //                flyOrbitPath(
@@ -906,7 +909,7 @@ class PachKeyManager() {
                 Log.v("PachKeyManagerHIPPO", "Unknown Decision Check Failed")
                 break
             }
-            this@PachKeyManager.action = ""
+            this@PachKeyManager.actionState.action = "" // if no action is taken, reset action to empty string
 
             // Handle logic for updating waypoint
             if (telemService.isGatherAction){
@@ -921,7 +924,7 @@ class PachKeyManager() {
             else {
                 if (telemService.plannerAction == "stay" && telemService.isStayAction){
                     Log.v("PachKeyManagerHIPPO", "Staying at Waypoint: $waypoint")
-                    this@PachKeyManager.action = "Holding position"
+                    this@PachKeyManager.actionState.action = "Holding position"
 //                    sendAutonomyStatus("waypoint-reached")
                     delay(telemService.dwellTime.toLong())
                     telemService.isStayAction = false // reset flag to false so stay action is not taken
@@ -937,7 +940,7 @@ class PachKeyManager() {
                     Log.v("PachKeyManagerHIPPO", "Waypoint Not Updated")
                 }
             }
-            this@PachKeyManager.action = ""
+            this@PachKeyManager.actionState.action = "" // if no action is taken, reset action to empty string
         }
         controller.endVirtualStick()
     }

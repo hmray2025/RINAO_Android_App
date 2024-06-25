@@ -44,8 +44,6 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.LifecycleOwner;
-
 import dji.sdk.keyvalue.value.common.LocationCoordinate2D;
 import dji.sdk.keyvalue.value.common.LocationCoordinate3D;
 import dji.v5.manager.aircraft.flysafe.info.FlyZoneInformation;
