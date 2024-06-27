@@ -76,6 +76,7 @@ import dji.v5.ux.mapkit.core.models.annotations.DJIPolyline;
 import dji.v5.ux.mapkit.core.models.annotations.DJIPolylineOptions;
 import dji.v5.ux.mapkit.gmap.provider.GoogleProvider;
 import dji.v5.ux.mapkit.maplibre.provider.MaplibreProvider;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -145,6 +146,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     private CompositeDisposable disposables;
     private Drawable TuskWaypointIcon;
     private boolean aircraftMarkerEnabled;
+    private boolean isSubscribedToPachManager;
     private float aircraftIconAnchorX = 0.5f;
     private float aircraftIconAnchorY = 0.5f;
     //endregion
@@ -466,15 +468,22 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         disposables.add(
                 dataFlowable
                         .distinctUntilChanged()
-                        .observeOn(Schedulers.io()) // Or another appropriate thread
-                        .subscribe(this::updateTuskTelemetryWaypoint, Throwable::printStackTrace)
+                        .doOnSubscribe(disposable -> isSubscribedToPachManager = true)
+                        .doOnError(throwable -> Log.e("JAKEDEBUG2", "flow error " + throwable.getMessage()))
+                        .doFinally(() -> isSubscribedToPachManager = false)
+                        .observeOn(AndroidSchedulers.mainThread()) // Or another appropriate thread
+                        .subscribe(data -> updateTuskTelemetryWaypoint(data), throwable -> throwable.printStackTrace())
         );
+    }
+
+    public boolean isSubscribedToPachManager() {
+        return isSubscribedToPachManager;
     }
 
     protected void updateTuskTelemetryWaypoint(DJILatLng waypoint) {
         Log.d("JAKEDEBUG2","map got the thing");
         if (tuskMarker != null) {
-            homeMarker.setPosition(waypoint);
+            tuskMarker.setPosition(waypoint);
         } else {
             addTuskWaypointOnMap(waypoint);
         }

@@ -72,6 +72,7 @@ import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget;
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget;
 import dji.v5.ux.map.MapWidget;
 import dji.v5.ux.mapkit.core.maps.DJIMap;
+import dji.v5.ux.mapkit.core.models.DJILatLng;
 import dji.v5.ux.pachWidget.PachWidget;
 import dji.v5.ux.pachWidget.PachWidgetModel;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
@@ -79,7 +80,9 @@ import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
 import dji.v5.ux.visualcamera.zoom.FocalZoomWidget;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
@@ -182,13 +185,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         mapWidget.onCreate(savedInstanceState);
         pachManager = new PachKeyManager(); // points to object created in DJIAircraftMainActivity
         streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
-        mapWidget.subscribeToDataSource(pachManager.getDataFlowable());
-        pachManager.getDataFlowable()
-                .subscribe(data -> Log.d("DataFlowable", "Data: " + data), Throwable::printStackTrace);
 //        mMediaManagerBtn = (Button)findViewById(R.id.btn_mediaManager); // where to put this?
 //        mMediaManagerBtn.setOnClickListener(this);
     }
-
     private void initClickListener() {
         secondaryFPVWidget.setOnClickListener(v -> swapVideoSource());
         initChannelStateListener();
@@ -265,6 +264,22 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         super.onResume();
         mapWidget.onResume();
         compositeDisposable = new CompositeDisposable();
+
+        Log.d("JAKEDEBUG2", "onResume called");
+        mapWidget.subscribeToDataSource(pachManager.getDataFlowable());
+
+        // current state: getDataFlowable returns data from subscription within
+        // pachManager, but not in defaultLayoutActivity.
+        // different threads?
+        // different packages?
+        compositeDisposable.add(pachManager.getDataFlowable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        data -> {
+                            Log.d("JAKEDEBUG2", "Data flowable: " + data);
+//                            mapWidget.addTuskWaypointOnMap(data);
+                            }));
+
         compositeDisposable.add(systemStatusListPanelWidget.closeButtonPressed()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pressed -> {
@@ -287,6 +302,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 .subscribeOn(SchedulerProvider.io())
                 .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
         );
+//        compositeDisposable.add(pachManager.getDataFlowable()
+//                .observeOn(SchedulerProvider.io())
+//                .subscribeOn(SchedulerProvider.io())
+//                .subscribe(result -> Log.d("JAKEDEBUG2", "pachwidget data: " + result))
+//
+//        );
         if (streamManager.isStreaming()) {
             liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
         }

@@ -149,6 +149,9 @@ class PachKeyManager() {
         initializeFlightParameters()
         keyDisposables = CompositeDisposable()
 //        streamer.startStream()
+        getDataFlowable().subscribe{
+            Log.v("JAKEDEBUG2", "Waypoint Data: $it")
+        }
     }
 
     fun updateStatusWidget() {
@@ -178,7 +181,7 @@ class PachKeyManager() {
                 if (this@PachKeyManager.actionState.autonomous) {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
                     if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
-                        var wp = DJILatLng(nextWaypoint.lat, nextWaypoint.lon)
+                        var wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
                         this@PachKeyManager.sendWaypointToMap(wp)
                     }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
@@ -1106,9 +1109,8 @@ class PachKeyManager() {
         return waypointDataProcessor
     }
 
-    fun sendWaypointToMap(data: DJILatLng?) {
-        Log.d("JAKEDEBUG2","Sending waypoint to map")
-        waypointDataProcessor.onNext(data)
+    fun sendWaypointToMap(Data: DJILatLng?) {
+        waypointDataProcessor.onNext(Data)
     }
 
 //    override fun getConnectionStatus(): Boolean {
