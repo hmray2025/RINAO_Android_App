@@ -126,6 +126,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private Button mapExpand;
     private PachKeyManager pachManager;
     private Button mMediaManagerBtn;
+
     //endregion
 
     //region Lifecycle
@@ -183,7 +184,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 //            }
 //        });
         mapWidget.onCreate(savedInstanceState);
-        pachManager = new PachKeyManager(); // points to object created in DJIAircraftMainActivity
+        pachManager = PachKeyManager.Companion.getInstance(); // points to object created in DJIAircraftMainActivity
         streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
 //        mMediaManagerBtn = (Button)findViewById(R.id.btn_mediaManager); // where to put this?
 //        mMediaManagerBtn.setOnClickListener(this);
@@ -264,21 +265,19 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         super.onResume();
         mapWidget.onResume();
         compositeDisposable = new CompositeDisposable();
-
-        Log.d("JAKEDEBUG2", "onResume called");
         mapWidget.subscribeToDataSource(pachManager.getDataFlowable());
-
-        // current state: getDataFlowable returns data from subscription within
-        // pachManager, but not in defaultLayoutActivity.
-        // different threads?
-        // different packages?
-        compositeDisposable.add(pachManager.getDataFlowable()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        data -> {
-                            Log.d("JAKEDEBUG2", "Data flowable: " + data);
-//                            mapWidget.addTuskWaypointOnMap(data);
-                            }));
+        compositeDisposable.add(
+                pachManager.getDummyDataProcessor()
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(
+                                data -> {
+                                    Log.d("JAKEDEBUG2", "Data: " + data);
+                                },
+                                error -> {
+                                    Log.d("JAKEDEBUG2", "Error: " + error);
+                                }
+                        )
+        );
 
         compositeDisposable.add(systemStatusListPanelWidget.closeButtonPressed()
                 .observeOn(AndroidSchedulers.mainThread())

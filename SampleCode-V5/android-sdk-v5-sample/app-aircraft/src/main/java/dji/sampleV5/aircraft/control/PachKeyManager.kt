@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.lang.Math.random
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -83,6 +84,7 @@ class PachKeyManager() {
     // Initialize necessary classes
     private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
     private val waypointDataProcessor = PublishProcessor.create<DJILatLng>()
+    val dummyDataProcessor = PublishProcessor.create<String>()
     val telemService = TuskServiceWebsocket()
 
     /**
@@ -90,6 +92,9 @@ class PachKeyManager() {
      * to display the current status of the aircraft. These need to be moved to the datastructures
      * file, in order to keep the code consistent and clean.
      */
+
+    private var compositeDisposable: CompositeDisposable = CompositeDisposable()
+
     private val safetyState = SafetyState()
     private var actionState = AircraftAction("", false)
     private var controller = VirtualStickControl()
@@ -149,9 +154,6 @@ class PachKeyManager() {
         initializeFlightParameters()
         keyDisposables = CompositeDisposable()
 //        streamer.startStream()
-        getDataFlowable().subscribe{
-            Log.v("JAKEDEBUG2", "Waypoint Data: $it")
-        }
     }
 
     fun updateStatusWidget() {
@@ -162,6 +164,7 @@ class PachKeyManager() {
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
             var nextWaypoint = this@PachKeyManager.telemService.nextWaypoint
             while(isActive) {
+                sendDummyData("${random()}")
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
                 for (i in safetyState.failures.indices) {
@@ -1106,11 +1109,15 @@ class PachKeyManager() {
     }
 
     fun getDataFlowable(): Flowable<DJILatLng> {
-        return waypointDataProcessor
+        return waypointDataProcessor.onBackpressureBuffer()
     }
 
     fun sendWaypointToMap(Data: DJILatLng?) {
-        waypointDataProcessor.onNext(Data)
+        waypointDataProcessor.offer(Data)
+    }
+
+    fun sendDummyData(Data: String) {
+        dummyDataProcessor.offer(Data)
     }
 
 //    override fun getConnectionStatus(): Boolean {

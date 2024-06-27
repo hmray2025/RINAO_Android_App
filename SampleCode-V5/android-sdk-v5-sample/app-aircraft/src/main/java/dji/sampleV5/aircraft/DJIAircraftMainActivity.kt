@@ -21,7 +21,7 @@ import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
  * Copyright (c) 2022, DJI All Rights Reserved.
  */
 class DJIAircraftMainActivity : DJIMainActivity() {
-    val TuskManger = PachKeyManager()
+    val TuskManger = PachKeyManager.getInstance()
     override fun prepareUxActivity() {
         UxSharedPreferencesUtil.initialize(this)
         GlobalPreferencesManager.initialize(DefaultGlobalPreferences(this))
