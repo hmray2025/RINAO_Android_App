@@ -162,7 +162,7 @@ class PachKeyManager() {
         mainScope.launch {
             var status = ""
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
-            var nextWaypoint = this@PachKeyManager.telemService.nextWaypoint
+            var wp = DJILatLng(0.0,0.0)
             while(isActive) {
                 sendDummyData("${random()}")
                 this@PachKeyManager.safetyChecks()
@@ -174,21 +174,24 @@ class PachKeyManager() {
                 }
                 if (this@PachKeyManager.statusData.goHomeStatus == "RETURNING_TO_HOME") {
                     status = "Returning Home"
+                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | Flight Info Received | $warnings" else "Manual | Flight Info Received"
+                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.telemService.nextWaypoint == prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | $warnings" else "Manual"
+                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.actionState.autonomous) {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
                     if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
-                        var wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
-                        this@PachKeyManager.sendWaypointToMap(wp)
+                        wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
                     }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
+                this@PachKeyManager.sendWaypointToMap(wp)
                 pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
                 pachModel.updateMsg(status)
                 delay(1000)

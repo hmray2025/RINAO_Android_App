@@ -374,7 +374,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
             }
             setGimbalAttitudeEnabled(typedArray.getBoolean(R.styleable.MapWidget_uxsdk_gimbalAttitudeEnabled, true));
 
-            drawable = context.getDrawable(R.drawable.uxsdk_bg_rtk_guidance_step_oval_blue_solid);
+            drawable = context.getDrawable(R.drawable.uxsdk_ic_metering_switch);
             if (drawable != null) {
                 setTuskWaypointIcon(drawable);
             }
@@ -482,13 +482,22 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     }
 
     protected void updateTuskTelemetryWaypoint(DJILatLng waypoint) {
-        Log.d("JAKEDEBUG2","map got the thing");
         if (tuskMarker != null) {
             tuskMarker.setPosition(waypoint);
         } else {
+            if (!waypoint.isAvailable()) {
+                removeTuskTelemetryWaypoint();
+            }
             addTuskWaypointOnMap(waypoint);
         }
 
+    }
+
+    protected void removeTuskTelemetryWaypoint() {
+        if (tuskMarker != null) {
+            tuskMarker.remove();
+            tuskMarker = null;
+        }
     }
     @Nullable
     public void addTuskWaypointOnMap(DJILatLng wp) {
@@ -496,7 +505,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         // Draw marker
         DJIMarkerOptions wpOptions = new DJIMarkerOptions()
                 .position(wp)
-                .icon(DJIBitmapDescriptorFactory.fromBitmap(ViewUtil.getBitmapFromVectorDrawable(aircraftIcon)))
+                .icon(DJIBitmapDescriptorFactory.fromBitmap(ViewUtil.getBitmapFromVectorDrawable(TuskWaypointIcon)))
                 .title(TUSK_MARKER)
                 .anchor(homeIconAnchorX, homeIconAnchorY)
                 .zIndex(HOME_MARKER_ELEVATION)
