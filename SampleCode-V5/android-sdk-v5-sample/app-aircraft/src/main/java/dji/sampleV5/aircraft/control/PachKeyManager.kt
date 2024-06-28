@@ -41,7 +41,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.lang.Math.random
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -83,8 +82,7 @@ class PachKeyManager() {
     }
     // Initialize necessary classes
     private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
-    private val waypointDataProcessor = PublishProcessor.create<DJILatLng>()
-    val dummyDataProcessor = PublishProcessor.create<String>()
+    private val waypointDataProcessor = PublishProcessor.create<DJILatLng>() // for publishing waypoints to map
     val telemService = TuskServiceWebsocket()
 
     /**
@@ -164,7 +162,6 @@ class PachKeyManager() {
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
             var wp = DJILatLng(0.0,0.0)
             while(isActive) {
-                sendDummyData("${random()}")
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
                 for (i in safetyState.failures.indices) {
@@ -1115,12 +1112,9 @@ class PachKeyManager() {
         return waypointDataProcessor.onBackpressureBuffer()
     }
 
+    // Function to send data to the data processor
     fun sendWaypointToMap(Data: DJILatLng?) {
         waypointDataProcessor.offer(Data)
-    }
-
-    fun sendDummyData(Data: String) {
-        dummyDataProcessor.offer(Data)
     }
 
 //    override fun getConnectionStatus(): Boolean {

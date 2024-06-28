@@ -469,22 +469,19 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         disposables.add(
                 dataFlowable
                         .distinctUntilChanged()
-                        .doOnSubscribe(disposable -> isSubscribedToPachManager = true)
-                        .doOnError(throwable -> Log.e("JAKEDEBUG2", "flow error " + throwable.getMessage()))
-                        .doFinally(() -> isSubscribedToPachManager = false)
-                        .observeOn(AndroidSchedulers.mainThread()) // Or another appropriate thread
+                        .doOnError(throwable -> Log.e("MapWidget", "flow error " + throwable.getMessage()))
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(data -> updateTuskTelemetryWaypoint(data), throwable -> throwable.printStackTrace())
         );
     }
 
-    public boolean isSubscribedToPachManager() {
-        return isSubscribedToPachManager;
-    }
-
+    // this function handles the data from the flowable. There should be
+    // a maximum of one tusk waypoint at a time.
     protected void updateTuskTelemetryWaypoint(DJILatLng waypoint) {
         if (tuskMarker != null) {
             tuskMarker.setPosition(waypoint);
         } else {
+            // called when DJILatLong(0.0, 0.0) is sent from pachKeyManager
             if (!waypoint.isAvailable()) {
                 removeTuskTelemetryWaypoint();
             }

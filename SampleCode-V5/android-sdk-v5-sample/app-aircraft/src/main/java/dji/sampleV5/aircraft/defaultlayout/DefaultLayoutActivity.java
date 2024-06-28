@@ -266,20 +266,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         super.onResume();
         mapWidget.onResume();
         compositeDisposable = new CompositeDisposable();
-        mapWidget.subscribeToDataSource(pachManager.getDataFlowable());
-        compositeDisposable.add(
-                pachManager.getDummyDataProcessor()
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(
-                                data -> {
-                                    Log.d("JAKEDEBUG2", "Data: " + data);
-                                },
-                                error -> {
-                                    Log.d("JAKEDEBUG2", "Error: " + error);
-                                }
-                        )
-        );
-
+        mapWidget.subscribeToDataSource(pachManager.getDataFlowable()); // connects the mapWidget to the dataFlowable in PachKeyManager
         compositeDisposable.add(systemStatusListPanelWidget.closeButtonPressed()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pressed -> {
