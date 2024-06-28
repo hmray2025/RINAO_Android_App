@@ -435,6 +435,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
 
     private void initDefaults() {
         aircraftIcon = getResources().getDrawable(R.drawable.uxsdk_ic_compass_aircraft);
+        TuskWaypointIcon = getResources().getDrawable(R.drawable.uxsdk_ic_metering_switch);
         homeIcon = getResources().getDrawable(R.drawable.uxsdk_ic_home);
         gimbalYawIcon = getResources().getDrawable(R.drawable.uxsdk_ic_map_gimbal_yaw);
     }
