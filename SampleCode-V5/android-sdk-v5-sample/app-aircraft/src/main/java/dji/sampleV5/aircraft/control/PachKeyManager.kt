@@ -90,9 +90,6 @@ class PachKeyManager() {
      * to display the current status of the aircraft. These need to be moved to the datastructures
      * file, in order to keep the code consistent and clean.
      */
-
-    private var compositeDisposable: CompositeDisposable = CompositeDisposable()
-
     private val safetyState = SafetyState()
     private var actionState = AircraftAction("", false)
     private var controller = VirtualStickControl()
@@ -183,9 +180,9 @@ class PachKeyManager() {
                 }
                 if (this@PachKeyManager.actionState.autonomous) {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
-                    if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
-                        wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
-                    }
+                if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
+                    wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
+                }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
                 this@PachKeyManager.sendWaypointToMap(wp)
