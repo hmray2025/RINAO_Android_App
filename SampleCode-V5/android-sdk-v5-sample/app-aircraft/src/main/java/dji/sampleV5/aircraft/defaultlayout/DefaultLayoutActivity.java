@@ -72,6 +72,7 @@ import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget;
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget;
 import dji.v5.ux.map.MapWidget;
 import dji.v5.ux.mapkit.core.maps.DJIMap;
+import dji.v5.ux.mapkit.core.models.DJILatLng;
 import dji.v5.ux.pachWidget.PachWidget;
 import dji.v5.ux.pachWidget.PachWidgetModel;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
@@ -79,7 +80,9 @@ import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
 import dji.v5.ux.visualcamera.zoom.FocalZoomWidget;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
@@ -123,6 +126,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     private Button mapExpand;
     private PachKeyManager pachManager;
     private Button mMediaManagerBtn;
+
     //endregion
 
     //region Lifecycle
@@ -180,13 +184,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 //            }
 //        });
         mapWidget.onCreate(savedInstanceState);
-        pachManager = new PachKeyManager(); // points to object created in DJIAircraftMainActivity
+        pachManager = PachKeyManager.Companion.getInstance(); // points to object created in DJIAircraftMainActivity
+//        pachManager = new PachKeyManager(); // points to object created in this class
         streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
-
 //        mMediaManagerBtn = (Button)findViewById(R.id.btn_mediaManager); // where to put this?
 //        mMediaManagerBtn.setOnClickListener(this);
     }
-
     private void initClickListener() {
         secondaryFPVWidget.setOnClickListener(v -> swapVideoSource());
         initChannelStateListener();
@@ -263,6 +266,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         super.onResume();
         mapWidget.onResume();
         compositeDisposable = new CompositeDisposable();
+        mapWidget.subscribeToDataSource(pachManager.getDataFlowable()); // connects the mapWidget to the dataFlowable in PachKeyManager
         compositeDisposable.add(systemStatusListPanelWidget.closeButtonPressed()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pressed -> {
@@ -285,6 +289,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 .subscribeOn(SchedulerProvider.io())
                 .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
         );
+//        compositeDisposable.add(pachManager.getDataFlowable()
+//                .observeOn(SchedulerProvider.io())
+//                .subscribeOn(SchedulerProvider.io())
+//                .subscribe(result -> Log.d("JAKEDEBUG2", "pachwidget data: " + result))
+//
+//        );
         if (streamManager.isStreaming()) {
             liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
         }

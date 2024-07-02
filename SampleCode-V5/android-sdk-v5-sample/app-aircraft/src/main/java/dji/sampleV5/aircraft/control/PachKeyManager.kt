@@ -30,9 +30,12 @@ import dji.v5.common.callback.CommonCallbacks
 import dji.v5.common.error.IDJIError
 import dji.v5.common.utils.RxUtil
 import dji.v5.manager.KeyManager
+import dji.v5.ux.mapkit.core.models.DJILatLng
 import dji.v5.ux.pachWidget.PachWidgetModel
+import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.functions.Consumer
+import io.reactivex.rxjava3.processors.PublishProcessor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -79,7 +82,7 @@ class PachKeyManager() {
     }
     // Initialize necessary classes
     private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
-//    var listener: WaypointListener? = null
+    private val waypointDataProcessor = PublishProcessor.create<DJILatLng>() // for publishing waypoints to map
     val telemService = TuskServiceWebsocket()
 
     /**
@@ -154,6 +157,7 @@ class PachKeyManager() {
         mainScope.launch {
             var status = ""
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
+            var wp = DJILatLng(0.0,0.0)
             while(isActive) {
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
@@ -164,17 +168,24 @@ class PachKeyManager() {
                 }
                 if (this@PachKeyManager.statusData.goHomeStatus == "RETURNING_TO_HOME") {
                     status = "Returning Home"
+                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | Flight Info Received | $warnings" else "Manual | Flight Info Received"
+                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.telemService.nextWaypoint == prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | $warnings" else "Manual"
+                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.actionState.autonomous) {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
+                if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
+                    wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
+                }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
+                this@PachKeyManager.sendWaypointToMap(wp)
                 pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
                 pachModel.updateMsg(status)
                 delay(1000)
@@ -1094,10 +1105,14 @@ class PachKeyManager() {
         }
     }
 
-//    interface WaypointListener {
-//        fun onReachedWaypoint()
-//        fun onUpdatedWaypoints()
-//    }
+    fun getDataFlowable(): Flowable<DJILatLng> {
+        return waypointDataProcessor.onBackpressureBuffer()
+    }
+
+    // Function to send data to the data processor
+    fun sendWaypointToMap(Data: DJILatLng?) {
+        waypointDataProcessor.offer(Data)
+    }
 
 //    override fun getConnectionStatus(): Boolean {
 //        return this.telemService.getConnectionStatus()
