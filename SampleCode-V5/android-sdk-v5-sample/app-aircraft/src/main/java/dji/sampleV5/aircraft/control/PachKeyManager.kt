@@ -82,9 +82,13 @@ class PachKeyManager() {
         }
     }
     // Initialize necessary classes
-    private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
     private var sartopo: SartopoService = SartopoService.getInstance()
     private val waypointDataProcessor = PublishProcessor.create<DJILatLng>() // for publishing waypoints to map
+    private val connectionDataProcessor = PublishProcessor.create<Boolean>() // for publishing connection status to status indicator
+    private val autonamousDataProcessor = PublishProcessor.create<Boolean>() // for publishing messages to status indicator
+    private val actionDataProcessor = PublishProcessor.create<String>() // for publishing action status to status indicator
+    private val warningDataProcessor = PublishProcessor.create<String>() // for publishing warnings to status indicator
+    private val messageDataProcessor = PublishProcessor.create<String>() // for publishing messages to status indicator
     val telemService = TuskServiceWebsocket()
 
     /**
@@ -161,19 +165,6 @@ class PachKeyManager() {
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
             var wp = DJILatLng(0.0,0.0)
             while(isActive) {
-
-                if (sartopo.isURLValid()) {
-                    sartopo.sendGetRequest(stateData.longitude!!, stateData.latitude!!)
-                    Log.v("Sartopo", "Sartopo URL is valid\n" +
-                            "Base: ${sartopo.getBaseURL()}\n" +
-                            "Access: ${sartopo.getAccessURL()}\n" +
-                            "ID: ${sartopo.getDeviceID()}\n")
-                } else {
-                    Log.e("Sartopo", "Sartopo URL is not valid\n" +
-                            "Base: ${sartopo.getBaseURL()}\n" +
-                            "Access: ${sartopo.getAccessURL()}\n" +
-                            "ID: ${sartopo.getDeviceID()}\n")
-                }
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
                 for (i in safetyState.failures.indices) {
@@ -201,8 +192,10 @@ class PachKeyManager() {
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
                 this@PachKeyManager.sendWaypointToMap(wp)
-                pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
-                pachModel.updateMsg(status)
+//                pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
+//                pachModel.updateMsg(status)
+
+                sendDataToStatusWidget(status, this@PachKeyManager.telemService.getConnectionStatus())
                 delay(1000)
             }
         }
@@ -352,6 +345,18 @@ class PachKeyManager() {
                 velocityZ = it.z)
             sendState(stateData)
             Log.d("PachTelemetry", "AircraftVelocity $it")
+            if (sartopo.isURLValid()) {
+                sartopo.sendGetRequest(stateData.longitude!!, stateData.latitude!!)
+                Log.v("Sartopo", "Sartopo URL is valid\n" +
+                        "Base: ${sartopo.getBaseURL()}\n" +
+                        "Access: ${sartopo.getAccessURL()}\n" +
+                        "ID: ${sartopo.getDeviceID()}\n")
+            } else {
+                Log.e("Sartopo", "Sartopo URL is not valid\n" +
+                        "Base: ${sartopo.getBaseURL()}\n" +
+                        "Access: ${sartopo.getAccessURL()}\n" +
+                        "ID: ${sartopo.getDeviceID()}\n")
+            }
         }
 
         registerKey(
@@ -1119,7 +1124,21 @@ class PachKeyManager() {
         }
     }
 
-    fun getDataFlowable(): Flowable<DJILatLng> {
+    fun getConnectionFlowable(): Flowable<Boolean> {
+        return connectionDataProcessor.onBackpressureBuffer()
+    }
+
+    fun getMessageFlowable(): Flowable<String> {
+        return messageDataProcessor.onBackpressureBuffer()
+    }
+
+    private fun sendDataToStatusWidget(message: String, connection: Boolean) {
+        messageDataProcessor.offer(message)
+        connectionDataProcessor.offer(connection)
+    }
+
+
+    fun getWaypointFlowable(): Flowable<DJILatLng> {
         return waypointDataProcessor.onBackpressureBuffer()
     }
 

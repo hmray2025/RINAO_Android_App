@@ -1,50 +1,109 @@
 package dji.v5.ux.pachWidget;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import java.util.List;
+
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Flowable;
+
 public class PachWidgetModel extends ViewModel{
     private static PachWidgetModel instance = null;
-    private IPachWidgetModel pachKeyManager;
-    private MutableLiveData<String> _msgdata; // updated by PachKeyManager
-    public LiveData<String> msgdata; // observable to Widgets
-    private MutableLiveData<Boolean> _connectiondata; // updated by PachKeyManager
-    public LiveData<Boolean> connectiondata; // observable to Widgets
+    private CompositeDisposable disposables;
+    private Boolean autonamousFlightState;
+    private Boolean connectionState;
+    private List<String> flightActions;
+    private List<String> flightWarnings;
+    MutableLiveData<String> _msgdata = new MutableLiveData<>();
+    MutableLiveData<Boolean> _connectiondata = new MutableLiveData<>();
 
-    private PachWidgetModel() { // constructor
-        _msgdata = new MutableLiveData<>();
-        _connectiondata = new MutableLiveData<>();
-        msgdata = _msgdata;
-        connectiondata = _connectiondata;
+
+    PachWidgetModel() { // constructor
+        disposables = new CompositeDisposable();
+
     }
+//    void subscribeToDataSources(Flowable<Boolean> connectionData, Flowable<Boolean> autonamousData, Flowable<List<String>> flightActionsData, Flowable<List<String>> flightWarningsData) {
+//        disposables.add((Disposable) connectionData
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(msg -> {
+//                    connectionState = msg;
+//                    publishConnectionState();
+//                }));
+//        disposables.add((Disposable) autonamousData
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(msg -> {
+//                    autonamousFlightState = msg;
+//                    parseAndPublishMsg();
+//                }));
+//        disposables.add((Disposable) flightActionsData
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(msg -> {
+//                    flightActions = msg;
+//                    parseAndPublishMsg();
+//                }));
+//        disposables.add((Disposable) flightWarningsData
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(msg -> {
+//                    flightWarnings = msg;
+//                    parseAndPublishMsg();
+//                }));
+//    }
 
-    // singleton pattern - only one instance of this class can exist. Many PachWidgets
-    // can use this instance to update the message and connection status, but they will
-    // reference the same instance of the model. This is useful because it allows for
-    // a single source of truth for the message and connection status, coming from the
-    // PachKeyManager class.
-    public static synchronized PachWidgetModel getInstance() {
-        if (instance == null) {
-            instance = new PachWidgetModel();
+        // primitive change - will be updated in the future
+        void subscribeToDataSources(Flowable<Boolean> connectionData, Flowable<String> msgData) {
+            disposables.add(connectionData
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            data -> {
+                                connectionState = data;
+                                publishConnectionState();
+                                },
+                            error -> Log.e("PachWidgetModel", "Error observing connection data", error)
+                    ));
+            disposables.add(msgData
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            data -> {
+                                _msgdata.postValue(data);
+                                },
+                            error -> Log.e("PachWidgetModel", "Error observing message data", error)
+                    ));
         }
-        return instance;
+
+    void parseAndPublishMsg() {
+        String data = "";
+        if (autonamousFlightState) {
+            data = "Autonamous";
+        } else {
+            data = "Maunal";
+        }
+        if (!flightActions.isEmpty()) {
+            for (String action : flightActions) {
+                data += " | " + action;
+            }
+        }
+        if (!flightWarnings.isEmpty()) {
+            data += " | warnings: ";
+            for (String warning : flightWarnings) {
+                data += " | " + warning;
+            }
+        }
+        _msgdata.postValue(data);
     }
 
-    // update functions follow an encapsulation pattern, where the PachKeyManager class
-    // updates the MutableLiveData objects, and the Widgets observe the LiveData objects.
-    // This prevents the widgets from being able to change the data they get from the
-    // PachKeyManager, and ensures that the data is only updated by the PachKeyManager.
-    public void updateMsg(String msg) {
-        _msgdata.setValue(msg);
-        msgdata = _msgdata;
-    }
-    public void updateConnection(Boolean connection) {
-        _connectiondata.setValue(connection);
-        connectiondata = _connectiondata;
+    void publishConnectionState() {
+        _connectiondata.postValue(connectionState);
     }
 
-    public void setPach(IPachWidgetModel pach) {
-        this.pachKeyManager = pach;
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        disposables.dispose(); // Dispose all subscriptions
     }
 }
