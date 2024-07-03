@@ -32,6 +32,7 @@ import dji.v5.utils.common.LogUtils
 import dji.v5.utils.common.PermissionUtil
 import dji.v5.utils.common.StringUtils
 import dji.v5.utils.common.ToastUtils
+import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.Serializable
 
@@ -60,6 +61,8 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     private val handler: Handler = Handler(Looper.getMainLooper())
 
     abstract fun prepareUxActivity()
+
+    abstract fun getSartopoWidgetModel(): ISartopoWidgetModel
 
     abstract fun prepareTestingToolsActivity()
 
@@ -224,6 +227,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                 handler.postDelayed({
                     setStatus(1, droneStatus)
                     prepareUxActivity()
+                    sartopo_widget.setSartopoWidgetModel(getSartopoWidgetModel())
                 }, 5000)
             }
 

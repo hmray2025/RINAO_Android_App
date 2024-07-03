@@ -4,6 +4,7 @@ import dji.sampleV5.aircraft.telemetry.AircraftAction
 import dji.sampleV5.aircraft.telemetry.Coordinate
 import dji.sampleV5.aircraft.telemetry.Event
 import dji.sampleV5.aircraft.telemetry.SafetyState
+import dji.sampleV5.aircraft.telemetry.SartopoService
 import dji.sampleV5.aircraft.telemetry.StreamInfo
 import dji.sampleV5.aircraft.telemetry.TuskAircraftState
 import dji.sampleV5.aircraft.telemetry.TuskAircraftStatus
@@ -82,6 +83,7 @@ class PachKeyManager() {
     }
     // Initialize necessary classes
     private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
+    private var sartopo: SartopoService = SartopoService.getInstance()
     private val waypointDataProcessor = PublishProcessor.create<DJILatLng>() // for publishing waypoints to map
     val telemService = TuskServiceWebsocket()
 
@@ -159,6 +161,19 @@ class PachKeyManager() {
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
             var wp = DJILatLng(0.0,0.0)
             while(isActive) {
+
+                if (sartopo.isURLValid()) {
+                    sartopo.sendGetRequest(stateData.longitude!!, stateData.latitude!!)
+                    Log.v("Sartopo", "Sartopo URL is valid\n" +
+                            "Base: ${sartopo.getBaseURL()}\n" +
+                            "Access: ${sartopo.getAccessURL()}\n" +
+                            "ID: ${sartopo.getDeviceID()}\n")
+                } else {
+                    Log.e("Sartopo", "Sartopo URL is not valid\n" +
+                            "Base: ${sartopo.getBaseURL()}\n" +
+                            "Access: ${sartopo.getAccessURL()}\n" +
+                            "ID: ${sartopo.getDeviceID()}\n")
+                }
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
                 for (i in safetyState.failures.indices) {
@@ -314,7 +329,6 @@ class PachKeyManager() {
                 altitude = it.altitude
             )
             sendState(stateData)
-
             Log.v("PachTelemetry", "KeyAircraftLocation $it")
         }
 

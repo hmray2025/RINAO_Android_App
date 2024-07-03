@@ -4,6 +4,7 @@ import android.util.Log
 import android.widget.Toast
 import dji.sampleV5.aircraft.control.PachKeyManager
 import dji.sampleV5.aircraft.defaultlayout.DefaultLayoutActivity
+import dji.sampleV5.aircraft.telemetry.SartopoService
 import dji.sampleV5.modulecommon.DJIMainActivity
 import dji.v5.common.utils.GeoidManager
 import dji.v5.manager.datacenter.livestream.StreamQuality
@@ -11,6 +12,7 @@ import dji.v5.ux.core.communication.DefaultGlobalPreferences
 import dji.v5.ux.core.communication.GlobalPreferencesManager
 import dji.v5.ux.core.util.UxSharedPreferencesUtil
 import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
+import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel
 
 /**
  * Class Description
@@ -22,6 +24,7 @@ import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
  */
 class DJIAircraftMainActivity : DJIMainActivity() {
     val TuskManger = PachKeyManager.getInstance()
+    val sartopoService: SartopoService = SartopoService.getInstance()
     override fun prepareUxActivity() {
         UxSharedPreferencesUtil.initialize(this)
         GlobalPreferencesManager.initialize(DefaultGlobalPreferences(this))
@@ -41,6 +44,10 @@ class DJIAircraftMainActivity : DJIMainActivity() {
 //
 
 
+    }
+
+    override fun getSartopoWidgetModel(): ISartopoWidgetModel {
+        return sartopoService
     }
 
     override fun prepareTestingToolsActivity() {

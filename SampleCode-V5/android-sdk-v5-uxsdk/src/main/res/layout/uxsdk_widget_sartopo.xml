@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    <TextView
+        android:id="@+id/sartopo_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SARTopo"
+        android:textSize="@dimen/uxsdk_24_dp"
+        android:textStyle="bold"
+        android:textColor="@color/uxsdk_black">
+    </TextView>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/sartopo_url_container"
+        app:layout_constraintTop_toBottomOf="@id/sartopo_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/uxsdk_14_dp"
+        android:background="@drawable/uxsdk_bg_white_radius">
+        <TextView
+            android:id="@+id/sartopo_url"
+            app:layout_constraintBottom_toBottomOf="@id/sartopo_url_container"
+            app:layout_constraintStart_toStartOf="@id/sartopo_url_container"
+            app:layout_constraintTop_toTopOf="@id/sartopo_url_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SARTopo URL: not set"
+            android:textSize="@dimen/uxsdk_14_dp"
+            android:padding="@dimen/uxsdk_10_dp">
+        </TextView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Access URL:"
+        android:textSize="@dimen/uxsdk_12_dp"
+        app:layout_constraintTop_toBottomOf="@id/sartopo_url_container"
+        app:layout_constraintStart_toStartOf="parent"></TextView>
+    <EditText
+        android:id="@+id/edit_access_url"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:inputType="text"
+        android:layout_marginStart="@dimen/uxsdk_10_dp"
+        android:layout_marginEnd="@dimen/uxsdk_10_dp"
+        android:text="Not Set"></EditText>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Device ID:"
+        android:textSize="@dimen/uxsdk_12_dp"
+        app:layout_constraintTop_toBottomOf="@id/sartopo_url_container"
+        app:layout_constraintStart_toStartOf="parent"></TextView>
+    <EditText
+        android:id="@+id/edit_device_id"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:inputType="text"
+        android:layout_marginStart="@dimen/uxsdk_10_dp"
+        android:layout_marginEnd="@dimen/uxsdk_10_dp"
+        android:text="Not Set"></EditText>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Base URL:"
+        android:textSize="@dimen/uxsdk_12_dp"
+        app:layout_constraintTop_toBottomOf="@id/sartopo_url_container"
+        app:layout_constraintStart_toStartOf="parent"></TextView>
+    <EditText
+        android:id="@+id/edit_base_url"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:inputType="text"
+        android:layout_marginStart="@dimen/uxsdk_10_dp"
+        android:layout_marginEnd="@dimen/uxsdk_10_dp"
+        android:text="Not Set"></EditText>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hint: The base URL should have everything up until the Access URL. Ex: https://caltopo.com/api/v1/position/report/"
+        android:textSize="@dimen/uxsdk_12_dp"
+        app:layout_constraintTop_toBottomOf="@id/sartopo_url_container"
+        app:layout_constraintStart_toStartOf="parent"></TextView>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

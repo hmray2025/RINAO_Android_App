@@ -147,6 +147,9 @@ abstract class ConstraintLayoutWidget<T> @JvmOverloads constructor(
      * @return update with widget state
      */
     open fun getWidgetStateUpdate(): Flowable<T> = widgetStateDataProcessor.onBackpressureBuffer()
+    fun initView(context: Context) {
+
+    }
 
     companion object {
         private const val TAG = "ConstraintLayoutWidget"

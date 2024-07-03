@@ -685,6 +685,12 @@
                     android:layout_marginBottom="16dp"
                     android:layout_marginEnd="16dp"
                     />
+                <dji.sampleV5.modulecommon.settingswidgets.SartopoWidget
+                    android:id="@+id/sartopo_widget"
+                    android:layout_width="match_parent"
+                    android:padding="8dp"
+                    android:layout_height="@dimen/uxsdk_500_dp"
+                    android:visibility="visible" />
             </LinearLayout>
             </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>

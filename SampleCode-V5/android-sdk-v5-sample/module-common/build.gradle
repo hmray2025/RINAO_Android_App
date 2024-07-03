@@ -54,6 +54,7 @@ dependencies {
     implementation deps.bugly
     implementation deps.leakcanary
     api deps.glide
+    implementation project(':uxsdk')
     kapt deps.glidecompiler
     api deps.dynamicanimation
     api deps.expandedit
