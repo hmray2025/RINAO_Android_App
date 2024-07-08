@@ -1,5 +1,8 @@
 package dji.sampleV5.modulecommon.settingswidgets;
 
+import static android.app.PendingIntent.getActivity;
+import static android.provider.Settings.System.getString;
+
 import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,9 +14,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import dji.v5.ux.R;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 public class SartopoWidget extends ConstraintLayoutWidget<Object> {
     /*
@@ -27,6 +31,7 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
     private String access_url;
     private String device_id;
     private ISartopoWidgetModel sartopoWidgetModel;
+
     public SartopoWidget(@NonNull Context context) {
         super(context);
     }
@@ -41,7 +46,8 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
     @Override
     protected void initView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super.initView(context);
-        sharedPreferences = context.getSharedPreferences("SARTopoWidget", Context.MODE_MULTI_PROCESS);
+//        dataStore = new RxPreferenceDataStoreBuilder(context, /*name=*/ "sartopo_settings").build();
+        sharedPreferences = context.getSharedPreferences("SARTopo_preferences",Context.MODE_PRIVATE);
         inflate(context, R.layout.uxsdk_widget_sartopo, this);
 
         EditText editAccess = findViewById(R.id.edit_access_url);
@@ -50,9 +56,9 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
         TextView url = findViewById(R.id.sartopo_url);
 
         try {
-            base_url = retrieveString("SARTopoBaseURL");
-            access_url = retrieveString("SARTopoAccessURL");
-            device_id = retrieveString("SARTopoDeviceID");
+            base_url = retrieveString("base_url");
+            access_url = retrieveString("access_url");
+            device_id = retrieveString("device_id");
             sartopoWidgetModel.setBaseURL(base_url);
             sartopoWidgetModel.setAccessURL(access_url);
             sartopoWidgetModel.setDeviceID(device_id);
@@ -62,9 +68,9 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
             access_url = "Not set";
             device_id = "Not set";
         }
-        url.setText(base_url + access_url + "?id=" + device_id + "&lat={LAT}&lng={LNG}");
+        url.setText(String.format("%s%s?id=%s&lat={LAT}&lng={LNG}", base_url, access_url, device_id));
 
-        editAccess.setText(retrieveString("SARTopoAccessURL")); // Use the same key for saving and retrieving
+        editAccess.setText(retrieveString("access_url")); // Use the same key for saving and retrieving
         editAccess.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -78,18 +84,18 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
             public void afterTextChanged(Editable s) {
                 String text = s.toString();
                 // Save the text to SharedPreferences
-                saveString("SARTopoAccessURL", text);
+                saveString("access_url", text);
                 // Assuming sartopoWidgetModel is not null and properly initialized
                 if (sartopoWidgetModel != null) {
                     sartopoWidgetModel.setAccessURL(text);
                     base_url = sartopoWidgetModel.getBaseURL();
                     access_url = sartopoWidgetModel.getAccessURL();
                     device_id = sartopoWidgetModel.getDeviceID();
-                    url.setText(base_url + access_url + "?id=" + device_id + "&lat={LAT}&lng={LNG}");
+                    url.setText(String.format("%s%s?id=%s&lat={LAT}&lng={LNG}", base_url, access_url, device_id));
                 }
             }
         });
-        editID.setText(retrieveString("SARTopoDeviceID")); // Use the same key for saving and retrieving
+        editID.setText(retrieveString("device_id")); // Use the same key for saving and retrieving
         editID.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -103,18 +109,18 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
             public void afterTextChanged(Editable s) {
                 String text = s.toString();
                 // Save the text to SharedPreferences
-                saveString("SARTopoDeviceID", text);
+                saveString("device_id", text);
                 // Assuming sartopoWidgetModel is not null and properly initialized
                 if (sartopoWidgetModel != null) {
                     sartopoWidgetModel.setDeviceID(text);
                     base_url = sartopoWidgetModel.getBaseURL();
                     access_url = sartopoWidgetModel.getAccessURL();
                     device_id = sartopoWidgetModel.getDeviceID();
-                    url.setText(base_url + access_url + "?id=" + device_id + "&lat={LAT}&lng={LNG}");
+                    url.setText(String.format("%s%s?id=%s&lat={LAT}&lng={LNG}", base_url, access_url, device_id));
                 }
             }
         });
-        editBase.setText(retrieveString("SARTopoBaseURL")); // Use the same key for saving and retrieving
+        editBase.setText(retrieveString("base_url")); // Use the same key for saving and retrieving
         editBase.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -128,14 +134,14 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
             public void afterTextChanged(Editable s) {
                 String text = s.toString();
                 // Save the text to SharedPreferences
-                saveString("SARTopoBaseURL", text);
+                saveString("base_url", text);
                 // Assuming sartopoWidgetModel is not null and properly initialized
                 if (sartopoWidgetModel != null) {
                     sartopoWidgetModel.setBaseURL(text);
                     base_url = sartopoWidgetModel.getBaseURL();
                     access_url = sartopoWidgetModel.getAccessURL();
                     device_id = sartopoWidgetModel.getDeviceID();
-                    url.setText(base_url + access_url + "?id=" + device_id + "&lat={LAT}&lng={LNG}");
+                    url.setText(String.format("%s%s?id=%s&lat={LAT}&lng={LNG}", base_url, access_url, device_id));
 
                 }
             }
@@ -167,9 +173,25 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
         editor.apply();
     }
 
+//    public void saveString(String key, String value) {
+//        Preferences.Key<String> preferencesKey = PreferencesKeys.stringKey(key);
+//        Disposable savestr = dataStore.updateDataAsync(prefsIn -> {
+//            MutablePreferences mutablePreferences = prefsIn.toMutablePreferences();
+//            mutablePreferences.set(preferencesKey, value);
+//            return Single.just(mutablePreferences);
+//        }).subscribe(
+//                prefsOut -> {
+//                    // success, no action needed
+//                },
+//                err -> {
+//                    Log.e("SartopoWidget", "Error saving string to DataStore: " + err.getMessage());
+//                }
+//        );
+//    }
+
     // Method to retrieve string from SharedPreferences
     public String retrieveString(String key) {
-        return sharedPreferences.getString(key, ""); // Return an empty string if the key doesn't exist
+        return sharedPreferences.getString(key, "Not set");
     }
 
     public void setSartopoWidgetModel(ISartopoWidgetModel sartopoWidgetModel) {
