@@ -139,17 +139,17 @@ class StreamManager() : IStreamManager{
     }
 
 
-    override fun setStreamQuality(choice: Int) {
+    override fun setStreamQuality(choice: StreamQuality) {
         when (choice) {
-            0 -> {
+            StreamQuality.FULL_HD -> {
                 manager.liveStreamQuality = StreamQuality.FULL_HD
                 Log.d("Livestream", "StreamManager set quality to ${StreamQuality.FULL_HD}")
             }
-            1 -> {
+            StreamQuality.HD -> {
                 manager.liveStreamQuality = StreamQuality.HD
                 Log.d("Livestream", "StreamManager set quality to ${StreamQuality.HD}")
             }
-            2 -> {
+            StreamQuality.SD -> {
                 manager.liveStreamQuality = StreamQuality.SD
                 Log.d("Livestream", "StreamManager set quality to ${StreamQuality.SD}")
             }

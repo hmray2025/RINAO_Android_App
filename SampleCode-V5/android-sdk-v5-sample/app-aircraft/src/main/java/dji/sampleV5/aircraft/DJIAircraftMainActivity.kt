@@ -13,6 +13,7 @@ import dji.v5.ux.core.communication.GlobalPreferencesManager
 import dji.v5.ux.core.util.UxSharedPreferencesUtil
 import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
 import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel
+import dji.sampleV5.modulecommon.util.IStreamManager
 import dji.sampleV5.modulecommon.util.ITuskServiceCallback
 
 /**
@@ -45,9 +46,9 @@ class DJIAircraftMainActivity : DJIMainActivity() {
         return sartopoService
     }
 
-//    override fun getTuskWidgetModel(): ITuskServiceCallback {
-//        return this
-//    }
+    override fun getStreamModel(): IStreamManager {
+        return TuskManger.streamer
+    }
 
     override fun prepareTestingToolsActivity() {
         enableTestingTools(AircraftTestingToolsActivity::class.java)
@@ -86,7 +87,7 @@ class DJIAircraftMainActivity : DJIMainActivity() {
         this.TuskManger.streamer.setBitrate(rate)
     }
 
-    override fun setStreamQuality(choice: Int) {
+    override fun setStreamQuality(choice: StreamQuality) {
         this.TuskManger.streamer.setStreamQuality(choice)
     }
 
