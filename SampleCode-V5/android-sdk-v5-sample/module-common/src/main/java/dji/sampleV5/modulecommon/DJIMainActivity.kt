@@ -65,7 +65,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     abstract fun getSartopoWidgetModel(): ISartopoWidgetModel
 
-    abstract fun getTuskWidgetModel(): ITuskServiceCallback
+    abstract fun getStreamModel(): IStreamManager
 
     abstract fun prepareTestingToolsActivity()
 
@@ -106,19 +106,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                 setStatus(-1, serverStatus)
                 Log.d("TuskService", "updated status to error")
             }
-        }
-
-        HD1080.setOnClickListener {
-            setStreamQuality(0)
-            setStreamSelection()
-        }
-        HD720.setOnClickListener {
-            setStreamQuality(1)
-            setStreamSelection()
-        }
-        SD540.setOnClickListener {
-            setStreamQuality(2)
-            setStreamSelection()
         }
 
 //        image3.setOnClickListener {
@@ -231,6 +218,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                     setStatus(1, droneStatus)
                     prepareUxActivity()
                     sartopo_widget.setSartopoWidgetModel(getSartopoWidgetModel())
+                    livestream_widget.setStreamManager(getStreamModel())
                     sartopo_widget.loadDefaults()
                 }, 5000)
             }
@@ -319,7 +307,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     }
 
     override fun onDestroy() {
-        removeSettingsPageOverlay()
         stopStatusCheck()
         super.onDestroy()
         baseMainActivityVm.releaseSDKCallback()
@@ -329,7 +316,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     override fun onPause() {
         super.onPause()
 //        stopStatusCheck() // Stop the status checking coroutine when the activity is paused
-        removeSettingsPageOverlay()
     }
 
     private fun startStatusCheck() {
@@ -351,15 +337,11 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             else {
                 setStatus(-1, serverStatus)
             }
-            setStreamSelection()
-            streambitrate.text = "Stream Bitrate: ${getBitrate()}"
-            streamquality.text = "Stream Quality: ${getStreamQuality()}"
-            streamurl.text = "Stream URL: ${getStreamURL()}"
-            currentlystreaming.text = "Currently Streaming: ${isStreaming()}"
             serverconnected.text = "Connection Status: ${callGetConnectionStatus()}"
             serverip.text = "Server IP: ${callGetIP()}"
             // Schedule the next status check after the interval
             handler.postDelayed(this, 1000.toLong())
+            if (livestream_widget.isInterfaceBinded()) livestream_widget.setStreamSelection()
         }
     }
 
@@ -385,59 +367,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             0 -> {
                 dots.visibility = View.VISIBLE
                 indicator.visibility = View.INVISIBLE
-            }
-        }
-    }
-
-    private fun addSettingsPageOverlay() {
-        // Initialize WindowManager
-        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        // Create layout params for the settings page overlay
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            else
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            PixelFormat.TRANSPARENT
-        )
-
-        // Set position of the settings page overlay
-        params.gravity = Gravity.CENTER
-        // Add the settings page overlay to the WindowManager
-        windowManager!!.addView(settings_panel, params)
-    }
-
-    private fun removeSettingsPageOverlay() {
-        // Remove the settings page overlay from the WindowManager
-        windowManager?.removeView(settings_panel)
-        windowManager = null
-    }
-
-    private fun setStreamSelection() {
-        val buttons: List<Button> = listOf(HD1080, HD720, SD540)
-        var selectionIndex = -1
-
-        when (getStreamQuality()) {
-            StreamQuality.FULL_HD -> {
-                selectionIndex = 0
-            }
-            StreamQuality.HD -> {
-                selectionIndex = 1
-            }
-            StreamQuality.SD -> {
-                selectionIndex = 2
-            }
-        }
-
-        for ((index, button) in buttons.withIndex()) {
-            if (index == selectionIndex) {
-                button.setBackgroundResource(R.drawable.rounded_selected)
-            } else {
-                button.setBackgroundResource(R.drawable.rounded_white_bg)
             }
         }
     }

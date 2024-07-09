@@ -432,162 +432,6 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:background="@drawable/rounded_gray_bg">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Livestream Settings"
-                    android:fontFamily="sans-serif-black"
-                    android:textSize="30sp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:textColor="@color/black"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Stream Quality:"
-                    android:textSize="18sp"
-                    android:fontFamily="sans-serif"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:textColor="@color/black" />
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginEnd="8dp">
-                    <Button
-                        android:id="@+id/HD1080"
-                        android:layout_width="150dp"
-                        android:layout_height="wrap_content"
-                        android:text="HD 1080P / 30fps"
-                        app:layout_constraintVertical_chainStyle="packed"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintRight_toLeftOf="@id/HD720"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:background="@drawable/rounded_white_bg"/>
-                    <Button
-                        android:id="@+id/HD720"
-                        android:layout_width="150dp"
-                        android:layout_height="wrap_content"
-                        android:text="HD 720P / 30fps"
-                        app:layout_constraintVertical_chainStyle="packed"
-                        app:layout_constraintLeft_toRightOf="@id/HD1080"
-                        app:layout_constraintRight_toLeftOf="@id/SD540"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:background="@drawable/rounded_white_bg"/>
-                    <Button
-                        android:id="@+id/SD540"
-                        android:layout_width="150dp"
-                        android:layout_height="wrap_content"
-                        android:text="SD 540P / 30fps"
-                        app:layout_constraintVertical_chainStyle="packed"
-                        app:layout_constraintLeft_toRightOf="@id/HD720"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        android:background="@drawable/rounded_white_bg"/>
-                </androidx.constraintlayout.widget.ConstraintLayout>
-<!--                <androidx.constraintlayout.widget.ConstraintLayout-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:layout_marginLeft="16dp"-->
-<!--                    android:layout_marginRight="8dp">-->
-<!--                    <EditText-->
-<!--                        android:id="@+id/editText"-->
-<!--                        android:layout_width="200dp"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:hint="Enter Stream Bitrate"-->
-<!--                        android:inputType="number"-->
-<!--                        android:maxLines="1"-->
-<!--                        android:imeOptions="actionDone"-->
-<!--                        android:textSize="18sp"-->
-<!--                        android:layout_marginTop="8dp"-->
-<!--                        android:layout_marginStart="8dp"-->
-<!--                        android:layout_marginBottom="8dp"-->
-<!--                        android:layout_marginEnd="8dp"-->
-<!--                        android:cursorVisible="false"-->
-<!--                        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                        app:layout_constraintTop_toTopOf="parent"-->
-<!--                        android:backgroundTint="@color/black_medium"/>-->
-
-<!--                    <Button-->
-<!--                        android:id="@+id/setbitrate"-->
-<!--                        android:layout_width="150dp"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:text="Set Bitrate"-->
-<!--                        app:layout_constraintVertical_chainStyle="packed"-->
-<!--                        app:layout_constraintLeft_toRightOf="@id/editText"-->
-<!--                        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                        app:layout_constraintTop_toTopOf="parent"-->
-<!--                        android:enabled="false"-->
-<!--                        android:background="@drawable/rounded_white_bg"-->
-<!--                        android:layout_marginTop="8dp"-->
-<!--                        android:layout_marginStart="8dp"-->
-<!--                        android:layout_marginBottom="8dp"-->
-<!--                        android:layout_marginEnd="8dp"/>-->
-<!--                </androidx.constraintlayout.widget.ConstraintLayout>-->
-                    <LinearLayout
-                        android:layout_height="wrap_content"
-                        android:layout_width="match_parent"
-                        android:background="@drawable/rounded_white_bg"
-                        android:orientation="vertical"
-                        android:layout_marginTop="16dp"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginBottom="16dp"
-                        android:layout_marginEnd="16dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Stream Bitrate:"
-                            android:textSize="18sp"
-                            android:fontFamily="sans-serif"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginBottom="8dp"
-                            android:textColor="@color/black"
-                            android:id="@+id/streambitrate"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Stream URL:"
-                            android:textSize="18sp"
-                            android:fontFamily="sans-serif"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginBottom="8dp"
-                            android:textColor="@color/black"
-                            android:id="@+id/streamurl"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Currently Streaming:"
-                            android:textSize="18sp"
-                            android:fontFamily="sans-serif"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginBottom="8dp"
-                            android:textColor="@color/black"
-                            android:id="@+id/currentlystreaming"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Stream Quality:"
-                            android:textSize="18sp"
-                            android:fontFamily="sans-serif"
-                            android:layout_marginTop="8dp"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginBottom="8dp"
-                            android:textColor="@color/black"
-                            android:id="@+id/streamquality"/>
-                    </LinearLayout>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -691,6 +535,12 @@
                     android:padding="8dp"
                     android:layout_height="@dimen/uxsdk_500_dp"
                     android:visibility="visible" />
+                <dji.sampleV5.modulecommon.settingswidgets.LivestreamWidget
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/uxsdk_500_dp"
+                    android:id="@+id/livestream_widget"
+                    android:visibility="visible"
+                    android:padding="8dp"/>
             </LinearLayout>
             </ScrollView>
         </androidx.constraintlayout.widget.ConstraintLayout>
