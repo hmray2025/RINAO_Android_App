@@ -77,7 +77,7 @@ class SartopoService : ISartopoWidgetModel{
         if (baseUrl.isEmpty() || accessCode.isEmpty() || deviceID.isEmpty()) {
             return false
         }
-        if (!baseUrl.startsWith("https://") || !baseUrl.startsWith("http://")){
+        if (!baseUrl.startsWith("https://") && !baseUrl.startsWith("http://")){
             return false
         }
         return true
