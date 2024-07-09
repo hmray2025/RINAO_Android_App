@@ -64,7 +64,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     abstract fun getSartopoWidgetModel(): ISartopoWidgetModel
 
-    abstract fun getTuskWidgetModel(): ITuskServiceCallback
+//    abstract fun getTuskWidgetModel(): ITuskServiceCallback
 
     abstract fun prepareTestingToolsActivity()
 

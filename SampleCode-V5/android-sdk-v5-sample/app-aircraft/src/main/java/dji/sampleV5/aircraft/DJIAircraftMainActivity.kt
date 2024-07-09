@@ -45,9 +45,9 @@ class DJIAircraftMainActivity : DJIMainActivity() {
         return sartopoService
     }
 
-    override fun getTuskWidgetModel(): ITuskServiceCallback {
-        return TuskManger
-    }
+//    override fun getTuskWidgetModel(): ITuskServiceCallback {
+//        return this
+//    }
 
     override fun prepareTestingToolsActivity() {
         enableTestingTools(AircraftTestingToolsActivity::class.java)

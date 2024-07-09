@@ -75,9 +75,10 @@ class SartopoService : ISartopoWidgetModel{
     fun isURLValid(): Boolean {
         // Check if the URL is valid
         if (baseUrl.isEmpty() || accessCode.isEmpty() || deviceID.isEmpty()) {
+            Log.e("SarTopo", "base: ${baseUrl}, access: ${accessCode}, device: ${deviceID}")
             return false
         }
-        if (!baseUrl.startsWith("https://") || !baseUrl.startsWith("http://")){
+        if (!baseUrl.startsWith("https://") && !baseUrl.startsWith("http://")){
             return false
         }
         return true
