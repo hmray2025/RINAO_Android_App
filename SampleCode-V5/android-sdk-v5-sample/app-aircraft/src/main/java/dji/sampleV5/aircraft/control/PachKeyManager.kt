@@ -347,10 +347,6 @@ class PachKeyManager() {
             Log.d("PachTelemetry", "AircraftVelocity $it")
             if (sartopo.isURLValid()) {
                 sartopo.sendGetRequest(stateData.longitude!!, stateData.latitude!!)
-                Log.v("Sartopo", "Sartopo URL is valid\n" +
-                        "Base: ${sartopo.getBaseURL()}\n" +
-                        "Access: ${sartopo.getAccessURL()}\n" +
-                        "ID: ${sartopo.getDeviceID()}\n")
             } else {
                 Log.e("Sartopo", "Sartopo URL is not valid\n" +
                         "Base: ${sartopo.getBaseURL()}\n" +
