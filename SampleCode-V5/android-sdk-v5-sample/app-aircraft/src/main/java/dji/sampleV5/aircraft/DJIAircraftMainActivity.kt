@@ -13,6 +13,7 @@ import dji.v5.ux.core.communication.GlobalPreferencesManager
 import dji.v5.ux.core.util.UxSharedPreferencesUtil
 import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
 import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel
+import dji.sampleV5.modulecommon.util.ITuskServiceCallback
 
 /**
  * Class Description
@@ -30,13 +31,7 @@ class DJIAircraftMainActivity : DJIMainActivity() {
         GlobalPreferencesManager.initialize(DefaultGlobalPreferences(this))
         GeoidManager.getInstance().init(this)
 
-        if (TuskManger != null) {
-            enableDefaultLayout(DefaultLayoutActivity::class.java) // important
-        }
-        else {
-            enableDefaultLayout(DefaultLayoutActivity::class.java) // important
-        }
-
+        enableDefaultLayout(DefaultLayoutActivity::class.java) // important
         enableWidgetList(WidgetsActivity::class.java)
         this.TuskManger.runTesting()
         this.TuskManger.updateStatusWidget()
@@ -48,6 +43,10 @@ class DJIAircraftMainActivity : DJIMainActivity() {
 
     override fun getSartopoWidgetModel(): ISartopoWidgetModel {
         return sartopoService
+    }
+
+    override fun getTuskWidgetModel(): ITuskServiceCallback {
+        return TuskManger
     }
 
     override fun prepareTestingToolsActivity() {

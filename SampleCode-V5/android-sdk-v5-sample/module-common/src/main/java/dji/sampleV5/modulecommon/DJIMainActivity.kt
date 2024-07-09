@@ -65,6 +65,8 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     abstract fun getSartopoWidgetModel(): ISartopoWidgetModel
 
+    abstract fun getTuskWidgetModel(): ITuskServiceCallback
+
     abstract fun prepareTestingToolsActivity()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -261,10 +263,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         })
     }
 
-
-    fun <T> enableDefaultLayout(cl: Class<T>, obj: Any) {
-        enableShowCaseButton(default_layout_button, cl)
-    }
     fun <T> enableDefaultLayout(cl: Class<T>) {
         enableShowCaseButton(default_layout_button, cl)
     }
@@ -277,31 +275,11 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         enableShowCaseButton(testing_tool_button, cl)
     }
 
-//    fun <T> enableSettings(cl: Class<T>) {
-//        enableShowCaseButton(settingsButton, cl)
-//    }
-
-//    fun <T> enableLiveStreamShortcut(cl: Class<T>){
-//        enableShowCaseButton(live_stream_shortcut, cl)
-//    }
-
     private fun <T> enableShowCaseButton(view: View, cl: Class<T>) {
         view.isEnabled = true
         view.setOnClickListener {
             Intent(this, cl).also {
                 startActivity(it)
-            }
-        }
-    }
-
-    // overloaded function needed to pass Pach instance to defaultLayout
-    private fun <T> enableShowCaseButton(view: View, cl: Class<T>, obj: Serializable) {
-        view.isEnabled = true
-        view.setOnClickListener {
-            Intent(view.context, cl).also { intent ->
-                intent.putExtra("objectKey", obj)
-                Log.d("PachKeyManager", "About to start DefaultLayout")
-                view.context.startActivity(intent)
             }
         }
     }

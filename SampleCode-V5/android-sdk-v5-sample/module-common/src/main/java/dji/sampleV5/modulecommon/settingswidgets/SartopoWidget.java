@@ -153,7 +153,7 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
 
     @Override
     protected void reactToModelChanges() {
-
+        // do nothing
     }
 
     // Method to save string to SharedPreferences
