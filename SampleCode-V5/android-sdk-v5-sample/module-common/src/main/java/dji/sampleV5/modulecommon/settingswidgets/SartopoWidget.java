@@ -31,11 +31,6 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
     private String access_url;
     private String device_id;
     private ISartopoWidgetModel sartopoWidgetModel;
-    private TextView url;
-    private EditText editAccess;
-    private EditText editID;
-    private EditText editBase;
-
 
     public SartopoWidget(@NonNull Context context) {
         super(context);
@@ -55,10 +50,25 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
         sharedPreferences = context.getSharedPreferences("SARTopo_preferences",Context.MODE_PRIVATE);
         inflate(context, R.layout.uxsdk_widget_sartopo, this);
 
-        editAccess = findViewById(R.id.edit_access_url);
-        editID = findViewById(R.id.edit_device_id);
-        editBase = findViewById(R.id.edit_base_url);
-        url = findViewById(R.id.sartopo_url);
+        EditText editAccess = findViewById(R.id.edit_access_url);
+        EditText editID = findViewById(R.id.edit_device_id);
+        EditText editBase = findViewById(R.id.edit_base_url);
+        TextView url = findViewById(R.id.sartopo_url);
+
+        try {
+            base_url = retrieveString("base_url");
+            access_url = retrieveString("access_url");
+            device_id = retrieveString("device_id");
+            sartopoWidgetModel.setBaseURL(base_url);
+            sartopoWidgetModel.setAccessURL(access_url);
+            sartopoWidgetModel.setDeviceID(device_id);
+        } catch (Exception e) {
+            Log.e("SartopoWidget", "Error retrieving values from SharedPreferences: " + e.getMessage());
+            base_url = "Not set";
+            access_url = "Not set";
+            device_id = "Not set";
+        }
+        url.setText(String.format("%s%s?id=%s&lat={LAT}&lng={LNG}", base_url, access_url, device_id));
 
         editAccess.setText(retrieveString("access_url")); // Use the same key for saving and retrieving
         editAccess.addTextChangedListener(new TextWatcher() {
@@ -186,22 +196,5 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
 
     public void setSartopoWidgetModel(ISartopoWidgetModel sartopoWidgetModel) {
         this.sartopoWidgetModel = sartopoWidgetModel;
-    }
-
-    public void loadDefaults() {
-        try {
-            base_url = retrieveString("base_url");
-            access_url = retrieveString("access_url");
-            device_id = retrieveString("device_id");
-            sartopoWidgetModel.setBaseURL(base_url);
-            sartopoWidgetModel.setAccessURL(access_url);
-            sartopoWidgetModel.setDeviceID(device_id);
-        } catch (Exception e) {
-            Log.e("SartopoWidget", "Error retrieving values from SharedPreferences: " + e.getMessage());
-            base_url = "Not set";
-            access_url = "Not set";
-            device_id = "Not set";
-        }
-        url.setText(String.format("%s%s?id=%s&lat={LAT}&lng={LNG}", base_url, access_url, device_id));
     }
 }

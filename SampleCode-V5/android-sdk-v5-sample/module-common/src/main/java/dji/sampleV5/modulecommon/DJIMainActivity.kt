@@ -33,7 +33,6 @@ import dji.v5.utils.common.PermissionUtil
 import dji.v5.utils.common.StringUtils
 import dji.v5.utils.common.ToastUtils
 import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel
-import dji.sampleV5.modulecommon.settingswidgets.SartopoWidget
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.Serializable
 
@@ -231,7 +230,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                     setStatus(1, droneStatus)
                     prepareUxActivity()
                     sartopo_widget.setSartopoWidgetModel(getSartopoWidgetModel())
-                    sartopo_widget.loadDefaults()
                 }, 5000)
             }
 
