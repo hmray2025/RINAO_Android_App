@@ -56,7 +56,7 @@ public class ServerWidget extends ConstraintLayoutWidget<Object> {
 
         reconnect_ws_settings.setOnClickListener(v -> {
             tuskManager.callReconnectWebsocket();
-            Toast.makeText(this.getContext(), "Reconnecting to server \n" + tuskManager.callGetIP(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this.getContext(), "Reconnecting WS with IP:\n" + tuskManager.callGetIP(), Toast.LENGTH_SHORT).show();
             updateData();
         });
         setIP.setOnClickListener(v -> {

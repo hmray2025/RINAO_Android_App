@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -17,6 +18,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -79,6 +81,11 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
                         View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
+        scroll_view_settings.setOnScrollChangeListener { v: View?, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int ->
+            // Assuming you have a method to calculate the section based on scrollY
+            val currentSection = calculateCurrentSection(scrollY)
+            highlightSideListItem(currentSection)
+        }.also { server_scrollspy.setTypeface(null, Typeface.BOLD)}
         initOnClickListeners()
         initMSDKInfoView()
         checkPermissionAndRequest()
@@ -372,6 +379,39 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                 dots.visibility = View.VISIBLE
                 indicator.visibility = View.INVISIBLE
             }
+        }
+    }
+
+    // Method to calculate the current section based on scrollY
+    private fun calculateCurrentSection(scrollY: Int): Int {
+        val h0 = server_widget.height
+        val h1 = sartopo_widget.height
+        val h2 = livestream_widget.height
+        val h3 = quickactions_widget.height
+
+        val cumulativeHeight1 = h0 - 300
+        val cumulativeHeight2 = cumulativeHeight1 + h1
+        val cumulativeHeight3 = cumulativeHeight2 + h2
+
+        return when (scrollY) {
+            in 0..cumulativeHeight1 -> 0
+            in (cumulativeHeight1 + 1)..cumulativeHeight2 -> 1
+            in (cumulativeHeight2 + 1)..cumulativeHeight3 -> 2
+            in (cumulativeHeight3 + 1)..(cumulativeHeight3 + h3) -> 3
+            else -> -1 // Consider adding a default case to handle unexpected values
+        }
+    }
+
+    // Method to highlight the side list item
+    private fun highlightSideListItem(sectionIndex: Int) {
+        val setOfScrollspyWidgets: Set<TextView> = setOf(server_scrollspy, sartopo_scrollspy, livestream_scrollspy, quickactions_scrollspy)
+        if (sectionIndex == -1) return
+        for (widget in setOfScrollspyWidgets) {
+            widget.setTypeface(null, if (widget == setOfScrollspyWidgets.elementAt(sectionIndex)) {
+                Typeface.BOLD
+            } else {
+                Typeface.NORMAL
+            })
         }
     }
 }
