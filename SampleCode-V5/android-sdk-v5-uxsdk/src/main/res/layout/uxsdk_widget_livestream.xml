@@ -108,46 +108,6 @@
                 android:padding="@dimen/uxsdk_10_dp">
             </TextView>
         </LinearLayout>
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/uxsdk_14_dp">
-            <EditText
-                android:id="@+id/editTextIP"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:inputType="textUri"
-                android:maxLines="1"
-                android:imeOptions="actionDone"
-                android:textSize="18sp"
-                android:layout_marginTop="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:cursorVisible="true"
-                android:text="ws://"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/setIP" />
-
-            <Button
-                android:id="@+id/setIP"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:text="Set IP"
-                app:layout_constraintVertical_chainStyle="packed"
-                app:layout_constraintLeft_toRightOf="@id/editTextIP"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                android:enabled="false"
-                android:background="@drawable/uxsdk_bg_white_radius"
-                android:layout_marginTop="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"/>
-        </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

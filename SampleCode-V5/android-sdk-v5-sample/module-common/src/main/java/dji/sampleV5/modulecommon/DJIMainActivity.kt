@@ -67,6 +67,8 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     abstract fun getStreamModel(): IStreamManager
 
+    abstract fun getTuskModel(): ITuskServiceCallback
+
     abstract fun prepareTestingToolsActivity()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,18 +97,18 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             }
         }
 
-        reconnect_ws_settings.setOnClickListener {
-            setStatus(1, serverStatus)
-            callReconnectWebsocket()
-            if (callGetConnectionStatus()) {
-                setStatus(1, serverStatus)
-                Log.d("TuskService", "updated status to good")
-            }
-            else {
-                setStatus(-1, serverStatus)
-                Log.d("TuskService", "updated status to error")
-            }
-        }
+//        reconnect_ws_settings.setOnClickListener {
+//            setStatus(1, serverStatus)
+//            callReconnectWebsocket()
+//            if (callGetConnectionStatus()) {
+//                setStatus(1, serverStatus)
+//                Log.d("TuskService", "updated status to good")
+//            }
+//            else {
+//                setStatus(-1, serverStatus)
+//                Log.d("TuskService", "updated status to error")
+//            }
+//        }
 
 //        image3.setOnClickListener {
 //            baseMainActivityVm.doPairing {
@@ -133,23 +135,23 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 //            editText.text.clear()
 //        }
 
-        editTextIP.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                // not needed, keep here
-            }
-
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                setIP.isEnabled = p0.toString().isNotEmpty()
-            }
-
-            override fun afterTextChanged(p0: Editable?) {
-                // not needed, keep here
-            }
-        })
-
-        setIP.setOnClickListener {
-            callSetIP(editTextIP.text.toString())
-        }
+//        editTextIP.addTextChangedListener(object : TextWatcher {
+//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                // not needed, keep here
+//            }
+//
+//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                setIP.isEnabled = p0.toString().isNotEmpty()
+//            }
+//
+//            override fun afterTextChanged(p0: Editable?) {
+//                // not needed, keep here
+//            }
+//        })
+//
+//        setIP.setOnClickListener {
+//            callSetIP(editTextIP.text.toString())
+//        }
 
 
         // Show the settings dialog when the settingsButton is clicked
@@ -219,6 +221,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                     prepareUxActivity()
                     sartopo_widget.setSartopoWidgetModel(getSartopoWidgetModel())
                     livestream_widget.setStreamManager(getStreamModel())
+                    server_widget.setServerManager(getTuskModel())
                     sartopo_widget.loadDefaults()
                 }, 5000)
             }
@@ -337,11 +340,12 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             else {
                 setStatus(-1, serverStatus)
             }
-            serverconnected.text = "Connection Status: ${callGetConnectionStatus()}"
-            serverip.text = "Server IP: ${callGetIP()}"
+//            serverconnected.text = "Connection Status: ${callGetConnectionStatus()}"
+//            serverip.text = "Server IP: ${callGetIP()}"
             // Schedule the next status check after the interval
             handler.postDelayed(this, 1000.toLong())
             if (livestream_widget.isInterfaceBinded()) livestream_widget.setStreamSelection()
+            if (server_widget.isInterfaceBinded()) server_widget.updateData()
         }
     }
 

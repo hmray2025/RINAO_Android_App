@@ -50,6 +50,10 @@ class DJIAircraftMainActivity : DJIMainActivity() {
         return TuskManger.streamer
     }
 
+    override fun getTuskModel(): ITuskServiceCallback {
+        return TuskManger.telemService
+    }
+
     override fun prepareTestingToolsActivity() {
         enableTestingTools(AircraftTestingToolsActivity::class.java)
     }
