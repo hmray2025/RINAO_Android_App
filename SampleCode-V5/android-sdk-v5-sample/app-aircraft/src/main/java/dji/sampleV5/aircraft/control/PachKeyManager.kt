@@ -186,9 +186,10 @@ class PachKeyManager() {
                 }
                 if (this@PachKeyManager.actionState.autonomous) {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
-                if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
-                    wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
-                }
+                    if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
+//                        wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
+                        wp = DJILatLng(prevWaypoint.lat,prevWaypoint.lon) // want to send the "current target" waypoint to the map, not the next one
+                    }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
                 this@PachKeyManager.sendWaypointToMap(wp)
