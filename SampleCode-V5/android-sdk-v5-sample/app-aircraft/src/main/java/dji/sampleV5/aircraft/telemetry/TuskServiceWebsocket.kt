@@ -8,7 +8,7 @@ import okio.ByteString
 import org.json.JSONObject
 import java.io.Serializable
 
-class TuskServiceWebsocket {
+class TuskServiceWebsocket : ITuskServiceCallback{
     private val client: OkHttpClient = OkHttpClient()
     private lateinit var webSocket: WebSocket
     private val gson: Gson = Gson()
@@ -28,6 +28,23 @@ class TuskServiceWebsocket {
     private val defaultIP: String = "ws://192.168.0.101:8084"
     private var currentIP: String = defaultIP
     private var connectionStatus: Boolean = false
+
+
+    override fun callReconnectWebsocket() {
+        connectWebSocket()
+    }
+
+    override fun callSetIP(ip: String) {
+        currentIP = ip
+    }
+
+    override fun callGetIP(): String {
+        return currentIP
+    }
+
+    override fun callGetConnectionStatus(): Boolean {
+        return connectionStatus
+    }
 
     fun setConnectionStatus (status: Boolean) {
         connectionStatus = status

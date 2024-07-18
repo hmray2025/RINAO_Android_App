@@ -4,6 +4,7 @@ import dji.sampleV5.aircraft.telemetry.AircraftAction
 import dji.sampleV5.aircraft.telemetry.Coordinate
 import dji.sampleV5.aircraft.telemetry.Event
 import dji.sampleV5.aircraft.telemetry.SafetyState
+import dji.sampleV5.aircraft.telemetry.SartopoService
 import dji.sampleV5.aircraft.telemetry.StreamInfo
 import dji.sampleV5.aircraft.telemetry.TuskAircraftState
 import dji.sampleV5.aircraft.telemetry.TuskAircraftStatus
@@ -81,8 +82,13 @@ class PachKeyManager() {
         }
     }
     // Initialize necessary classes
-    private var pachModel: PachWidgetModel = PachWidgetModel.getInstance()
+    private var sartopo: SartopoService = SartopoService.getInstance()
     private val waypointDataProcessor = PublishProcessor.create<DJILatLng>() // for publishing waypoints to map
+    private val connectionDataProcessor = PublishProcessor.create<Boolean>() // for publishing connection status to status indicator
+    private val autonamousDataProcessor = PublishProcessor.create<Boolean>() // for publishing messages to status indicator
+    private val actionDataProcessor = PublishProcessor.create<String>() // for publishing action status to status indicator
+    private val warningDataProcessor = PublishProcessor.create<String>() // for publishing warnings to status indicator
+    private val messageDataProcessor = PublishProcessor.create<String>() // for publishing messages to status indicator
     val telemService = TuskServiceWebsocket()
 
     /**
@@ -180,14 +186,17 @@ class PachKeyManager() {
                 }
                 if (this@PachKeyManager.actionState.autonomous) {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
-                if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
-                    wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
-                }
+                    if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
+//                        wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
+                        wp = DJILatLng(prevWaypoint.lat,prevWaypoint.lon) // want to send the "current target" waypoint to the map, not the next one
+                    }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
                 this@PachKeyManager.sendWaypointToMap(wp)
-                pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
-                pachModel.updateMsg(status)
+//                pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
+//                pachModel.updateMsg(status)
+
+                sendDataToStatusWidget(status, this@PachKeyManager.telemService.getConnectionStatus())
                 delay(1000)
             }
         }
@@ -314,7 +323,6 @@ class PachKeyManager() {
                 altitude = it.altitude
             )
             sendState(stateData)
-
             Log.v("PachTelemetry", "KeyAircraftLocation $it")
         }
 
@@ -338,6 +346,14 @@ class PachKeyManager() {
                 velocityZ = it.z)
             sendState(stateData)
             Log.d("PachTelemetry", "AircraftVelocity $it")
+            if (sartopo.isURLValid()) {
+                sartopo.sendGetRequest(stateData.longitude!!, stateData.latitude!!)
+            } else {
+                Log.e("Sartopo", "Sartopo URL is not valid\n" +
+                        "Base: ${sartopo.getBaseURL()}\n" +
+                        "Access: ${sartopo.getAccessURL()}\n" +
+                        "ID: ${sartopo.getDeviceID()}\n")
+            }
         }
 
         registerKey(
@@ -1105,7 +1121,21 @@ class PachKeyManager() {
         }
     }
 
-    fun getDataFlowable(): Flowable<DJILatLng> {
+    fun getConnectionFlowable(): Flowable<Boolean> {
+        return connectionDataProcessor.onBackpressureBuffer()
+    }
+
+    fun getMessageFlowable(): Flowable<String> {
+        return messageDataProcessor.onBackpressureBuffer()
+    }
+
+    private fun sendDataToStatusWidget(message: String, connection: Boolean) {
+        messageDataProcessor.offer(message)
+        connectionDataProcessor.offer(connection)
+    }
+
+
+    fun getWaypointFlowable(): Flowable<DJILatLng> {
         return waypointDataProcessor.onBackpressureBuffer()
     }
 

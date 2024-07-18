@@ -283,6 +283,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         if (mapView != null) {
             mapView.onPause();
         }
+        dispose();
     }
 
     /**
@@ -296,6 +297,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                 LogUtils.e(TAG, "Error while attempting MapView.onDestroy(), ignoring exception" + e);
             }
         }
+        dispose();
     }
 
     /**
@@ -374,7 +376,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
             }
             setGimbalAttitudeEnabled(typedArray.getBoolean(R.styleable.MapWidget_uxsdk_gimbalAttitudeEnabled, true));
 
-            drawable = context.getDrawable(R.drawable.uxsdk_ic_metering_switch);
+            drawable = context.getDrawable(R.drawable.crosshair_red);
             if (drawable != null) {
                 setTuskWaypointIcon(drawable);
             }
@@ -473,6 +475,9 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(data -> updateTuskTelemetryWaypoint(data), throwable -> throwable.printStackTrace())
         );
+    }
+    public void dispose() {
+        disposables.dispose();
     }
 
     // this function handles the data from the flowable. There should be
@@ -1533,8 +1538,4 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
          */
         void onMapReady(@NonNull DJIMap map);
     }
-
-//    public getPachData(){
-//        return pachData;
-//    }
 }

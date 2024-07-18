@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -17,6 +18,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +34,8 @@ import dji.v5.utils.common.LogUtils
 import dji.v5.utils.common.PermissionUtil
 import dji.v5.utils.common.StringUtils
 import dji.v5.utils.common.ToastUtils
+import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel
+import dji.sampleV5.modulecommon.settingswidgets.SartopoWidget
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.Serializable
 
@@ -61,6 +65,12 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 
     abstract fun prepareUxActivity()
 
+    abstract fun getSartopoWidgetModel(): ISartopoWidgetModel
+
+    abstract fun getStreamModel(): IStreamManager
+
+    abstract fun getTuskModel(): ITuskServiceCallback
+
     abstract fun prepareTestingToolsActivity()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,6 +81,11 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
                         View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
+        scroll_view_settings.setOnScrollChangeListener { v: View?, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int ->
+            // Assuming you have a method to calculate the section based on scrollY
+            val currentSection = calculateCurrentSection(scrollY)
+            highlightSideListItem(currentSection)
+        }.also { server_scrollspy.setTypeface(null, Typeface.BOLD)}
         initOnClickListeners()
         initMSDKInfoView()
         checkPermissionAndRequest()
@@ -89,31 +104,18 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             }
         }
 
-        reconnect_ws_settings.setOnClickListener {
-            setStatus(1, serverStatus)
-            callReconnectWebsocket()
-            if (callGetConnectionStatus()) {
-                setStatus(1, serverStatus)
-                Log.d("TuskService", "updated status to good")
-            }
-            else {
-                setStatus(-1, serverStatus)
-                Log.d("TuskService", "updated status to error")
-            }
-        }
-
-        HD1080.setOnClickListener {
-            setStreamQuality(0)
-            setStreamSelection()
-        }
-        HD720.setOnClickListener {
-            setStreamQuality(1)
-            setStreamSelection()
-        }
-        SD540.setOnClickListener {
-            setStreamQuality(2)
-            setStreamSelection()
-        }
+//        reconnect_ws_settings.setOnClickListener {
+//            setStatus(1, serverStatus)
+//            callReconnectWebsocket()
+//            if (callGetConnectionStatus()) {
+//                setStatus(1, serverStatus)
+//                Log.d("TuskService", "updated status to good")
+//            }
+//            else {
+//                setStatus(-1, serverStatus)
+//                Log.d("TuskService", "updated status to error")
+//            }
+//        }
 
 //        image3.setOnClickListener {
 //            baseMainActivityVm.doPairing {
@@ -140,23 +142,23 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
 //            editText.text.clear()
 //        }
 
-        editTextIP.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                // not needed, keep here
-            }
-
-            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-                setIP.isEnabled = p0.toString().isNotEmpty()
-            }
-
-            override fun afterTextChanged(p0: Editable?) {
-                // not needed, keep here
-            }
-        })
-
-        setIP.setOnClickListener {
-            callSetIP(editTextIP.text.toString())
-        }
+//        editTextIP.addTextChangedListener(object : TextWatcher {
+//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                // not needed, keep here
+//            }
+//
+//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+//                setIP.isEnabled = p0.toString().isNotEmpty()
+//            }
+//
+//            override fun afterTextChanged(p0: Editable?) {
+//                // not needed, keep here
+//            }
+//        })
+//
+//        setIP.setOnClickListener {
+//            callSetIP(editTextIP.text.toString())
+//        }
 
 
         // Show the settings dialog when the settingsButton is clicked
@@ -224,6 +226,10 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
                 handler.postDelayed({
                     setStatus(1, droneStatus)
                     prepareUxActivity()
+                    sartopo_widget.setSartopoWidgetModel(getSartopoWidgetModel())
+                    livestream_widget.setStreamManager(getStreamModel())
+                    server_widget.setServerManager(getTuskModel())
+                    sartopo_widget.loadDefaults()
                 }, 5000)
             }
 
@@ -255,10 +261,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         })
     }
 
-
-    fun <T> enableDefaultLayout(cl: Class<T>, obj: Any) {
-        enableShowCaseButton(default_layout_button, cl)
-    }
     fun <T> enableDefaultLayout(cl: Class<T>) {
         enableShowCaseButton(default_layout_button, cl)
     }
@@ -271,31 +273,11 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         enableShowCaseButton(testing_tool_button, cl)
     }
 
-//    fun <T> enableSettings(cl: Class<T>) {
-//        enableShowCaseButton(settingsButton, cl)
-//    }
-
-//    fun <T> enableLiveStreamShortcut(cl: Class<T>){
-//        enableShowCaseButton(live_stream_shortcut, cl)
-//    }
-
     private fun <T> enableShowCaseButton(view: View, cl: Class<T>) {
         view.isEnabled = true
         view.setOnClickListener {
             Intent(this, cl).also {
                 startActivity(it)
-            }
-        }
-    }
-
-    // overloaded function needed to pass Pach instance to defaultLayout
-    private fun <T> enableShowCaseButton(view: View, cl: Class<T>, obj: Serializable) {
-        view.isEnabled = true
-        view.setOnClickListener {
-            Intent(view.context, cl).also { intent ->
-                intent.putExtra("objectKey", obj)
-                Log.d("PachKeyManager", "About to start DefaultLayout")
-                view.context.startActivity(intent)
             }
         }
     }
@@ -335,7 +317,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     }
 
     override fun onDestroy() {
-        removeSettingsPageOverlay()
         stopStatusCheck()
         super.onDestroy()
         baseMainActivityVm.releaseSDKCallback()
@@ -345,7 +326,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
     override fun onPause() {
         super.onPause()
 //        stopStatusCheck() // Stop the status checking coroutine when the activity is paused
-        removeSettingsPageOverlay()
     }
 
     private fun startStatusCheck() {
@@ -367,15 +347,12 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             else {
                 setStatus(-1, serverStatus)
             }
-            setStreamSelection()
-            streambitrate.text = "Stream Bitrate: ${getBitrate()}"
-            streamquality.text = "Stream Quality: ${getStreamQuality()}"
-            streamurl.text = "Stream URL: ${getStreamURL()}"
-            currentlystreaming.text = "Currently Streaming: ${isStreaming()}"
-            serverconnected.text = "Connection Status: ${callGetConnectionStatus()}"
-            serverip.text = "Server IP: ${callGetIP()}"
+//            serverconnected.text = "Connection Status: ${callGetConnectionStatus()}"
+//            serverip.text = "Server IP: ${callGetIP()}"
             // Schedule the next status check after the interval
             handler.postDelayed(this, 1000.toLong())
+            if (livestream_widget.isInterfaceBinded()) livestream_widget.setStreamSelection()
+            if (server_widget.isInterfaceBinded()) server_widget.updateData()
         }
     }
 
@@ -405,56 +382,36 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         }
     }
 
-    private fun addSettingsPageOverlay() {
-        // Initialize WindowManager
-        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    // Method to calculate the current section based on scrollY
+    private fun calculateCurrentSection(scrollY: Int): Int {
+        val h0 = server_widget.height
+        val h1 = sartopo_widget.height
+        val h2 = livestream_widget.height
+        val h3 = quickactions_widget.height
 
-        // Create layout params for the settings page overlay
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            else
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            PixelFormat.TRANSPARENT
-        )
+        val cumulativeHeight1 = h0 - 300
+        val cumulativeHeight2 = cumulativeHeight1 + h1
+        val cumulativeHeight3 = cumulativeHeight2 + h2
 
-        // Set position of the settings page overlay
-        params.gravity = Gravity.CENTER
-        // Add the settings page overlay to the WindowManager
-        windowManager!!.addView(settings_panel, params)
-    }
-
-    private fun removeSettingsPageOverlay() {
-        // Remove the settings page overlay from the WindowManager
-        windowManager?.removeView(settings_panel)
-        windowManager = null
-    }
-
-    private fun setStreamSelection() {
-        val buttons: List<Button> = listOf(HD1080, HD720, SD540)
-        var selectionIndex = -1
-
-        when (getStreamQuality()) {
-            StreamQuality.FULL_HD -> {
-                selectionIndex = 0
-            }
-            StreamQuality.HD -> {
-                selectionIndex = 1
-            }
-            StreamQuality.SD -> {
-                selectionIndex = 2
-            }
+        return when (scrollY) {
+            in 0..cumulativeHeight1 -> 0
+            in (cumulativeHeight1 + 1)..cumulativeHeight2 -> 1
+            in (cumulativeHeight2 + 1)..cumulativeHeight3 -> 2
+            in (cumulativeHeight3 + 1)..(cumulativeHeight3 + h3) -> 3
+            else -> -1 // Consider adding a default case to handle unexpected values
         }
+    }
 
-        for ((index, button) in buttons.withIndex()) {
-            if (index == selectionIndex) {
-                button.setBackgroundResource(R.drawable.rounded_selected)
+    // Method to highlight the side list item
+    private fun highlightSideListItem(sectionIndex: Int) {
+        val setOfScrollspyWidgets: Set<TextView> = setOf(server_scrollspy, sartopo_scrollspy, livestream_scrollspy, quickactions_scrollspy)
+        if (sectionIndex == -1) return
+        for (widget in setOfScrollspyWidgets) {
+            widget.setTypeface(null, if (widget == setOfScrollspyWidgets.elementAt(sectionIndex)) {
+                Typeface.BOLD
             } else {
-                button.setBackgroundResource(R.drawable.rounded_white_bg)
-            }
+                Typeface.NORMAL
+            })
         }
     }
 }

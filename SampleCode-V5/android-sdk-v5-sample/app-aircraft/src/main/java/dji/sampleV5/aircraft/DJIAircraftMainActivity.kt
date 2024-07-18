@@ -4,6 +4,7 @@ import android.util.Log
 import android.widget.Toast
 import dji.sampleV5.aircraft.control.PachKeyManager
 import dji.sampleV5.aircraft.defaultlayout.DefaultLayoutActivity
+import dji.sampleV5.aircraft.telemetry.SartopoService
 import dji.sampleV5.modulecommon.DJIMainActivity
 import dji.v5.common.utils.GeoidManager
 import dji.v5.manager.datacenter.livestream.StreamQuality
@@ -11,6 +12,9 @@ import dji.v5.ux.core.communication.DefaultGlobalPreferences
 import dji.v5.ux.core.communication.GlobalPreferencesManager
 import dji.v5.ux.core.util.UxSharedPreferencesUtil
 import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
+import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel
+import dji.sampleV5.modulecommon.util.IStreamManager
+import dji.sampleV5.modulecommon.util.ITuskServiceCallback
 
 /**
  * Class Description
@@ -22,18 +26,13 @@ import dji.v5.ux.sample.showcase.widgetlist.WidgetsActivity
  */
 class DJIAircraftMainActivity : DJIMainActivity() {
     val TuskManger = PachKeyManager.getInstance()
+    val sartopoService: SartopoService = SartopoService.getInstance()
     override fun prepareUxActivity() {
         UxSharedPreferencesUtil.initialize(this)
         GlobalPreferencesManager.initialize(DefaultGlobalPreferences(this))
         GeoidManager.getInstance().init(this)
 
-        if (TuskManger != null) {
-            enableDefaultLayout(DefaultLayoutActivity::class.java) // important
-        }
-        else {
-            enableDefaultLayout(DefaultLayoutActivity::class.java) // important
-        }
-
+        enableDefaultLayout(DefaultLayoutActivity::class.java) // important
         enableWidgetList(WidgetsActivity::class.java)
         this.TuskManger.runTesting()
         this.TuskManger.updateStatusWidget()
@@ -41,6 +40,18 @@ class DJIAircraftMainActivity : DJIMainActivity() {
 //
 
 
+    }
+
+    override fun getSartopoWidgetModel(): ISartopoWidgetModel {
+        return sartopoService
+    }
+
+    override fun getStreamModel(): IStreamManager {
+        return TuskManger.streamer
+    }
+
+    override fun getTuskModel(): ITuskServiceCallback {
+        return TuskManger.telemService
     }
 
     override fun prepareTestingToolsActivity() {
@@ -80,7 +91,7 @@ class DJIAircraftMainActivity : DJIMainActivity() {
         this.TuskManger.streamer.setBitrate(rate)
     }
 
-    override fun setStreamQuality(choice: Int) {
+    override fun setStreamQuality(choice: StreamQuality) {
         this.TuskManger.streamer.setStreamQuality(choice)
     }
 
