@@ -376,7 +376,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
             }
             setGimbalAttitudeEnabled(typedArray.getBoolean(R.styleable.MapWidget_uxsdk_gimbalAttitudeEnabled, true));
 
-            drawable = context.getDrawable(R.drawable.uxsdk_ic_metering_switch);
+            drawable = context.getDrawable(R.drawable.crosshair_red);
             if (drawable != null) {
                 setTuskWaypointIcon(drawable);
             }
