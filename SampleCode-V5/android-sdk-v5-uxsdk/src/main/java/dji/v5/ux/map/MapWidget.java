@@ -483,14 +483,18 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     // this function handles the data from the flowable. There should be
     // a maximum of one tusk waypoint at a time.
     protected void updateTuskTelemetryWaypoint(DJILatLng waypoint) {
+        if (waypoint == null) {
+            return; // no new data
+        }
         if (tuskMarker != null) {
-            tuskMarker.setPosition(waypoint);
-        } else {
-            // called when DJILatLong(0.0, 0.0) is sent from pachKeyManager
             if (!waypoint.isAvailable()) {
                 removeTuskTelemetryWaypoint();
+            } else {
+                tuskMarker.setPosition(waypoint);
             }
-            addTuskWaypointOnMap(waypoint);
+        } else {
+            // called when DJILatLong(0.0, 0.0) is sent from pachKeyManager
+            if (waypoint.isAvailable()) addTuskWaypointOnMap(waypoint);
         }
 
     }
