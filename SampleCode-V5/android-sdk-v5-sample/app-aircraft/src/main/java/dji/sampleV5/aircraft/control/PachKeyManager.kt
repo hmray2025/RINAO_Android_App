@@ -99,7 +99,10 @@ class PachKeyManager() {
     private val safetyState = SafetyState()
     private var actionState = AircraftAction("", false)
     private var controller = VirtualStickControl()
-    private var pidController = PidController(0.4f, 0.05f, 0.9f)
+    private val kp = 0.23f // was 0.4 // .6
+    private val ki = 0.0012f // was 0.05 // 0.003
+    private val kd = 0.27f // was 0.9 // 0.23
+    private var pidController = PidController(kp, ki, kd)
     val mainScope = CoroutineScope(Dispatchers.Main)
     val streamer = StreamManager()
     var stateData = TuskAircraftState( 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -163,7 +166,6 @@ class PachKeyManager() {
         mainScope.launch {
             var status = ""
             var prevWaypoint = Coordinate(0.0,0.0,0.0)
-            var wp = DJILatLng(0.0,0.0)
             while(isActive) {
                 this@PachKeyManager.safetyChecks()
                 var warnings = ""
@@ -174,25 +176,18 @@ class PachKeyManager() {
                 }
                 if (this@PachKeyManager.statusData.goHomeStatus == "RETURNING_TO_HOME") {
                     status = "Returning Home"
-                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | Flight Info Received | $warnings" else "Manual | Flight Info Received"
-                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.telemService.nextWaypoint == prevWaypoint && !this@PachKeyManager.actionState.autonomous) {
                     status = if (warnings.isNotEmpty()) "Manual | $warnings" else "Manual"
-                    wp = DJILatLng(0.0,0.0)
                 }
                 if (this@PachKeyManager.actionState.autonomous) {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
-                    if (this@PachKeyManager.telemService.nextWaypoint != prevWaypoint) {
-//                        wp = DJILatLng(this@PachKeyManager.telemService.nextWaypoint.lat, this@PachKeyManager.telemService.nextWaypoint.lon)
-                        wp = DJILatLng(prevWaypoint.lat,prevWaypoint.lon) // want to send the "current target" waypoint to the map, not the next one
-                    }
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
-                this@PachKeyManager.sendWaypointToMap(wp)
+//                this@PachKeyManager.sendWaypointToMap(wp)
 //                pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
 //                pachModel.updateMsg(status)
 
@@ -248,6 +243,19 @@ class PachKeyManager() {
 //                    controller.endVirtualStick()
                     Log.v("PachKeyManager", "Finished fiveDPress Execution")
                 }
+                if (fiveDLeft) {
+                    // test orbit
+                    delay(500)
+                    if (!actionState.autonomous) {
+                        val coord = Coordinate(
+                            stateData.latitude!!,
+                            stateData.longitude!!,
+                            stateData.altitude!!
+                        )
+                        flyOrbitPath(coord)
+                    }
+                    else Log.d("PachKeyManager", "Cannot fly orbit while in autonomous mode")
+                }
             }
 
         }
@@ -272,6 +280,7 @@ class PachKeyManager() {
                 Log.v("PachKeyManager", "No valid flight mode detected")
             }
         }
+        this@PachKeyManager.sendWaypointToMap(DJILatLng(0.0,0.0))
         this@PachKeyManager.actionState.autonomous = false
     }
 
@@ -838,18 +847,21 @@ class PachKeyManager() {
             }
             delay(100L)
         }
+        pidController.resetIntegral()
     }
 
-    suspend fun goToLocationFixedYaw(lat: Double, lon: Double, alt: Double, yaw: Double){
+    suspend fun goToLocationFixedYaw(lat: Double, lon: Double, alt: Double, yaw: Double, tolerence: Double = pidController.posTolerance){
         // Function goes to a coordinate location assuming a fixed yaw angle
         // compute distance to target location using lat and lon
         // TODO: There seems to be a control issue with this implementation.
         //  Aircraft doesn't seem to reach the waypoint in the expected manner. Potential coordinate frame issue.
         //  Can try checking basic flight control
         var distance = computeLatLonDistance(lat, lon)
-        while (distance > pidController.posTolerance) {
+        while (distance > tolerence) {
+
             // ((distance > pidController.posTolerance) and (stateData.velocityX!! > pidController.velTolerance))
             //What if we overshoot the target location? Will the aircraft back up or turn around?
+            Log.d("PachControlAction", "wp: $lat, $lon")
             Log.v("PachControlAction", "Distance: $distance")
             val yError = computeLatDistance(lat)
             val xError = computeLonDistance(lon)
@@ -875,6 +887,7 @@ class PachKeyManager() {
             delay(50L)
             distance = computeLatLonDistance(lat, lon)
         }
+        pidController.resetIntegral()
     }
 
     suspend fun flyHippo() {
@@ -901,6 +914,7 @@ class PachKeyManager() {
             // Handle logic for action execution
             if (decisionChecks()) {
                 Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
+                this@PachKeyManager.sendWaypointToMap(DJILatLng(waypoint.lat, waypoint.lon))
                 this@PachKeyManager.actionState.action = "Following waypoints"
                 go2LocationForward(
                     waypoint.lat,
@@ -918,10 +932,10 @@ class PachKeyManager() {
                 Log.v("PachKeyManagerHIPPO", "Gather Action")
                 this@PachKeyManager.actionState.action = "Gathering Info"
                 sendAutonomyStatus("GatheringInfo")
-                diveAndYaw(waypoint.alt-10, 30.0)
-//                flyOrbitPath(
-//                    Coordinate(stateData.latitude!!, stateData.longitude!!,stateData.altitude!!),
-//                    orbitRadius)
+//                diveAndYaw(waypoint.alt-10, 30.0)
+                flyOrbitPath(
+                    Coordinate(stateData.latitude!!, stateData.longitude!!,stateData.altitude!!),
+                    orbitRadius)
                 Log.v("PackKeyManagerHIPPO", "Gathering Complete")
             }
              else {
@@ -989,6 +1003,7 @@ class PachKeyManager() {
 
         for (wp in wpList){
             if (safetyChecks()) {
+                this@PachKeyManager.sendWaypointToMap(DJILatLng(wp.lat, wp.lon))
                 go2LocationForward(wp.lat, wp.lon, wp.alt)
 
             } else{
@@ -1007,7 +1022,7 @@ class PachKeyManager() {
         controller.ensureAdvancedVirtualStickMode()
 
         // Create a list of points that are evenly spaced around the circle
-        val numPoints = 5
+        val numPoints = 20
         val circlePoints = Array(numPoints) { Coordinate(0.0, 0.0, 0.0) }
         for (i in 1..numPoints) {
             val numDegrees = 360.0/numPoints*i
@@ -1031,7 +1046,7 @@ class PachKeyManager() {
             val wp = circlePoints[i - 1]
             if (!telemService.isAlertAction) {
                 Log.v("PachKeyManager", "NextWaypoint: $wp")
-                goToLocationFixedYaw(wp.lat, wp.lon, wp.alt, yawAngle)
+                goToLocationFixedYaw(wp.lat, wp.lon, wp.alt, yawAngle, tolerence = pidController.posTolerance / 3)
             } else {
                 Log.v("PachKeyManager", "Alerted Operator")
                 break
@@ -1084,7 +1099,7 @@ class PachKeyManager() {
         val dLat = lat2 * Math.PI / 180.0 - lat1 * Math.PI / 180.0;
         val a = sin(dLat/2) * sin(dLat/2)
         val d =  2.0 * atan2(Math.sqrt(a), sqrt(1-a))* R * 1000.0
-        return if (lat2<lat1) {
+        return if (lat2>lat1) {
             -d
         } else {
             d

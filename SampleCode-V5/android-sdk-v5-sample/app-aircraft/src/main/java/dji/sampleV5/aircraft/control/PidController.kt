@@ -20,6 +20,10 @@ class PidController(private val kp: Float, private val ki: Float, private val kd
         lastError = error
         return (kp * error) + (ki * integral) + (kd * derivative)
     }
+
+    fun resetIntegral() {
+        integral = 0.0
+    }
 //    fun calculateError(currentval: Double): Double {
 //        return (this.setpoint - currentval)
 //    }
