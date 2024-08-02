@@ -1015,42 +1015,67 @@ class PachKeyManager() {
         controller.endVirtualStick()
     }
 
+//    suspend fun flyOrbitPath(center:Coordinate, radius:Double=10.0) {
+//        // When called, this function will make the aircraft fly in a circle around a point
+//
+//        // Check to see that advanced virtual stick is enabled
+//        controller.ensureAdvancedVirtualStickMode()
+//
+//        // Create a list of points that are evenly spaced around the circle
+//        val numPoints = 20
+//        val circlePoints = Array(numPoints) { Coordinate(0.0, 0.0, 0.0) }
+//        for (i in 1..numPoints) {
+//            val numDegrees = 360.0/numPoints*i
+//            // Compute new lat/lon coordinates with 111,111m per degree assumption
+//            val dLat = radius * cos(Math.toRadians((numDegrees)))/(111111) + center.lat
+//            val dLon = radius * sin(Math.toRadians(numDegrees))/(111111* cos(Math.toRadians(center.lat)))+ center.lon
+//            //TODO: Configure altitude to account for multiple possible terrains.
+//            val z = center.alt
+//            circlePoints[i - 1] = Coordinate(dLat,dLon, z)
+//        }
+//        Log.v("PachKeyManager", "Circle Points: $circlePoints")
+//        // Fly the orbit
+//        for (i in 1..numPoints) {
+////            val angle =
+//            val yawAngle = 360.0/numPoints*i - 180.0
+////            val yawAngle = if (angle<180) {
+////                angle+180
+////            } else{
+////                angle-180
+////            }
+//            val wp = circlePoints[i - 1]
+//            if (!telemService.isAlertAction) {
+//                Log.v("PachKeyManager", "NextWaypoint: $wp")
+//                goToLocationFixedYaw(wp.lat, wp.lon, wp.alt, yawAngle, tolerence = pidController.posTolerance / 3)
+//            } else {
+//                Log.v("PachKeyManager", "Alerted Operator")
+//                break
+//            }
+//        }
+//    }
+
     suspend fun flyOrbitPath(center:Coordinate, radius:Double=10.0) {
         // When called, this function will make the aircraft fly in a circle around a point
 
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
-
-        // Create a list of points that are evenly spaced around the circle
-        val numPoints = 20
-        val circlePoints = Array(numPoints) { Coordinate(0.0, 0.0, 0.0) }
-        for (i in 1..numPoints) {
-            val numDegrees = 360.0/numPoints*i
-            // Compute new lat/lon coordinates with 111,111m per degree assumption
-            val dLat = radius * cos(Math.toRadians((numDegrees)))/(111111) + center.lat
-            val dLon = radius * sin(Math.toRadians(numDegrees))/(111111* cos(Math.toRadians(center.lat)))+ center.lon
-            //TODO: Configure altitude to account for multiple possible terrains.
-            val z = center.alt
-            circlePoints[i - 1] = Coordinate(dLat,dLon, z)
-        }
-        Log.v("PachKeyManager", "Circle Points: $circlePoints")
-        // Fly the orbit
-        for (i in 1..numPoints) {
-//            val angle =
-            val yawAngle = 360.0/numPoints*i - 180.0
-//            val yawAngle = if (angle<180) {
-//                angle+180
-//            } else{
-//                angle-180
-//            }
-            val wp = circlePoints[i - 1]
-            if (!telemService.isAlertAction) {
-                Log.v("PachKeyManager", "NextWaypoint: $wp")
-                goToLocationFixedYaw(wp.lat, wp.lon, wp.alt, yawAngle, tolerence = pidController.posTolerance / 3)
-            } else {
-                Log.v("PachKeyManager", "Alerted Operator")
-                break
+        val dLat = radius/(111111) + center.lat
+        var leftCircleOrigin = false
+        if (!telemService.isAlertAction) {
+            // go do some location north of the current location with yaw directed towards the center
+            goToLocationFixedYaw(dLat , center.lon, center.alt, 180.0, tolerence = pidController.posTolerance / 3)
+            while (!leftCircleOrigin || computeLatLonDistance(dLat, center.lon) > pidController.posTolerance / 3) {
+                if (computeLatLonDistance(dLat, center.lon) < pidController.posTolerance) {
+                    leftCircleOrigin = true
+                }
+                // calculate the yaw velocity using the radius of the circle and velocity of the aircraft
+                val yawVel = 2 * Math.PI / radius // rad/sec
+                // send the velocity command to the aircraft
             }
+            // calculate the yaw to send to go2LocationForward
+
+        } else {
+            Log.v("PachKeyManager", "Alerted Operator")
         }
     }
 
