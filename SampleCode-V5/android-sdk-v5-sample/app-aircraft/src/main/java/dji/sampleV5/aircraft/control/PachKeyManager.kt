@@ -1059,24 +1059,40 @@ class PachKeyManager() {
 
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
-        val dLat = radius/(111111) + center.lat
+        val topOfCircle = Coordinate(radius/(111111) + center.lat, center.lon, center.alt)
         var leftCircleOrigin = false
-        if (!telemService.isAlertAction) {
-            // go do some location north of the current location with yaw directed towards the center
-            goToLocationFixedYaw(dLat , center.lon, center.alt, 180.0, tolerence = pidController.posTolerance / 3)
-            while (!leftCircleOrigin || computeLatLonDistance(dLat, center.lon) > pidController.posTolerance / 3) {
-                if (computeLatLonDistance(dLat, center.lon) < pidController.posTolerance) {
-                    leftCircleOrigin = true
-                }
-                // calculate the yaw velocity using the radius of the circle and velocity of the aircraft
-                val yawVel = 2 * Math.PI / radius // rad/sec
-                // send the velocity command to the aircraft
+        val yawVel = 2 * Math.PI / radius * -1 // rad/s
+        val tanVel = yawVel * radius * -1 // m/s
+        // go do some location north of the current location with yaw directed towards the center
+        goToLocationFixedYaw(topOfCircle.lat, topOfCircle.lon, topOfCircle.alt, 180.0, tolerence = pidController.posTolerance / 3) // go to the top of the circle
+        while (!leftCircleOrigin || (computeLatLonDistance(topOfCircle.lat, topOfCircle.lon) > pidController.posTolerance)) {
+            if (telemService.isAlertAction)
+            {
+                Log.v("PachKeyManager", "Alerted Operator")
+                break
             }
-            // calculate the yaw to send to go2LocationForward
-
-        } else {
-            Log.v("PachKeyManager", "Alerted Operator")
+            if (!safetyChecks()) {
+                Log.v("PachKeyManager", "Safety Check Failed")
+                break
+            }
+            if (computeLatLonDistance(topOfCircle.lat, topOfCircle.lon) > pidController.posTolerance) {
+                if (!leftCircleOrigin) {
+                    leftCircleOrigin = true
+                    Log.v("PachKeyManager", "Left Circle Origin")
+                }
+            }
+            // the drone takes time to ramp up its tangental velocty, so we need to proportionally adjust the yaw
+            // to keep the drone facing the center of the circle
+            val proportion = calculateXYVel() / tanVel
+            val yaw = Math.toDegrees(yawVel * proportion)
+            controller.sendVirtualStickAnglularVelocityBody(0.0, tanVel, yaw, stateData.altitude!!)
+            delay(10L)
         }
+        // calculate the yaw to send to go2LocationForward
+    }
+
+    fun calculateXYVel(): Double {
+        return sqrt(stateData.velocityX!!*stateData.velocityX!! + stateData.velocityY!!*stateData.velocityY!!)
     }
 
     suspend fun diveAndYaw(alt: Double, yawDiff: Double) {
