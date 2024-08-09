@@ -48,7 +48,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class PachKeyManager() {
+class PachKeyManager() : IGimbalAngleChanger {
     /*
     * The companion object brackets are used to essentially create a singleton object,
     * where when the PachKeyManager class is called the first time, it creates an instance
@@ -89,7 +89,7 @@ class PachKeyManager() {
     private val actionDataProcessor = PublishProcessor.create<String>() // for publishing action status to status indicator
     private val warningDataProcessor = PublishProcessor.create<String>() // for publishing warnings to status indicator
     private val messageDataProcessor = PublishProcessor.create<String>() // for publishing messages to status indicator
-    val telemService = TuskServiceWebsocket()
+    val telemService = TuskServiceWebsocket(this)
 
     /**
      * Safety Failures, action, autonomous, and safety warnings are all used for the PachWidget
@@ -1198,6 +1198,10 @@ class PachKeyManager() {
     // Function to send data to the data processor
     fun sendWaypointToMap(Data: DJILatLng?) {
         waypointDataProcessor.offer(Data)
+    }
+
+    override fun changeGimbalAngle(angle: Double) {
+        rotateGimbal(angle)
     }
 
 //    override fun getConnectionStatus(): Boolean {
