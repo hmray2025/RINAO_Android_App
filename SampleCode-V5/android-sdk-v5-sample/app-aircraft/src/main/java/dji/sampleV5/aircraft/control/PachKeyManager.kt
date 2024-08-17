@@ -33,6 +33,7 @@ import dji.v5.common.utils.RxUtil
 import dji.v5.manager.KeyManager
 import dji.v5.ux.mapkit.core.models.DJILatLng
 import dji.v5.ux.pachWidget.PachWidgetModel
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.functions.Consumer
@@ -89,6 +90,7 @@ class PachKeyManager() {
     private val actionDataProcessor = PublishProcessor.create<String>() // for publishing action status to status indicator
     private val warningDataProcessor = PublishProcessor.create<String>() // for publishing warnings to status indicator
     private val messageDataProcessor = PublishProcessor.create<String>() // for publishing messages to status indicator
+    private val streamDataProcessor = PublishProcessor.create<Boolean>() // for publishing stream URL to status indicator
     val telemService = TuskServiceWebsocket()
 
     /**
@@ -109,7 +111,7 @@ class PachKeyManager() {
             0.0, 0.0, 0.0, 0.0, 0, windDirection = null, false)
     var statusData = TuskAircraftStatus( connected = false, battery = 0, gpsSignal = 0, gps = 0,
         signalQuality =  0,  goHomeState = null, flightMode = null, motorsOn = false, homeLocationLat = null,
-            homeLocationLong = null, gimbalAngle = 0.0, goHomeStatus = null, takeoffAltitude = null)
+            homeLocationLong = null, gimbalAngle = 0.0, goHomeStatus = null, takeoffAltitude = null, isStreaming = false)
     var controllerStatus = TuskControllerStatus( battery = 0, pauseButton = false, goHomeButton = false,
             leftStickX = 0,leftStickY=0,rightStickX=0,rightStickY=0, fiveDUp = false, fiveDDown = false,
             fiveDRight = false, fiveDLeft = false, fiveDPress = false)
@@ -558,6 +560,19 @@ class PachKeyManager() {
             sendControllerStatus(controllerStatus)
             Log.d("PachKeyManager", "FiveDButton $it")
         }
+
+        keyDisposables?.add( // dji key does not work in this instance
+            streamDataProcessor
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    Log.v("PachKeyManager", "is Streaming: $it")
+                    statusData = statusData.copy(isStreaming = it)
+                    sendStatus(statusData)
+                }, {
+                    Log.e("PachKeyManager", "Stream URL Error: $it")
+                })
+
+        )
         // Continue to do this for the other required keys...
     }
 
@@ -1144,6 +1159,10 @@ class PachKeyManager() {
         return messageDataProcessor.onBackpressureBuffer()
     }
 
+    fun sendStreamDataToServer(stream: Boolean) {
+        streamDataProcessor.offer(stream)
+    }
+
     private fun sendDataToStatusWidget(message: String, connection: Boolean) {
         messageDataProcessor.offer(message)
         connectionDataProcessor.offer(connection)
@@ -1152,6 +1171,10 @@ class PachKeyManager() {
 
     fun getWaypointFlowable(): Flowable<DJILatLng> {
         return waypointDataProcessor.onBackpressureBuffer()
+    }
+
+    fun getStreamerFlowable(): Flowable<Boolean> {
+        return streamDataProcessor
     }
 
     // Function to send data to the data processor

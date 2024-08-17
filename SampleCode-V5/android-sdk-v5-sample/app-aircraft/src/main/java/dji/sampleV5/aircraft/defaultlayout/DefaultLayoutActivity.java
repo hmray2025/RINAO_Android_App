@@ -214,9 +214,11 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                     pachManager.sendStreamURL(streamManager.getStreamURL());
                     if (streamManager.isStreaming()) {
                         liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
+                        pachManager.sendStreamDataToServer(true);
                     }
                     else {
                         liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_start);
+                        pachManager.sendStreamDataToServer(false);
                     }
                 }
             });
@@ -296,9 +298,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 //        );
         if (streamManager.isStreaming()) {
             liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
+            pachManager.sendStreamDataToServer(true);
         }
         else {
             liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_start);
+            pachManager.sendStreamDataToServer(false);
+
         }
     }
 
