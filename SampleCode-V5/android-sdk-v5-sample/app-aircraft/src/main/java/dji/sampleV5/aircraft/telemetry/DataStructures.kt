@@ -37,6 +37,7 @@ data class TuskAircraftStatus(
     @SerializedName("gimbalAngle") val gimbalAngle: Double?,
     @SerializedName("goHomeStatus") val goHomeStatus: String?,
     @SerializedName("takeoffAltitude") val takeoffAltitude: Double?,
+    @SerializedName("isStreaming") val isStreaming: Boolean?,
 )
 
 data class TuskControllerStatus(
