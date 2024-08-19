@@ -109,7 +109,7 @@ class TuskServiceWebsocket : ITuskServiceCallback{
             when (action) {
                 "FollowWaypoints" -> handleWaypointSet(args as JSONObject?)
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
-                "FlightStatus" -> handleFlightStatusUpdate(args as JSONObject?)
+                "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
                 else -> Log.d("TuskService", "Unknown action: $action")
             }
         } catch (e: Exception) {
@@ -216,17 +216,20 @@ class TuskServiceWebsocket : ITuskServiceCallback{
         // Handle action "FlightStatus" with decision making event
         try {
             if (args is JSONObject) {
-                val event = args.optJSONArray("event")
-                val flag = event?.get(0)
-                if (flag == "gather-info"){
+                val event = args.getString("event")
+                Log.d("TuskService", "Event: $event")
+//                val flag = event?.get(0)
+                if (event == "gather-info"){
+                    Log.d("TuskService", "Handling GatherInfo action")
                     isGatherAction = true
                     val gatherstreamcoord = args.optJSONArray("coordinate")
+                    Log.d("TuskService", "Gather Coordinate: $gatherstreamcoord")
                     gathercoordinate = Coordinate(
                         gatherstreamcoord.get(0).toString().toDouble(),
                         gatherstreamcoord.get(1).toString().toDouble(),
                         gatherstreamcoord.get(2).toString().toDouble()
                     )
-                } else if (flag == "alert-operator"){
+                } else if (event == "alert-operator"){
                     isAlertAction = true
                 } else {
                     Log.d("TuskService", "Invalid event format for FlightStatus action")

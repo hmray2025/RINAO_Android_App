@@ -948,10 +948,10 @@ class PachKeyManager() {
                 this@PachKeyManager.actionState.action = "Gathering Info"
                 sendAutonomyStatus("GatheringInfo")
 //                diveAndYaw(waypoint.alt-10, 30.0)
+                Log.v("PackKeyManagerHIPPO", "Gathering coordinate: ${telemService.gathercoordinate}")
                 flyOrbitPath(
-                    Coordinate(stateData.latitude!!, stateData.longitude!!,stateData.altitude!!),
+                    telemService.gathercoordinate,
                     orbitRadius)
-                Log.v("PackKeyManagerHIPPO", "Gathering Complete")
             }
              else {
                 Log.v("PachKeyManagerHIPPO", "Unknown Decision Check Failed")
