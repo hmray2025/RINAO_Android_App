@@ -24,6 +24,8 @@ class TuskServiceWebsocket : ITuskServiceCallback{
     var dwellTime = 0
     var flightMode = "idle"
 
+    var gathercoordinate = Coordinate(0.0, 0.0, 0.0)
+
     // Establish WebSocket connection
     private val defaultIP: String = "ws://192.168.0.101:8084"
     private var currentIP: String = defaultIP
@@ -218,6 +220,12 @@ class TuskServiceWebsocket : ITuskServiceCallback{
                 val flag = event?.get(0)
                 if (flag == "gather-info"){
                     isGatherAction = true
+                    val gatherstreamcoord = args.optJSONArray("coordinate")
+                    gathercoordinate = Coordinate(
+                        gatherstreamcoord.get(0).toString().toDouble(),
+                        gatherstreamcoord.get(1).toString().toDouble(),
+                        gatherstreamcoord.get(2).toString().toDouble()
+                    )
                 } else if (flag == "alert-operator"){
                     isAlertAction = true
                 } else {
