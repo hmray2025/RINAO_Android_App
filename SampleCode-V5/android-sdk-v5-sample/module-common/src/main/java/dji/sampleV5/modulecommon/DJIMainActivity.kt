@@ -104,63 +104,6 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             }
         }
 
-//        reconnect_ws_settings.setOnClickListener {
-//            setStatus(1, serverStatus)
-//            callReconnectWebsocket()
-//            if (callGetConnectionStatus()) {
-//                setStatus(1, serverStatus)
-//                Log.d("TuskService", "updated status to good")
-//            }
-//            else {
-//                setStatus(-1, serverStatus)
-//                Log.d("TuskService", "updated status to error")
-//            }
-//        }
-
-//        image3.setOnClickListener {
-//            baseMainActivityVm.doPairing {
-//                ToastUtils.showToast(it)
-//            }
-//        }
-
-//        editText.addTextChangedListener(object : TextWatcher {
-//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//                // not needed, keep here
-//            }
-//
-//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//                setbitrate.isEnabled = p0.toString().isNotEmpty()
-//            }
-//
-//            override fun afterTextChanged(p0: Editable?) {
-//                // not needed, keep here
-//            }
-//        })
-//
-//        setbitrate.setOnClickListener {
-//            setBitrate(editText.text.toString().toInt())
-//            editText.text.clear()
-//        }
-
-//        editTextIP.addTextChangedListener(object : TextWatcher {
-//            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//                // not needed, keep here
-//            }
-//
-//            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
-//                setIP.isEnabled = p0.toString().isNotEmpty()
-//            }
-//
-//            override fun afterTextChanged(p0: Editable?) {
-//                // not needed, keep here
-//            }
-//        })
-//
-//        setIP.setOnClickListener {
-//            callSetIP(editTextIP.text.toString())
-//        }
-
-
         // Show the settings dialog when the settingsButton is clicked
         settings_button.setOnClickListener {
 //            bottomSheetDialog.show()
@@ -179,6 +122,20 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             baseMainActivityVm.doPairing {
                 ToastUtils.showToast(it)
             }
+        }
+
+        // Set onClickListener for the scrollspy widgets
+        server_scrollspy.setOnClickListener {
+            moveToClickedPortion(0)
+        }
+        sartopo_scrollspy.setOnClickListener {
+            moveToClickedPortion(1)
+        }
+        livestream_scrollspy.setOnClickListener {
+            moveToClickedPortion(2)
+        }
+        quickactions_scrollspy.setOnClickListener {
+            moveToClickedPortion(3)
         }
     }
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -389,7 +346,7 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
         val h2 = livestream_widget.height
         val h3 = quickactions_widget.height
 
-        val cumulativeHeight1 = h0 - 300
+        val cumulativeHeight1 = h0 - 300 // Adjusted such that the top of the section is not at the top of the screen
         val cumulativeHeight2 = cumulativeHeight1 + h1
         val cumulativeHeight3 = cumulativeHeight2 + h2
 
@@ -400,6 +357,26 @@ abstract class DJIMainActivity : AppCompatActivity(), ITuskServiceCallback, IStr
             in (cumulativeHeight3 + 1)..(cumulativeHeight3 + h3) -> 3
             else -> -1 // Consider adding a default case to handle unexpected values
         }
+    }
+
+    private fun moveToClickedPortion(sectionIndex: Int) {
+        val h0 = server_widget.height
+        val h1 = sartopo_widget.height
+        val h2 = livestream_widget.height
+        val h3 = quickactions_widget.height
+
+        val cumulativeHeight1 = h0
+        val cumulativeHeight2 = cumulativeHeight1 + h1
+        val cumulativeHeight3 = cumulativeHeight2 + h2
+
+        val scrollToY = when (sectionIndex) {
+            0 -> 0
+            1 -> cumulativeHeight1
+            2 -> cumulativeHeight2
+            3 -> cumulativeHeight3
+            else -> 0
+        }
+        scroll_view_settings.smoothScrollTo(0, scrollToY)
     }
 
     // Method to highlight the side list item
