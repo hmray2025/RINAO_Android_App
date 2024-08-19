@@ -1,6 +1,7 @@
 package dji.sampleV5.aircraft.telemetry
 import android.util.Log
 import com.google.gson.Gson
+import dji.sampleV5.aircraft.control.IGimbalAngleChanger
 import dji.sampleV5.modulecommon.util.ITuskServiceCallback
 import dji.v5.utils.common.ToastUtils
 import okhttp3.*
@@ -8,11 +9,11 @@ import okio.ByteString
 import org.json.JSONObject
 import java.io.Serializable
 
-class TuskServiceWebsocket : ITuskServiceCallback{
+class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServiceCallback{
     private val client: OkHttpClient = OkHttpClient()
     private lateinit var webSocket: WebSocket
     private val gson: Gson = Gson()
-// Set of Variables that system is expected to receive from server
+    // Set of Variables that system is expected to receive from server
     var maxVelocity: Double = 6.0 // m/s
     var waypointList =  listOf<Coordinate>()
     var nextWaypoint = Coordinate(0.0, 0.0, 0.0)
@@ -109,6 +110,7 @@ class TuskServiceWebsocket : ITuskServiceCallback{
             when (action) {
                 "FollowWaypoints" -> handleWaypointSet(args as JSONObject?)
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
+                "changeGimbalAngle" -> handleChangeGimbalAngle(args as JSONObject?)
                 "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
                 else -> Log.d("TuskService", "Unknown action: $action")
             }
@@ -209,6 +211,19 @@ class TuskServiceWebsocket : ITuskServiceCallback{
             }
         } catch (e: Exception) {
             Log.e("TuskService", "Failed to handle FlightWaypoint action: ${e.message}")
+        }
+    }
+
+    private fun handleChangeGimbalAngle(args: Any?) {
+        // Handle action "changeGimbalAngle" with the new gimbal angle
+        try {
+            if (args is JSONObject) {
+                val angleObject = args.getJSONObject("angle")
+                val gimbalAngle = angleObject.getDouble("angle")
+                gimbal!!.changeGimbalAngle(gimbalAngle)
+            }
+        } catch (e: Exception) {
+            Log.e("TuskService", "Failed to handle changeGimbalAngle action: ${e.message}")
         }
     }
 

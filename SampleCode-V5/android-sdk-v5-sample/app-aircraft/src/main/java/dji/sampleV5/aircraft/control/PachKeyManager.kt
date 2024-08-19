@@ -49,7 +49,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class PachKeyManager() {
+class PachKeyManager() : IGimbalAngleChanger {
     /*
     * The companion object brackets are used to essentially create a singleton object,
     * where when the PachKeyManager class is called the first time, it creates an instance
@@ -91,7 +91,7 @@ class PachKeyManager() {
     private val warningDataProcessor = PublishProcessor.create<String>() // for publishing warnings to status indicator
     private val messageDataProcessor = PublishProcessor.create<String>() // for publishing messages to status indicator
     private val streamDataProcessor = PublishProcessor.create<Boolean>() // for publishing stream URL to status indicator
-    val telemService = TuskServiceWebsocket()
+    val telemService = TuskServiceWebsocket(this)
 
     /**
      * Safety Failures, action, autonomous, and safety warnings are all used for the PachWidget
@@ -1030,43 +1030,84 @@ class PachKeyManager() {
         controller.endVirtualStick()
     }
 
+//    suspend fun flyOrbitPath(center:Coordinate, radius:Double=10.0) {
+//        // When called, this function will make the aircraft fly in a circle around a point
+//
+//        // Check to see that advanced virtual stick is enabled
+//        controller.ensureAdvancedVirtualStickMode()
+//
+//        // Create a list of points that are evenly spaced around the circle
+//        val numPoints = 20
+//        val circlePoints = Array(numPoints) { Coordinate(0.0, 0.0, 0.0) }
+//        for (i in 1..numPoints) {
+//            val numDegrees = 360.0/numPoints*i
+//            // Compute new lat/lon coordinates with 111,111m per degree assumption
+//            val dLat = radius * cos(Math.toRadians((numDegrees)))/(111111) + center.lat
+//            val dLon = radius * sin(Math.toRadians(numDegrees))/(111111* cos(Math.toRadians(center.lat)))+ center.lon
+//            //TODO: Configure altitude to account for multiple possible terrains.
+//            val z = center.alt
+//            circlePoints[i - 1] = Coordinate(dLat,dLon, z)
+//        }
+//        Log.v("PachKeyManager", "Circle Points: $circlePoints")
+//        // Fly the orbit
+//        for (i in 1..numPoints) {
+////            val angle =
+//            val yawAngle = 360.0/numPoints*i - 180.0
+////            val yawAngle = if (angle<180) {
+////                angle+180
+////            } else{
+////                angle-180
+////            }
+//            val wp = circlePoints[i - 1]
+//            if (!telemService.isAlertAction) {
+//                Log.v("PachKeyManager", "NextWaypoint: $wp")
+//                goToLocationFixedYaw(wp.lat, wp.lon, wp.alt, yawAngle, tolerence = pidController.posTolerance / 3)
+//            } else {
+//                Log.v("PachKeyManager", "Alerted Operator")
+//                break
+//            }
+//        }
+//    }
+
     suspend fun flyOrbitPath(center:Coordinate, radius:Double=10.0) {
         // When called, this function will make the aircraft fly in a circle around a point
 
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
-
-        // Create a list of points that are evenly spaced around the circle
-        val numPoints = 20
-        val circlePoints = Array(numPoints) { Coordinate(0.0, 0.0, 0.0) }
-        for (i in 1..numPoints) {
-            val numDegrees = 360.0/numPoints*i
-            // Compute new lat/lon coordinates with 111,111m per degree assumption
-            val dLat = radius * cos(Math.toRadians((numDegrees)))/(111111) + center.lat
-            val dLon = radius * sin(Math.toRadians(numDegrees))/(111111* cos(Math.toRadians(center.lat)))+ center.lon
-            //TODO: Configure altitude to account for multiple possible terrains.
-            val z = center.alt
-            circlePoints[i - 1] = Coordinate(dLat,dLon, z)
-        }
-        Log.v("PachKeyManager", "Circle Points: $circlePoints")
-        // Fly the orbit
-        for (i in 1..numPoints) {
-//            val angle =
-            val yawAngle = 360.0/numPoints*i - 180.0
-//            val yawAngle = if (angle<180) {
-//                angle+180
-//            } else{
-//                angle-180
-//            }
-            val wp = circlePoints[i - 1]
-            if (!telemService.isAlertAction) {
-                Log.v("PachKeyManager", "NextWaypoint: $wp")
-                goToLocationFixedYaw(wp.lat, wp.lon, wp.alt, yawAngle, tolerence = pidController.posTolerance / 3)
-            } else {
+        val topOfCircle = Coordinate(radius/(111111) + center.lat, center.lon, center.alt)
+        var leftCircleOrigin = false
+        val yawVel = 2 * Math.PI / radius * -1 // rad/s
+        val tanVel = yawVel * radius * -1 // m/s
+        // go do some location north of the current location with yaw directed towards the center
+        goToLocationFixedYaw(topOfCircle.lat, topOfCircle.lon, topOfCircle.alt, 180.0, tolerence = pidController.posTolerance / 3) // go to the top of the circle
+        while (!leftCircleOrigin || (computeLatLonDistance(topOfCircle.lat, topOfCircle.lon) > pidController.posTolerance)) {
+            if (telemService.isAlertAction)
+            {
                 Log.v("PachKeyManager", "Alerted Operator")
                 break
             }
+            if (!safetyChecks()) {
+                Log.v("PachKeyManager", "Safety Check Failed")
+                break
+            }
+            if (computeLatLonDistance(topOfCircle.lat, topOfCircle.lon) > pidController.posTolerance) {
+                if (!leftCircleOrigin) {
+                    leftCircleOrigin = true
+                    Log.v("PachKeyManager", "Left Circle Origin")
+                }
+            }
+            // the drone takes time to ramp up its tangental velocty, so we need to proportionally adjust the yaw
+            // to keep the drone facing the center of the circle
+            val proportion = calculateXYVel() / tanVel
+            val yaw = Math.toDegrees(yawVel * proportion)
+            controller.sendVirtualStickAnglularVelocityBody(0.0, tanVel, yaw, stateData.altitude!!)
+            delay(10L)
         }
+        // calculate the yaw to send to go2LocationForward
+    }
+
+    fun calculateXYVel(): Double {
+        return sqrt(stateData.velocityX!!*stateData.velocityX!! + stateData.velocityY!!*stateData.velocityY!!)
     }
 
     suspend fun diveAndYaw(alt: Double, yawDiff: Double) {
@@ -1180,6 +1221,10 @@ class PachKeyManager() {
     // Function to send data to the data processor
     fun sendWaypointToMap(Data: DJILatLng?) {
         waypointDataProcessor.offer(Data)
+    }
+
+    override fun changeGimbalAngle(angle: Double) {
+        rotateGimbal(angle)
     }
 
 //    override fun getConnectionStatus(): Boolean {
