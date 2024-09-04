@@ -314,6 +314,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             compositeDisposable = null;
         }
         mapWidget.onPause();
+        if(streamManager.isStreaming()) {
+            streamManager.startStream();
+        }
         super.onPause();
     }
     //endregion
