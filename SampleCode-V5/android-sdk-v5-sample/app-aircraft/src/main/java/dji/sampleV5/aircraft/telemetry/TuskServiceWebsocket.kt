@@ -25,6 +25,7 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
     var dwellTime = 0
     var flightMode = "idle"
 
+    var speed = 0.0
     var gathercoordinate = Coordinate(0.0, 0.0, 0.0)
 
     // Establish WebSocket connection
@@ -237,13 +238,15 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
                 if (event == "gather-info"){
                     Log.d("TuskService", "Handling GatherInfo action")
                     isGatherAction = true
-                    val gatherstreamcoord = args.optJSONArray("coordinate")
-                    Log.d("TuskService", "Gather Coordinate: $gatherstreamcoord")
-                    gathercoordinate = Coordinate(
-                        gatherstreamcoord.get(0).toString().toDouble(),
-                        gatherstreamcoord.get(1).toString().toDouble(),
-                        gatherstreamcoord.get(2).toString().toDouble()
+                    nextWaypoint = Coordinate(
+                        args.optDouble("latitude"),
+                        args.optDouble("longitude"),
+                        args.optDouble("altitude")
                     )
+                    speed = args.optDouble("speed")
+                    nextWaypointID = args.optInt("waypointID")
+                    plannerAction = args.optString("plannerAction")
+                    dwellTime = args.optInt("dwellTime")
                 } else if (event == "alert-operator"){
                     isAlertAction = true
                 } else {

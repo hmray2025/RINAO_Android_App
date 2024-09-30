@@ -927,7 +927,7 @@ class PachKeyManager() : IGimbalAngleChanger {
 
         while (safetyChecks()) {
             // Handle logic for action execution
-            if (decisionChecks()) {
+            if (this@PachKeyManager.decisionChecks()) {
                 Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
                 this@PachKeyManager.sendWaypointToMap(DJILatLng(waypoint.lat, waypoint.lon))
                 this@PachKeyManager.actionState.action = "Following waypoints"
@@ -935,22 +935,22 @@ class PachKeyManager() : IGimbalAngleChanger {
                     waypoint.lat,
                     waypoint.lon,
                     waypoint.alt)
-            } else if (telemService.isAlertAction) {
+            } else if (this@PachKeyManager.telemService.isAlertAction) {
                 // Alert action stops the aircraft's movement
                 telemService.isAlertAction = false
                 Log.v("PachKeyManagerHIPPO", "Alert Action")
                 this@PachKeyManager.actionState.action = "Flight Paused - person?"
                 sendAutonomyStatus("AlertedOperator")
                 break
-            } else if (telemService.isGatherAction) {
+            } else if (this@PachKeyManager.telemService.isGatherAction) {
                 // Send Gather Confirmation
                 Log.v("PachKeyManagerHIPPO", "Gather Action")
                 this@PachKeyManager.actionState.action = "Gathering Info"
                 sendAutonomyStatus("GatheringInfo")
 //                diveAndYaw(waypoint.alt-10, 30.0)
-                Log.v("PackKeyManagerHIPPO", "Gathering coordinate: ${telemService.gathercoordinate}")
+                Log.v("PackKeyManagerHIPPO", "Gathering coordinate: ${telemService.nextWaypoint}")
                 flyOrbitPath(
-                    telemService.gathercoordinate,
+                    telemService.nextWaypoint,
                     orbitRadius)
             }
              else {
