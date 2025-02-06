@@ -1,15 +1,14 @@
 package dji.sampleV5.aircraft.telemetry
 import android.util.Log
 import com.google.gson.Gson
-import dji.sampleV5.aircraft.control.IGimbalAngleChanger
+import dji.sampleV5.aircraft.control.IVehicleController
 import dji.sampleV5.modulecommon.util.ITuskServiceCallback
 import dji.v5.utils.common.ToastUtils
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
-import java.io.Serializable
 
-class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServiceCallback{
+class TuskServiceWebsocket(private val gimbal: IVehicleController?) : ITuskServiceCallback{
     private val client: OkHttpClient = OkHttpClient()
     private lateinit var webSocket: WebSocket
     private val gson: Gson = Gson()
@@ -113,6 +112,7 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
                 "changeGimbalAngle" -> handleChangeGimbalAngle(args as JSONObject?)
                 "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
+                "modeJoystick" -> handleJoystickUpdate(args as JSONObject?)
                 else -> Log.d("TuskService", "Unknown action: $action")
             }
         } catch (e: Exception) {
@@ -226,6 +226,11 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
         } catch (e: Exception) {
             Log.e("TuskService", "Failed to handle changeGimbalAngle action: ${e.message}")
         }
+    }
+
+    private fun handleJoystickUpdate(args: Any?){
+        // Handle action "modeJoystick" with joystick update
+
     }
 
     private fun handleFlightStatusUpdate(args: Any?){
