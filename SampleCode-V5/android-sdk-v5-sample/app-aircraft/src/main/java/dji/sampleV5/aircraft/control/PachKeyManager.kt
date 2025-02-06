@@ -32,7 +32,6 @@ import dji.v5.common.error.IDJIError
 import dji.v5.common.utils.RxUtil
 import dji.v5.manager.KeyManager
 import dji.v5.ux.mapkit.core.models.DJILatLng
-import dji.v5.ux.pachWidget.PachWidgetModel
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -49,7 +48,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class PachKeyManager() : IGimbalAngleChanger {
+class PachKeyManager() : IVehicleController {
     /*
     * The companion object brackets are used to essentially create a singleton object,
     * where when the PachKeyManager class is called the first time, it creates an instance
@@ -116,33 +115,6 @@ class PachKeyManager() : IGimbalAngleChanger {
             leftStickX = 0,leftStickY=0,rightStickX=0,rightStickY=0, fiveDUp = false, fiveDDown = false,
             fiveDRight = false, fiveDLeft = false, fiveDPress = false)
     val R = 6378.137 // Radius of earth in KM
-
-    var backyardCoordinatesSingleAlt = listOf(
-            Coordinate(40.010457220936324, -105.24444971137794, 200.0),
-            Coordinate(40.011165499597105, -105.24412041426442, 200.0),
-            Coordinate(40.01110330957, -105.24382269358645, 200.0),
-            Coordinate(40.01045031086439, -105.24401215219972, 200.0)
-    )
-
-    var backyardCoordinatesIncreasingAlt = listOf(
-            Coordinate(40.01079, -105.24426, 30.0),
-            Coordinate(40.01114, -105.24407, 40.0),
-            Coordinate(40.01103, -105.24356, 45.0),
-            Coordinate(40.01061, -105.24414, 50.0)
-    )
-
-    var backyardCoordinatesComplexChangingAlt = listOf(
-        Coordinate(40.01079, -105.24426, 30.0),
-        Coordinate(40.01114, -105.24407, 40.0),
-        Coordinate(40.01103, -105.24356, 45.0),
-        Coordinate(40.01061, -105.24414, 40.0),
-        Coordinate(40.01114, -105.24407, 40.0),
-        Coordinate(40.01173, -105.24352, 45.0),
-        Coordinate(40.01174, -105.24273, 50.0),
-        Coordinate(40.01046, -105.24427, 15.0)
-    )
-
-    var backyardSingleCoordinate = listOf(Coordinate(40.010819889488076, -105.244268000203, 30.0))
 
     // Create variables here
     private var keyDisposables: CompositeDisposable? = null
@@ -579,7 +551,7 @@ class PachKeyManager() : IGimbalAngleChanger {
     private fun initializeFlightParameters() {
         // Function initializes any static parameters prior to flight
         // Set battery warning threshold to 30%
-        val batteryWarningValue = 30
+        val batteryWarningValue = 20
         val batteryThresh = KeyTools.createKey(FlightControllerKey.KeyLowBatteryWarningThreshold)
         KeyManager.getInstance().setValue(batteryThresh, batteryWarningValue, object : CommonCallbacks.CompletionCallback {
             override fun onSuccess() {
@@ -607,7 +579,7 @@ class PachKeyManager() : IGimbalAngleChanger {
     }
 
     // Make a function to rotate the gimbal by a certain angle
-    fun rotateGimbal(angle: Double) {
+    override fun changeGimbalAngle(angle: Double){
         // Gimbal can be rotated by a range of [-90, 35]
         // The provided angle sets the pitch of the gimbal to the given angle
         val gimbalKey = KeyTools.createKey(GimbalKey.KeyRotateByAngle)
@@ -760,6 +732,19 @@ class PachKeyManager() : IGimbalAngleChanger {
         return true
     }
 
+    private suspend fun engageGatherAction(){
+        // Function handles the gathering of information.
+        // Called from multiple locations, so this allows for a standardized execution
+        val orbitRadius = 10.0
+        this@PachKeyManager.actionState.action = "Gathering Info"
+        sendAutonomyStatus("GatheringInfo")
+//                diveAndYaw(waypoint.alt-10, 30.0)
+        Log.v("PackKeyManagerHIPPO", "Gathering coordinate: ${telemService.nextWaypoint}")
+        flyOrbitPath(
+            telemService.nextWaypoint,
+            orbitRadius)
+    }
+
     private fun safetyChecks(): Boolean {
         // Function checks all safety information before returning a boolean for proceeding.
         // Checks:
@@ -819,7 +804,7 @@ class PachKeyManager() : IGimbalAngleChanger {
         }
     }
 
-    suspend fun go2LocationForward(lat: Double, lon: Double, alt: Double){
+    suspend fun goToLocationForward(lat: Double, lon: Double, alt: Double){
         // When called, this function will make the aircraft go to a certain location
         // Setting the yaw to a negative number will cause the yaw to be dynamically set. Helpful
         // cases when the aircraft needs to adjust its heading to reach a location
@@ -857,8 +842,15 @@ class PachKeyManager() : IGimbalAngleChanger {
                     break
                 }
             } else {
-                Log.v("PachKeyManager", "Decision Check Failed")
-                break
+                Log.v("PachKeyManager", "Decision Check failed while proceeding to waypoint")
+                if (this@PachKeyManager.telemService.isAlertAction) {
+                    Log.v("PachKeyManager", "Alerted Operator")
+                    break
+                } else if (this@PachKeyManager.telemService.isGatherAction) {
+                    Log.v("PachKeyManager", "Gather Action")
+                    engageGatherAction()
+                    break
+                }
             }
             delay(100L)
         }
@@ -921,37 +913,30 @@ class PachKeyManager() : IGimbalAngleChanger {
         var waypoint = getNewDirection()
         var waypointID = telemService.nextWaypointID
         sendAutonomyStatus("waypoint-reached")
-        val orbitRadius = 10.0
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
 
         while (safetyChecks()) {
             // Handle logic for action execution
-            if (decisionChecks()) {
+            if (this@PachKeyManager.decisionChecks()) {
                 Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
                 this@PachKeyManager.sendWaypointToMap(DJILatLng(waypoint.lat, waypoint.lon))
                 this@PachKeyManager.actionState.action = "Following waypoints"
-                go2LocationForward(
+                goToLocationForward(
                     waypoint.lat,
                     waypoint.lon,
                     waypoint.alt)
-            } else if (telemService.isAlertAction) {
+            } else if (this@PachKeyManager.telemService.isAlertAction) {
                 // Alert action stops the aircraft's movement
                 telemService.isAlertAction = false
                 Log.v("PachKeyManagerHIPPO", "Alert Action")
                 this@PachKeyManager.actionState.action = "Flight Paused - person?"
                 sendAutonomyStatus("AlertedOperator")
                 break
-            } else if (telemService.isGatherAction) {
+            } else if (this@PachKeyManager.telemService.isGatherAction) {
                 // Send Gather Confirmation
                 Log.v("PachKeyManagerHIPPO", "Gather Action")
-                this@PachKeyManager.actionState.action = "Gathering Info"
-                sendAutonomyStatus("GatheringInfo")
-//                diveAndYaw(waypoint.alt-10, 30.0)
-                Log.v("PackKeyManagerHIPPO", "Gathering coordinate: ${telemService.gathercoordinate}")
-                flyOrbitPath(
-                    telemService.gathercoordinate,
-                    orbitRadius)
+                engageGatherAction()
             }
              else {
                 Log.v("PachKeyManagerHIPPO", "Unknown Decision Check Failed")
@@ -1019,7 +1004,7 @@ class PachKeyManager() : IGimbalAngleChanger {
         for (wp in wpList){
             if (safetyChecks()) {
                 this@PachKeyManager.sendWaypointToMap(DJILatLng(wp.lat, wp.lon))
-                go2LocationForward(wp.lat, wp.lon, wp.alt)
+                goToLocationForward(wp.lat, wp.lon, wp.alt)
 
             } else{
                 Log.v("SafetyChecks", "Safety Check Failed")
@@ -1029,45 +1014,7 @@ class PachKeyManager() : IGimbalAngleChanger {
 
         controller.endVirtualStick()
     }
-
-//    suspend fun flyOrbitPath(center:Coordinate, radius:Double=10.0) {
-//        // When called, this function will make the aircraft fly in a circle around a point
-//
-//        // Check to see that advanced virtual stick is enabled
-//        controller.ensureAdvancedVirtualStickMode()
-//
-//        // Create a list of points that are evenly spaced around the circle
-//        val numPoints = 20
-//        val circlePoints = Array(numPoints) { Coordinate(0.0, 0.0, 0.0) }
-//        for (i in 1..numPoints) {
-//            val numDegrees = 360.0/numPoints*i
-//            // Compute new lat/lon coordinates with 111,111m per degree assumption
-//            val dLat = radius * cos(Math.toRadians((numDegrees)))/(111111) + center.lat
-//            val dLon = radius * sin(Math.toRadians(numDegrees))/(111111* cos(Math.toRadians(center.lat)))+ center.lon
-//            //TODO: Configure altitude to account for multiple possible terrains.
-//            val z = center.alt
-//            circlePoints[i - 1] = Coordinate(dLat,dLon, z)
-//        }
-//        Log.v("PachKeyManager", "Circle Points: $circlePoints")
-//        // Fly the orbit
-//        for (i in 1..numPoints) {
-////            val angle =
-//            val yawAngle = 360.0/numPoints*i - 180.0
-////            val yawAngle = if (angle<180) {
-////                angle+180
-////            } else{
-////                angle-180
-////            }
-//            val wp = circlePoints[i - 1]
-//            if (!telemService.isAlertAction) {
-//                Log.v("PachKeyManager", "NextWaypoint: $wp")
-//                goToLocationFixedYaw(wp.lat, wp.lon, wp.alt, yawAngle, tolerence = pidController.posTolerance / 3)
-//            } else {
-//                Log.v("PachKeyManager", "Alerted Operator")
-//                break
-//            }
-//        }
-//    }
+    
 
     suspend fun flyOrbitPath(center:Coordinate, radius:Double=10.0) {
         // When called, this function will make the aircraft fly in a circle around a point
@@ -1078,8 +1025,13 @@ class PachKeyManager() : IGimbalAngleChanger {
         var leftCircleOrigin = false
         val yawVel = 2 * Math.PI / radius * -1 // rad/s
         val tanVel = yawVel * radius * -1 // m/s
+        // Head to the top of the circle
+        goToLocationForward(
+            topOfCircle.lat,
+            topOfCircle.lon,
+            topOfCircle.alt)
         // go do some location north of the current location with yaw directed towards the center
-        goToLocationFixedYaw(topOfCircle.lat, topOfCircle.lon, topOfCircle.alt, 180.0, tolerence = pidController.posTolerance / 3) // go to the top of the circle
+//        goToLocationFixedYaw(topOfCircle.lat, topOfCircle.lon, topOfCircle.alt, 180.0, tolerence = pidController.posTolerance / 3) // go to the top of the circle
         while (!leftCircleOrigin || (computeLatLonDistance(topOfCircle.lat, topOfCircle.lon) > pidController.posTolerance)) {
             if (telemService.isAlertAction)
             {
@@ -1133,6 +1085,13 @@ class PachKeyManager() : IGimbalAngleChanger {
         Log.v("PachKeyManager", "Yawing Right to $yawR")
         goToYawAngle(yawR)
         delay(500L)
+    }
+
+    override fun userJoystickInput(x: Float, y: Float) {
+        // Function will take in user joystick input and send it to the aircraft
+        // Check to see that advanced virtual stick is enabled
+        controller.ensureAdvancedVirtualStickMode()
+        controller.sendVirtualStickVelocityBody(x.toDouble(), y.toDouble(), stateData.yaw!!, stateData.altitude!!)
     }
 
     // compute distance to target location using lat and lon
@@ -1222,25 +1181,4 @@ class PachKeyManager() : IGimbalAngleChanger {
     fun sendWaypointToMap(Data: DJILatLng?) {
         waypointDataProcessor.offer(Data)
     }
-
-    override fun changeGimbalAngle(angle: Double) {
-        rotateGimbal(angle)
-    }
-
-//    override fun getConnectionStatus(): Boolean {
-//        return this.telemService.getConnectionStatus()
-//    }
-//
-//    override fun getFailedSafetyCheck(): Array<Int> {
-//        return this.safetyFailures
-//    }
-//
-//    override fun getAction(): String {
-//        return this.action
-//    }
 }
-
-// Router
-// dataProcessor
-// new PachKeyManager().registerKey(BATTERY_KEY, dataProcessor)
-// dataProcessor.subscribe()

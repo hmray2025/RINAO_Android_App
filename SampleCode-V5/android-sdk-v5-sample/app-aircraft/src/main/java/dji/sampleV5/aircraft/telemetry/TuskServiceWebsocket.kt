@@ -1,15 +1,14 @@
 package dji.sampleV5.aircraft.telemetry
 import android.util.Log
 import com.google.gson.Gson
-import dji.sampleV5.aircraft.control.IGimbalAngleChanger
+import dji.sampleV5.aircraft.control.IVehicleController
 import dji.sampleV5.modulecommon.util.ITuskServiceCallback
 import dji.v5.utils.common.ToastUtils
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
-import java.io.Serializable
 
-class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServiceCallback{
+class TuskServiceWebsocket(private val gimbal: IVehicleController?) : ITuskServiceCallback{
     private val client: OkHttpClient = OkHttpClient()
     private lateinit var webSocket: WebSocket
     private val gson: Gson = Gson()
@@ -25,6 +24,7 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
     var dwellTime = 0
     var flightMode = "idle"
 
+    var speed = 0.0
     var gathercoordinate = Coordinate(0.0, 0.0, 0.0)
 
     // Establish WebSocket connection
@@ -112,6 +112,7 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
                 "changeGimbalAngle" -> handleChangeGimbalAngle(args as JSONObject?)
                 "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
+                "modeJoystick" -> handleJoystickUpdate(args as JSONObject?)
                 else -> Log.d("TuskService", "Unknown action: $action")
             }
         } catch (e: Exception) {
@@ -227,6 +228,11 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
         }
     }
 
+    private fun handleJoystickUpdate(args: Any?){
+        // Handle action "modeJoystick" with joystick update
+
+    }
+
     private fun handleFlightStatusUpdate(args: Any?){
         // Handle action "FlightStatus" with decision making event
         try {
@@ -237,13 +243,15 @@ class TuskServiceWebsocket(private val gimbal: IGimbalAngleChanger?) : ITuskServ
                 if (event == "gather-info"){
                     Log.d("TuskService", "Handling GatherInfo action")
                     isGatherAction = true
-                    val gatherstreamcoord = args.optJSONArray("coordinate")
-                    Log.d("TuskService", "Gather Coordinate: $gatherstreamcoord")
-                    gathercoordinate = Coordinate(
-                        gatherstreamcoord.get(0).toString().toDouble(),
-                        gatherstreamcoord.get(1).toString().toDouble(),
-                        gatherstreamcoord.get(2).toString().toDouble()
+                    nextWaypoint = Coordinate(
+                        args.optDouble("latitude"),
+                        args.optDouble("longitude"),
+                        args.optDouble("altitude")
                     )
+                    speed = args.optDouble("speed")
+                    nextWaypointID = args.optInt("waypointID")
+                    plannerAction = args.optString("plannerAction")
+                    dwellTime = args.optInt("dwellTime")
                 } else if (event == "alert-operator"){
                     isAlertAction = true
                 } else {
