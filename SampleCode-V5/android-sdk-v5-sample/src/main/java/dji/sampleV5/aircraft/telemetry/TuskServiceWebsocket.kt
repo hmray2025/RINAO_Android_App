@@ -2,13 +2,13 @@ package dji.sampleV5.aircraft.telemetry
 import android.util.Log
 import com.google.gson.Gson
 import dji.sampleV5.aircraft.control.IVehicleController
+import dji.sampleV5.aircraft.util.ToastUtils
 import dji.sampleV5.modulecommon.util.ITuskServiceCallback
-import dji.v5.utils.common.ToastUtils
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
 
-class TuskServiceWebsocket(private val gimbal: IVehicleController?) : ITuskServiceCallback{
+class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServiceCallback{
     private val client: OkHttpClient = OkHttpClient()
     private lateinit var webSocket: WebSocket
     private val gson: Gson = Gson()
@@ -112,6 +112,7 @@ class TuskServiceWebsocket(private val gimbal: IVehicleController?) : ITuskServi
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
                 "changeGimbalAngle" -> handleChangeGimbalAngle(args as JSONObject?)
                 "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
+                "ModeMessage" -> handleModeUpdate(args as JSONObject?)
                 "modeJoystick" -> handleJoystickUpdate(args as JSONObject?)
                 else -> Log.d("TuskService", "Unknown action: $action")
             }
@@ -221,7 +222,7 @@ class TuskServiceWebsocket(private val gimbal: IVehicleController?) : ITuskServi
             if (args is JSONObject) {
                 val angleObject = args.getJSONObject("angle")
                 val gimbalAngle = angleObject.getDouble("angle")
-                gimbal!!.changeGimbalAngle(gimbalAngle)
+                vehicle!!.changeGimbalAngle(gimbalAngle)
             }
         } catch (e: Exception) {
             Log.e("TuskService", "Failed to handle changeGimbalAngle action: ${e.message}")
@@ -231,6 +232,25 @@ class TuskServiceWebsocket(private val gimbal: IVehicleController?) : ITuskServi
     private fun handleJoystickUpdate(args: Any?){
         // Handle action "modeJoystick" with joystick update
 
+    }
+
+    private fun handleModeUpdate(args: Any?){
+        // Handle action "ModeMessage" with mode update
+        try {
+            if (args is JSONObject) {
+                flightMode = args.getString("mode")
+                Log.d("TuskService", "Mode: $flightMode")
+                if (flightMode == "joystick") {
+                    val modeInfo = args.getJSONObject("modeInfo")
+                    val x = modeInfo.getDouble("x")
+                    val y = modeInfo.getDouble("y")
+                    val yaw = modeInfo.getInt("yaw")
+                    vehicle!!.userJoystickInput(x.toFloat(), y.toFloat(), yaw)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TuskService", "Failed to handle ModeMessage action: ${e.message}")
+        }
     }
 
     private fun handleFlightStatusUpdate(args: Any?){

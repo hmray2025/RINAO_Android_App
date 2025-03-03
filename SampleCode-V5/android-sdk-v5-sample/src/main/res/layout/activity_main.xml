@@ -410,21 +410,21 @@
                     android:background="@drawable/rounded_gray_bg"
                     android:orientation="vertical">
 
-                    <dji.sampleV5.modulecommon.settingswidgets.ServerWidget
+                    <dji.sampleV5.aircraft.settingswidgets.ServerWidget
                         android:id="@+id/server_widget"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/uxsdk_350_dp"
                         android:padding="8dp"
                         android:visibility="visible" />
 
-                    <dji.sampleV5.modulecommon.settingswidgets.SartopoWidget
+                    <dji.sampleV5.aircraft.settingswidgets.SartopoWidget
                         android:id="@+id/sartopo_widget"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/uxsdk_350_dp"
                         android:padding="8dp"
                         android:visibility="visible" />
 
-                    <dji.sampleV5.modulecommon.settingswidgets.LivestreamWidget
+                    <dji.sampleV5.aircraft.settingswidgets.LivestreamWidget
                         android:id="@+id/livestream_widget"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/uxsdk_350_dp"

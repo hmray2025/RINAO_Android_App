@@ -1,4 +1,4 @@
-package dji.sampleV5.moduleaircraft.models
+package dji.sampleV5.aircraft.models
 
 import androidx.lifecycle.MutableLiveData
 import dji.sampleV5.aircraft.data.DJIToastResult

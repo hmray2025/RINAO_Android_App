@@ -1,6 +1,4 @@
-package dji.sampleV5.modulecommon.settingswidgets;
-
-import static com.tencent.bugly.Bugly.applicationContext;
+package dji.sampleV5.aircraft.settingswidgets;
 
 import android.content.Context;
 import android.content.SharedPreferences;

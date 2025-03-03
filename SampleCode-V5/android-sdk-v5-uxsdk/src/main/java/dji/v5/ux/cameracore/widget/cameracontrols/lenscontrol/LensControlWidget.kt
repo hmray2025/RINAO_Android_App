@@ -19,8 +19,8 @@ import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.databinding.UxsdkCameraLensControlWidgetBinding
 import dji.v5.ux.databinding.UxsdkPanelNdvlBinding
-import kotlinx.android.synthetic.main.uxsdk_activity_default_layout.view.widget_lens_control
-import kotlinx.android.synthetic.main.uxsdk_camera_lens_control_widget.view.*
+//import kotlinx.android.synthetic.main.uxsdk_activity_default_layout.view.widget_lens_control
+//import kotlinx.android.synthetic.main.uxsdk_camera_lens_control_widget.view.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -87,7 +87,7 @@ open class LensControlWidget @JvmOverloads constructor(
             dealLensBtnClicked(firstBtnSource)
         } else if (v == binding.secondLenBtn) {
             dealLensBtnClicked(secondBtnSource)
-        } else if (v == third_len_btn) {
+        } else if (v == binding.thirdLenBtn) {
             dealLensBtnClicked(thirdBtnSource)
         }
     }
@@ -113,12 +113,6 @@ open class LensControlWidget @JvmOverloads constructor(
     private fun updateBtnView() {
         val videoSourceRange = widgetModel.properCameraVideoStreamSourceRangeProcessor.value
         //单源
-        updateBtnText(first_len_btn, getProperVideoSource(videoSourceRange, firstBtnSource))
-        updateBtnText(second_len_btn, getProperVideoSource(videoSourceRange, secondBtnSource))
-        updateBtnText(third_len_btn, getProperVideoSource(videoSourceRange, thirdBtnSource))
-        updateBtnBackground(first_len_btn, getProperVideoSource(videoSourceRange, firstBtnSource))
-        updateBtnBackground(second_len_btn, getProperVideoSource(videoSourceRange, secondBtnSource))
-        updateBtnBackground(third_len_btn, getProperVideoSource(videoSourceRange, thirdBtnSource))
         if (videoSourceRange.size <= 1) {
             binding.firstLenBtn.visibility = INVISIBLE
             binding.secondLenBtn.visibility = INVISIBLE
@@ -141,6 +135,12 @@ open class LensControlWidget @JvmOverloads constructor(
         updateBtnText(binding.secondLenBtn, getProperVideoSource(videoSourceRange, firstBtnSource).also {
             secondBtnSource = it
         })
+//        updateBtnText(first_len_btn, getProperVideoSource(videoSourceRange, firstBtnSource))
+//        updateBtnText(second_len_btn, getProperVideoSource(videoSourceRange, secondBtnSource))
+//        updateBtnText(third_len_btn, getProperVideoSource(videoSourceRange, thirdBtnSource))
+//        updateBtnBackground(first_len_btn, getProperVideoSource(videoSourceRange, firstBtnSource))
+//        updateBtnBackground(second_len_btn, getProperVideoSource(videoSourceRange, secondBtnSource))
+//        updateBtnBackground(third_len_btn, getProperVideoSource(videoSourceRange, thirdBtnSource))
     }
 
     private fun updateBtnBackground(button: Button, source: CameraVideoStreamSourceType) {

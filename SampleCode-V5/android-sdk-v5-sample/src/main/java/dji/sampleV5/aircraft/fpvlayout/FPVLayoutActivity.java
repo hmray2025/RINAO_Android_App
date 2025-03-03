@@ -21,14 +21,16 @@
  *
  */
 
-package dji.sampleV5.aircraft.defaultlayout;
+package dji.sampleV5.aircraft.fpvlayout;
 
 import static com.google.android.gms.common.util.CollectionUtils.listOf;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.Button;
 
 import androidx.annotation.Nullable;
@@ -44,6 +46,8 @@ import dji.sampleV5.aircraft.control.PachKeyManager;
 import dji.sampleV5.aircraft.video.StreamManager;
 import dji.sdk.keyvalue.value.common.CameraLensType;
 import dji.sdk.keyvalue.value.common.ComponentIndexType;
+import dji.v5.common.video.channel.VideoChannelType;
+import dji.v5.common.video.interfaces.IVideoChannel;
 import dji.v5.manager.interfaces.ICameraStreamManager;
 import dji.v5.network.DJINetworkManager;
 import dji.v5.network.IDJINetworkStatusListener;
@@ -71,12 +75,12 @@ import dji.v5.ux.core.util.DataProcessor;
 import dji.v5.ux.core.widget.fpv.FPVWidget;
 import dji.v5.ux.core.widget.hsi.HorizontalSituationIndicatorWidget;
 import dji.v5.ux.core.widget.hsi.PrimaryFlightDisplayWidget;
+import dji.v5.ux.core.widget.setting.SettingPanelWidget;
 import dji.v5.ux.gimbal.GimbalFineTuneWidget;
 import dji.v5.ux.core.widget.setting.SettingWidget;
 import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget;
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget;
 import dji.v5.ux.map.MapWidget;
-import dji.v5.ux.mapkit.core.maps.DJIMap;
 import dji.v5.ux.mapkit.core.maps.DJIUiSettings;
 import dji.v5.ux.pachWidget.PachWidget;
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget;
@@ -84,12 +88,15 @@ import dji.v5.ux.visualcamera.CameraNDVIPanelWidget;
 import dji.v5.ux.visualcamera.CameraVisiblePanelWidget;
 import dji.v5.ux.visualcamera.zoom.FocalZoomWidget;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import dji.sampleV5.aircraft.BuildConfig;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import dji.v5.ux.mapkit.core.maps.DJIMap;
+
 
 /**
  * Displays a sample layout of widgets similar to that of the various DJI apps.
  */
-public class DefaultLayoutActivity extends AppCompatActivity {
+public class FPVLayoutActivity extends AppCompatActivity {
 
     //region Fields
     private final String TAG = LogUtils.getTag(this);
@@ -108,7 +115,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     protected ExposureSettingsPanel exposureSettingsPanel;
     protected PrimaryFlightDisplayWidget pfvFlightDisplayWidget;
     protected CameraNDVIPanelWidget ndviCameraPanel;
-    protected CameraVisiblePanelWidget visualCameraPanel;
+//    protected CameraVisiblePanelWidget visualCameraPanel;
     protected FocalZoomWidget focalZoomWidget;
     protected SettingWidget settingWidget;
     protected MapWidget mapWidget;
@@ -145,9 +152,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.uxsdk_activity_default_layout);
         Intent intent = getIntent();
-//        mDrawerLayout = findViewById(R.id.root_view);
+        mDrawerLayout = findViewById(R.id.root_view);
         topBarPanel = findViewById(R.id.panel_top_bar);
-//        settingWidget = topBarPanel.getSettingWidget();
+        settingWidget = topBarPanel.getSettingWidget();
         primaryFpvWidget = findViewById(R.id.widget_primary_fpv);
         fpvInteractionWidget = findViewById(R.id.widget_fpv_interaction);
         secondaryFPVWidget = findViewById(R.id.widget_secondary_fpv);
@@ -168,7 +175,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         pachWidget = findViewById(R.id.pach_widget);
         mapWidget = findViewById(R.id.widget_map);
         cameraControlsWidget.getExposureSettingsIndicatorWidget().setStateChangeResourceId(R.id.panel_camera_controls_exposure_settings);
-//        gimbalFineTuneWidget = findViewById(R.id.setting_menu_gimbal_fine_tune);
+        gimbalFineTuneWidget = findViewById(R.id.setting_menu_gimbal_fine_tune);
 //        ViewStub stub = findViewById(R.id.manual_right_nav_setting_stub);
 //        if (stub != null) {
 //            mSettingPanelWidget = (SettingPanelWidget) stub.inflate();
@@ -185,26 +192,21 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         //小surfaceView放置在顶部，避免被大的遮挡
         secondaryFPVWidget.setSurfaceViewZOrderOnTop(true);
         secondaryFPVWidget.setSurfaceViewZOrderMediaOverlay(true);
-        mapWidget.initMapLibreMap(getApplicationContext(), map -> {
-            DJIUiSettings uiSetting = map.getUiSettings();
-            if (uiSetting != null) {
-                uiSetting.setZoomControlsEnabled(false);//hide zoom widget
-            }
-        });
 
-//        mapWidget.initAMap(map -> {
-//            // map.setOnMapClickListener(latLng -> onViewClick(mapWidget));
+//        mapWidget.initMapLibreMap(getApplicationContext(), map -> {
 //            DJIUiSettings uiSetting = map.getUiSettings();
 //            if (uiSetting != null) {
 //                uiSetting.setZoomControlsEnabled(false);//hide zoom widget
 //            }
 //        });
+
+        mapWidget.initMapLibreMap(getApplicationContext(), map ->
+                map.setMapType(DJIMap.MapType.NORMAL)
+        );
+
         mapWidget.onCreate(savedInstanceState);
         pachManager = PachKeyManager.Companion.getInstance(); // points to object created in DJIAircraftMainActivity
-//        pachManager = new PachKeyManager(); // points to object created in this class
         streamManager = pachManager.getStreamer(); // sets the streamManager to the streamer in Pach
-//        mMediaManagerBtn = (Button)findViewById(R.id.btn_mediaManager); // where to put this?
-//        mMediaManagerBtn.setOnClickListener(this);
     }
 
     private void isGimableAdjustClicked(BroadcastValues broadcastValues) {
@@ -323,12 +325,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                 .subscribeOn(SchedulerProvider.io())
                 .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
         );
-//        compositeDisposable.add(pachManager.getWaypointFlowable()
-//                .observeOn(SchedulerProvider.io())
-//                .subscribeOn(SchedulerProvider.io())
-//                .subscribe(result -> Log.d("JAKEDEBUG2", "pachwidget data: " + result))
-//
-//        );
+        compositeDisposable.add(pachManager.getWaypointFlowable()
+                .observeOn(SchedulerProvider.io())
+                .subscribeOn(SchedulerProvider.io())
+                .subscribe(result -> Log.d("JAKEDEBUG2", "pachwidget data: " + result))
+
+        );
         if (streamManager.isStreaming()) {
             liveStreamButton.setBackgroundResource(R.drawable.uxsdk_livestream_stop);
             pachManager.sendStreamDataToServer(true);
@@ -371,20 +373,20 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
         ArrayList<ComponentIndexType> cameraList = new ArrayList<>(availableCameraList);
 
-        //没有数据
+        //No Data available
         if (cameraList.isEmpty()) {
             secondaryFPVWidget.setVisibility(View.GONE);
             return;
         }
 
-        //仅一路数据
+        //Only one data channel
         if (cameraList.size() == 1) {
             primaryFpvWidget.updateVideoSource(availableCameraList.get(0));
             secondaryFPVWidget.setVisibility(View.GONE);
             return;
         }
 
-        //大于两路数据
+        //More than two data channels
         ComponentIndexType primarySource = getSuitableSource(cameraList, ComponentIndexType.LEFT_OR_MAIN);
         primaryFpvWidget.updateVideoSource(primarySource);
         cameraList.remove(primarySource);
@@ -409,8 +411,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     }
 
 //    private void initChannelStateListener() {
-////        ComponentIndexType primarySource = getSuitableSource(cameraList, ComponentIndexType.LEFT_OR_MAIN);
-////        primaryChannel =  MediaDataCenter.getInstance().getVideoStreamManager().getAvailableVideoChannel(VideoChannelType.PRIMARY_STREAM_CHANNEL);
+//        ComponentIndexType primarySource = getSuitableSource(cameraList, ComponentIndexType.LEFT_OR_MAIN);
+//        primaryChannel =  MediaDataCenter.getInstance().getVideoStreamManager().getAvailableVideoChannel(VideoChannelType.PRIMARY_STREAM_CHANNEL);
 //        primaryChannel?.addVideoChannelStateChangeListener(primaryChannelStateListener);
 //        IVideoChannel secondaryChannel =
 //                MediaDataCenter.getInstance().getVideoStreamManager().getAvailableVideoChannel(VideoChannelType.SECONDARY_STREAM_CHANNEL);
@@ -454,7 +456,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         }
         lastDevicePosition = devicePosition;
         lastLensType = lensType;
-        updateViewVisibility(devicePosition, lensType);
+//        updateViewVisibility(devicePosition, lensType);
         updateInteractionEnabled();
         //如果无需使能或者显示的，也就没有必要切换了。
         if (fpvInteractionWidget.isInteractionEnabled()) {
@@ -467,9 +469,9 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         if (ndviCameraPanel.getVisibility() == View.VISIBLE) {
             ndviCameraPanel.updateCameraSource(devicePosition, lensType);
         }
-        if (visualCameraPanel.getVisibility() == View.VISIBLE) {
-            visualCameraPanel.updateCameraSource(devicePosition, lensType);
-        }
+//        if (visualCameraPanel.getVisibility() == View.VISIBLE) {
+//            visualCameraPanel.updateCameraSource(devicePosition, lensType);
+//        }
         if (autoExposureLockWidget.getVisibility() == View.VISIBLE) {
             autoExposureLockWidget.updateCameraSource(devicePosition, lensType);
         }
@@ -501,7 +503,7 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         //fpv下不显示
         lensControlWidget.setVisibility(CameraUtil.isFPVTypeView(devicePosition) ? View.INVISIBLE : View.VISIBLE);
         ndviCameraPanel.setVisibility(CameraUtil.isFPVTypeView(devicePosition) ? View.INVISIBLE : View.VISIBLE);
-        visualCameraPanel.setVisibility(CameraUtil.isFPVTypeView(devicePosition) ? View.INVISIBLE : View.VISIBLE);
+//        visualCameraPanel.setVisibility(CameraUtil.isFPVTypeView(devicePosition) ? View.INVISIBLE : View.VISIBLE);
         autoExposureLockWidget.setVisibility(CameraUtil.isFPVTypeView(devicePosition) ? View.INVISIBLE : View.VISIBLE);
         focusModeWidget.setVisibility(CameraUtil.isFPVTypeView(devicePosition) ? View.INVISIBLE : View.VISIBLE);
         focusExposureSwitchWidget.setVisibility(CameraUtil.isFPVTypeView(devicePosition) ? View.INVISIBLE : View.VISIBLE);
@@ -545,46 +547,4 @@ public class DefaultLayoutActivity extends AppCompatActivity {
             super.onBackPressed();
         }
     }
-
-//    /**
-//     * Swap the video sources of the FPV and secondary FPV widgets.
-//     */
-//    private void swapVideoSource() {
-//        VideoChannelType primaryVideoChannel = primaryFpvWidget.getVideoChannelType();
-//        StreamSource primaryStreamSource = primaryFpvWidget.getStreamSource();
-//        VideoChannelType secondaryVideoChannel = secondaryFPVWidget.getVideoChannelType();
-//        StreamSource secondaryStreamSource = secondaryFPVWidget.getStreamSource();
-//        //两个source都存在的情况下才进行切换
-//        if (secondaryStreamSource != null && primaryStreamSource != null) {
-//            primaryFpvWidget.updateVideoSource(secondaryStreamSource, secondaryVideoChannel);
-//            secondaryFPVWidget.updateVideoSource(primaryStreamSource, primaryVideoChannel);
-//        }
-//    }
-
-//    private void updateInteractionEnabled() {
-//        StreamSource newPrimaryStreamSource = primaryFpvWidget.getStreamSource();
-//        fpvInteractionWidget.setInteractionEnabled(false);
-//        if (newPrimaryStreamSource != null) {
-//            fpvInteractionWidget.setInteractionEnabled(newPrimaryStreamSource.getPhysicalDevicePosition() != PhysicalDevicePosition.NOSE);
-//        }
-//    }
-
-//    private static class CameraSource {
-//        PhysicalDevicePosition devicePosition;
-//        CameraLensType lensType;
-//
-//        public CameraSource(ComponentIndexType devicePosition, CameraLensType lensType) {
-//            this.devicePosition = devicePosition;
-//            this.lensType = lensType;
-//        }
-//    }
-//
-//    @Override
-//    public void onBackPressed() {
-//        if (mDrawerLayout.isDrawerOpen(GravityCompat.END)) {
-//            mDrawerLayout.closeDrawers();
-//        } else {
-//            super.onBackPressed();
-//        }
-//    }
 }

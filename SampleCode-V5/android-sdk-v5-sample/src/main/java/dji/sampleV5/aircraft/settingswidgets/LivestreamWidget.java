@@ -1,4 +1,4 @@
-package dji.sampleV5.modulecommon.settingswidgets;
+package dji.sampleV5.aircraft.settingswidgets;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -10,8 +10,8 @@ import androidx.annotation.Nullable;
 
 import java.text.MessageFormat;
 
-import dji.sampleV5.modulecommon.R;
-import dji.sampleV5.modulecommon.util.IStreamManager;
+import dji.sampleV5.aircraft.R;
+import dji.sampleV5.aircraft.util.IStreamManager;
 import dji.v5.manager.datacenter.livestream.StreamQuality;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 

@@ -1087,11 +1087,49 @@ class PachKeyManager() : IVehicleController {
         delay(500L)
     }
 
-    override fun userJoystickInput(x: Float, y: Float) {
+
+
+    override fun userJoystickInput(x: Float, y: Float, yaw: Int) {
         // Function will take in user joystick input and send it to the aircraft
         // Check to see that advanced virtual stick is enabled
+        val yawDiff = 5.0
         controller.ensureAdvancedVirtualStickMode()
-        controller.sendVirtualStickVelocityBody(x.toDouble(), y.toDouble(), stateData.yaw!!, stateData.altitude!!)
+        when (yaw) {
+            1 -> {
+                val yawR = if (stateData.yaw!! + yawDiff > 180.0) {
+                    stateData.yaw!! + yawDiff - 360.0
+                } else {
+                    stateData.yaw!! + yawDiff
+                }
+                controller.sendVirtualStickVelocityBody(
+                    x.toDouble(),
+                    y.toDouble(),
+                    yawR,
+                    stateData.altitude!!
+                )
+            }
+            -1 -> {
+                val yawL = if (stateData.yaw!! - yawDiff<-180.0) {
+                    stateData.yaw!! - yawDiff + 360.0
+                } else {
+                    stateData.yaw!! - yawDiff
+                }
+                controller.sendVirtualStickVelocityBody(
+                    x.toDouble(),
+                    y.toDouble(),
+                    yawL,
+                    stateData.altitude!!
+                )
+            }
+            else -> {
+                controller.sendVirtualStickVelocityBody(
+                    x.toDouble(),
+                    y.toDouble(),
+                    stateData.yaw!!,
+                    stateData.altitude!!
+                )
+            }
+        }
     }
 
     // compute distance to target location using lat and lon
@@ -1179,6 +1217,8 @@ class PachKeyManager() : IVehicleController {
 
     // Function to send data to the data processor
     fun sendWaypointToMap(Data: DJILatLng?) {
-        waypointDataProcessor.offer(Data)
+        if (Data != null) {
+            waypointDataProcessor.offer(Data)
+        }
     }
 }

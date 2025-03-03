@@ -39,7 +39,7 @@ class SartopoService : ISartopoWidgetModel{
             override fun onResponse(call: Call, response: Response) {
                 if (response.isSuccessful) {
                     // Handle the response
-                    val responseBody = response.body()?.string()
+                    val responseBody = response.body?.string()
                     Log.v("SARTopo","Response:\n${responseBody}")
                 }
             }

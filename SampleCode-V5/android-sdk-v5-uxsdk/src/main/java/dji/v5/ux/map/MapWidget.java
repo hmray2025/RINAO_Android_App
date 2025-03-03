@@ -82,8 +82,6 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-
 import static dji.v5.ux.map.MapWidgetModel.INVALID_COORDINATE;
 
 /**
@@ -166,7 +164,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
 
     //region flight path fields
     private DJIPolyline flightPathLine;
-    private List<DJILatLng> flightPathPoints = new ArrayList<>();
+    private final List<DJILatLng> flightPathPoints = new ArrayList<>();
     @ColorInt
     private int flightPathColor = Color.WHITE;
     private float flightPathWidth = 5;
@@ -1004,22 +1002,6 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     }
 
     /**
-     * Initializes the MapWidget with AMaps.
-     *
-     * @param listener The OnMapReadyListener which will invoke the onMapReady method when the map has finished
-     *                 initializing.
-     */
-    public void initAMap(@Nullable final OnMapReadyListener listener) {
-        mapView = new AMapProvider().dispatchMapViewRequest(getContext(), null);
-        addView((ViewGroup) mapView, 0);
-        mapView.getDJIMapAsync(map -> {
-            MapWidget.this.map = map;
-            postInit(listener);
-            flyZoneHelper.initializeMap(map);
-        });
-    }
-
-    /**
      * Initializes the MapWidget with Mapbox.
      *
      * @param listener The OnMapReadyListener which will invoke the onMapReady method when the map has finished
@@ -1031,10 +1013,9 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         mapView = new MaplibreProvider().dispatchMapViewRequest(getContext(), null);
         addView((ViewGroup) mapView, 0);
         mapView.getDJIMapAsync(map -> {
-            flyZoneHelper.initializeMap(map);
             this.map = map;
-//            postInit(listener);
-//            flyZoneHelper.initializeMap(map);
+            postInit(listener);
+            flyZoneHelper.initializeMap(map);
             postInit(mapLib -> {
                 if (flyZoneInformationList != null) {
                     onFlyZoneListUpdate(flyZoneInformationList);

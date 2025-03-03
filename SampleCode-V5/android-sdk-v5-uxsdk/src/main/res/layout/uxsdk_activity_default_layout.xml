@@ -54,6 +54,18 @@
                 app:uxsdk_cameraNameTextSize="14dp"
                 app:uxsdk_cameraSideTextSize="14dp">
 
+                <ImageView
+                    android:id="@+id/uxsdk_imageview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.5"
+                    android:rotation="45"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/uxsdk_ic_centerpoint_cross" />
+
                 <dji.v5.ux.cameracore.widget.fpvinteraction.FPVInteractionWidget
                     android:id="@+id/widget_fpv_interaction"
                     android:layout_width="0dp"
@@ -96,6 +108,17 @@
             android:id="@+id/widget_horizontal_situation_indicator"
             android:layout_width="350dp"
             android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/widget_auto_exposure_lock"
+            app:layout_constraintVertical_bias="0.95" />
+
+        <dji.v5.ux.gimbal.GimbalFineTuneWidget
+            android:id="@+id/setting_menu_gimbal_fine_tune"
+            android:layout_width="350dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -256,15 +279,6 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/panel_top_bar" />
 
-        <dji.v5.ux.core.widget.hsi.PrimaryFlightDisplayWidget
-            android:id="@+id/widget_fpv_flight_display_widget"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
         <dji.v5.ux.map.MapWidget
             android:id="@+id/widget_map"
@@ -317,8 +331,8 @@
 
         <Button
             android:id="@+id/myLiveStream"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginStart="25dp"
             android:layout_marginTop="60dp"
             android:background="@drawable/uxsdk_livestream_start"
@@ -331,6 +345,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0" />
+
+        <dji.v5.ux.core.widget.hsi.PrimaryFlightDisplayWidget
+            android:id="@+id/widget_fpv_flight_display_widget"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -4,11 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import dji.sampleV5.aircraft.R
-import dji.sampleV5.aircraft.databinding.FragAppSilentlyUpgradePageBinding
 import dji.sampleV5.aircraft.databinding.FragUasChinaPageBinding
 import dji.sampleV5.aircraft.pages.DJIFragment
-import dji.sampleV5.moduleaircraft.models.UASChinaVM
+import dji.sampleV5.aircraft.models.UASChinaVM
 import dji.sdk.keyvalue.value.flightcontroller.RealNameRegistrationState
 import dji.v5.utils.common.JsonUtil
 import java.util.*

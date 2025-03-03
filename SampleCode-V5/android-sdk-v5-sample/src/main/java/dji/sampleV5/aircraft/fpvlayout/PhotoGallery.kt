@@ -1,4 +1,4 @@
-package dji.sampleV5.aircraft.defaultlayout
+package dji.sampleV5.aircraft.fpvlayout
 
 class PhotoGallery {
 }

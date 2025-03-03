@@ -1,4 +1,4 @@
-package dji.sampleV5.modulecommon.settingswidgets;
+package dji.sampleV5.aircraft.settingswidgets;
 
 import static android.app.PendingIntent.getActivity;
 import static android.provider.Settings.System.getString;
@@ -14,6 +14,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import dji.sampleV5.modulecommon.settingswidgets.ISartopoWidgetModel;
 import dji.v5.ux.R;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import io.reactivex.rxjava3.core.Single;
@@ -51,7 +53,6 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
     @Override
     protected void initView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super.initView(context);
-//        dataStore = new RxPreferenceDataStoreBuilder(context, /*name=*/ "sartopo_settings").build();
         sharedPreferences = context.getSharedPreferences("SARTopo_preferences",Context.MODE_PRIVATE);
         inflate(context, R.layout.uxsdk_widget_sartopo, this);
 
@@ -136,19 +137,6 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
                 }
             }
         });
-//        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//            @Override
-//            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-//                if (actionId == EditorInfo.IME_ACTION_DONE) {
-//                    // Update your text variable here
-//                    String updatedText = editText.getText().toString();
-//                    // Do something with the updatedText
-//                    saveString("SARTopoAccessURL", editText.getText().toString()); // Save the text after any change
-//                    return true; // Consume the action
-//                }
-//                return false; // Pass on to other listeners.
-//            }
-//        });
     }
 
     @Override
@@ -163,21 +151,6 @@ public class SartopoWidget extends ConstraintLayoutWidget<Object> {
         editor.apply();
     }
 
-//    public void saveString(String key, String value) {
-//        Preferences.Key<String> preferencesKey = PreferencesKeys.stringKey(key);
-//        Disposable savestr = dataStore.updateDataAsync(prefsIn -> {
-//            MutablePreferences mutablePreferences = prefsIn.toMutablePreferences();
-//            mutablePreferences.set(preferencesKey, value);
-//            return Single.just(mutablePreferences);
-//        }).subscribe(
-//                prefsOut -> {
-//                    // success, no action needed
-//                },
-//                err -> {
-//                    Log.e("SartopoWidget", "Error saving string to DataStore: " + err.getMessage());
-//                }
-//        );
-//    }
 
     // Method to retrieve string from SharedPreferences
     public String retrieveString(String key) {

@@ -109,12 +109,11 @@ android {
 }
 
 dependencies {
-    implementation project(':sample-module-aircraft')
     compileOnly deps.aircraftProvided
     implementation deps.aircraft
 
     /** <-----------------sample所需--------------------> **/
-//    implementation project(':uxsdk')
+    implementation project(':uxsdk')
     implementation deps.appcompat
     implementation deps.constraintLayout
     implementation deps.aacCommon

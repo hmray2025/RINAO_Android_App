@@ -31,8 +31,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -118,8 +116,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
 
 
     private CompositeDisposable compositeDisposable;
-    private final DataProcessor<CameraSource> cameraSourceProcessor = DataProcessor.create(new CameraSource(ComponentIndexType.UNKNOWN,
-            CameraLensType.UNKNOWN));
+//    private final DataProcessor<CameraSource> cameraSourceProcessor = DataProcessor.create(new CameraSource(ComponentIndexType.UNKNOWN,
+//            CameraLensType.UNKNOWN));
     private final IDJINetworkStatusListener networkStatusListener = isNetworkAvailable -> {
         if (isNetworkAvailable) {
             LogUtils.d(TAG, "isNetworkAvailable=" + true);
@@ -156,13 +154,13 @@ public class DefaultLayoutActivity extends AppCompatActivity {
         focalZoomWidget = findViewById(R.id.widget_focal_zoom);
         cameraControlsWidget = findViewById(R.id.widget_camera_controls);
         horizontalSituationIndicatorWidget = findViewById(R.id.widget_horizontal_situation_indicator);
-        gimbalAdjustDone = findViewById(R.id.fpv_gimbal_ok_btn);
-        gimbalFineTuneWidget = findViewById(R.id.setting_menu_gimbal_fine_tune);
+//        gimbalAdjustDone = findViewById(R.id.fpv_gimbal_ok_btn);
+//        gimbalFineTuneWidget = findViewById(R.id.setting_menu_gimbal_fine_tune);
         mapWidget = findViewById(R.id.widget_map);
 
         initClickListener();
         MediaDataCenter.getInstance().getCameraStreamManager().addAvailableCameraUpdatedListener(availableCameraUpdatedListener);
-        primaryFpvWidget.setOnFPVStreamSourceListener((devicePosition, lensType) -> cameraSourceProcessor.onNext(new CameraSource(devicePosition, lensType)));
+//        primaryFpvWidget.setOnFPVStreamSourceListener((devicePosition, lensType) -> cameraSourceProcessor.onNext(new CameraSource(devicePosition, lensType)));
 
         //小surfaceView放置在顶部，避免被大的遮挡
         secondaryFPVWidget.setSurfaceViewZOrderOnTop(true);
@@ -254,12 +252,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                         }
                     }
                 }));
-        compositeDisposable.add(cameraSourceProcessor.toFlowable()
-                .observeOn(SchedulerProvider.io())
-                .throttleLast(500, TimeUnit.MILLISECONDS)
-                .subscribeOn(SchedulerProvider.io())
-                .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
-        );
+//        compositeDisposable.add(cameraSourceProcessor.toFlowable()
+//                .observeOn(SchedulerProvider.io())
+//                .throttleLast(500, TimeUnit.MILLISECONDS)
+//                .subscribeOn(SchedulerProvider.io())
+//                .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
+//        );
         compositeDisposable.add(ObservableInMemoryKeyedStore.getInstance()
                 .addObserver(UXKeys.create(GlobalPreferenceKeys.GIMBAL_ADJUST_CLICKED))
                 .observeOn(SchedulerProvider.ui())

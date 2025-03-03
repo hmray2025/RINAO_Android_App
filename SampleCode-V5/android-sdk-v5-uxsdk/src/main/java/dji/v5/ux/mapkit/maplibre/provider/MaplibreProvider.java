@@ -5,6 +5,7 @@ import android.view.Gravity;
 
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.WellKnownTileServer;
+import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapboxMapOptions;
 
 import androidx.annotation.NonNull;
@@ -40,11 +41,11 @@ public class MaplibreProvider extends MapProvider {
         Mapkit.mapProvider(providerType);
         Mapbox.getInstance(context.getApplicationContext(), Mapkit.getMapboxAccessToken(), WellKnownTileServer.Mapbox);
         MapboxMapOptions options = MapboxMapOptions.createFromAttributes(context);
-        CameraPosition cameraPosition = new CameraPosition.Builder()
-                .target(new DJILatLng(40.0150, -105.2705)) // Sets the new camera position to Boulder
-                .zoom(11)
-                .build();
-        options.camera(cameraPosition);
+//        CameraPosition cameraPosition = new CameraPosition.Builder()
+//                .target(new LatLng(40.0150, -105.2705)) // Sets the new camera position to Boulder
+//                .zoom(11)
+//                .build();
+//        options.camera(cameraPosition);
         options.textureMode(true);
         options.attributionGravity(Gravity.BOTTOM | Gravity.RIGHT);
         options.logoGravity(Gravity.BOTTOM | Gravity.RIGHT);

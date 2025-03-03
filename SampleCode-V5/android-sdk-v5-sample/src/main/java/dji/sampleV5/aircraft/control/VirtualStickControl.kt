@@ -1,8 +1,9 @@
 package dji.sampleV5.aircraft.control
 
 import android.util.Log
-import dji.sampleV5.moduleaircraft.models.BasicAircraftControlVM
-import dji.sampleV5.moduleaircraft.models.VirtualStickVM
+import dji.sampleV5.aircraft.models.BasicAircraftControlVM
+import dji.sampleV5.aircraft.models.VirtualStickVM
+import dji.sampleV5.aircraft.util.ToastUtils
 import dji.sdk.keyvalue.value.common.EmptyMsg
 import dji.sdk.keyvalue.value.flightcontroller.FlightCoordinateSystem
 import dji.sdk.keyvalue.value.flightcontroller.RollPitchControlMode
@@ -11,7 +12,6 @@ import dji.sdk.keyvalue.value.flightcontroller.VirtualStickFlightControlParam
 import dji.sdk.keyvalue.value.flightcontroller.YawControlMode
 import dji.v5.common.callback.CommonCallbacks
 import dji.v5.common.error.IDJIError
-import dji.v5.utils.common.ToastUtils
 
 
 /**

@@ -1,4 +1,4 @@
-package dji.sampleV5.modulecommon.util
+package dji.sampleV5.aircraft.util
 
 import dji.v5.manager.datacenter.livestream.StreamQuality
 

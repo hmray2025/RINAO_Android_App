@@ -57,7 +57,6 @@ import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.widget.fpv.FPVWidget.ModelState
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.functions.Consumer
-import kotlinx.android.synthetic.main.uxsdk_view_widget.view.textview_aspect_ratio
 
 private const val TAG = "FPVWidget"
 private const val ORIGINAL_SCALE = 1f
