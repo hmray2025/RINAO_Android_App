@@ -12,7 +12,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.Dimension
 import androidx.annotation.StyleRes
 import androidx.core.content.res.use
-import androidx.fragment.app.FragmentTransaction
+import dji.sdk.keyvalue.utils.ProductUtil
 import dji.sdk.keyvalue.value.rtkbasestation.RTKReferenceStationSource
 import dji.sdk.keyvalue.value.rtkbasestation.RTKServiceState
 import dji.sdk.keyvalue.value.rtkmobilestation.GNSSType
@@ -98,6 +98,7 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
     private val rtkOrientationPositioningSeparator: View = findViewById(R.id.rtk_orientation_positioning_separator)
     private val rtkLocationSeparator: View = findViewById(R.id.rtk_location_separator)
     private val rtkSatelliteCountSeparator: View = findViewById(R.id.rtk_satellite_count_separator)
+    private var positioningSolution :RTKPositioningSolution ?= null
     private val connectionStateTextColorMap: MutableMap<RTKSatelliteStatusWidgetModel.RTKBaseStationState, Int> =
         mutableMapOf(
             RTKSatelliteStatusWidgetModel.RTKBaseStationState.CONNECTED_IN_USE to getColor(R.color.uxsdk_rtk_status_connected_in_use),
@@ -491,7 +492,42 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
     init {
         initItemValues()
         initListener()
+        updateLabelView()
         attrs?.let { initAttributes(context, it) }
+    }
+
+    private fun updateLabelView() {
+        if (ProductUtil.isM3EProduct() || ProductUtil.isM4EProduct()) {
+            //orientation
+            orientationTextView.visibility = GONE
+            orientationTitleTextView.visibility = GONE
+            //Antenna2
+            beiDouAntenna2TextView.visibility = GONE
+            galileoAntenna2TextView.visibility = GONE
+            glonassAntenna2TextView.visibility = GONE
+            gpsAntenna2TextView.visibility = GONE
+            antenna2TitleTextView.visibility = GONE
+            antenna1TitleTextView.visibility = GONE
+            //courseAngle
+            courseAngleTitleTextView.visibility = GONE
+            courseAngleTextView.visibility = GONE
+
+
+        } else {
+            //orientation
+            orientationTextView.visibility = VISIBLE
+            orientationTitleTextView.visibility = VISIBLE
+            //Antenna2
+            beiDouAntenna2TextView.visibility = VISIBLE
+            galileoAntenna2TextView.visibility = VISIBLE
+            glonassAntenna2TextView.visibility = VISIBLE
+            gpsAntenna2TextView.visibility = VISIBLE
+            antenna2TitleTextView.visibility = VISIBLE
+            antenna1TitleTextView.visibility = VISIBLE
+            //courseAngle
+            courseAngleTitleTextView.visibility = VISIBLE
+            courseAngleTextView.visibility = VISIBLE
+        }
     }
 
     private fun initListener() {
@@ -517,6 +553,7 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
     override fun reactToModelChanges() {
         addReaction(widgetModel.productConnection.observeOn(SchedulerProvider.ui()).subscribe { updateUIForIsRTKConnected(it) })
         addReaction(widgetModel.rtkLocationInfo.observeOn(SchedulerProvider.ui()).subscribe(this::updateRTKLocationInfo))
+
         addReaction(widgetModel.rtkSystemState.observeOn(SchedulerProvider.ui()).subscribe(this::updateRTKSystemState))
         addReaction(widgetModel.standardDeviation.observeOn(SchedulerProvider.ui()).subscribe { updateStandardDeviation(it) })
         addReaction(widgetModel.rtkBaseStationState.observeOn(SchedulerProvider.ui()).subscribe { updateBaseStationStatus(it) })
@@ -754,6 +791,7 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
                     getRTKConnectionStatusLabelTextColor(RTKSatelliteStatusWidgetModel.RTKBaseStationState.DISCONNECTED)
             }
         }
+
     }
 
     private fun updateNetworkServiceStatus(networkServiceState: RTKSatelliteStatusWidgetModel.RTKNetworkServiceState) {
@@ -872,12 +910,18 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
         }
 
         //更新定位信息
-        val positioningSolution = rtkLocationInfo?.rtkLocation?.positioningSolution
+         positioningSolution = rtkLocationInfo?.rtkLocation?.positioningSolution
         if (positioningSolution == RTKPositioningSolution.NONE || positioningSolution == RTKPositioningSolution.UNKNOWN) {
             positioningTextView.setText(R.string.uxsdk_string_default_value)
         } else {
             positioningTextView.text = RTKUtil.getRTKStatusName(this, positioningSolution)
         }
+
+        if (positioningSolution == RTKPositioningSolution.FIXED_POINT ) {
+            rtkStatusTextView.setText(R.string.uxsdk_rtk_state_connect)
+            rtkStatusTextView.setTextColor(getRTKConnectionStatusLabelTextColor(RTKSatelliteStatusWidgetModel.RTKBaseStationState.CONNECTED_IN_USE))
+        }
+
     }
 
     //更新标准差
@@ -918,6 +962,9 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
                     GNSSType.GPS -> {
                         gpsAntenna1TextView.text = count
                     }
+                    else -> {
+                        //do something
+                    }
                 }
             }
         }
@@ -941,7 +988,9 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
                     GNSSType.GPS -> {
                         gpsAntenna2TextView.text = count
                     }
-
+                    else -> {
+                        //do something
+                    }
                 }
             }
         }
@@ -964,6 +1013,9 @@ open class RTKSatelliteStatusWidget @JvmOverloads constructor(
                     }
                     GNSSType.GPS -> {
                         gpsBaseStationTextView.text = count
+                    }
+                    else -> {
+                        //do something
                     }
                 }
             }

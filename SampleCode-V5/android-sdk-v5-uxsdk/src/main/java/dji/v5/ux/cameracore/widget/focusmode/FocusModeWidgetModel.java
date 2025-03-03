@@ -40,7 +40,7 @@ import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
 import dji.v5.ux.core.communication.UXKey;
 import dji.v5.ux.core.communication.UXKeys;
 import dji.v5.ux.core.util.DataProcessor;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 import dji.v5.ux.core.util.SettingDefinitions;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -223,21 +223,21 @@ public class FocusModeWidgetModel extends WidgetModel implements ICameraIndex {
                 addDisposable(keyedStore.setValue(controlModeKey, SettingDefinitions.ControlMode.AUTO_FOCUS)
                         .subscribe(() -> {
                             //do nothing
-                        }, RxUtil.logErrorConsumer(tag, "setControlModeAutoFocus: ")));
+                        }, UxErrorHandle.logErrorConsumer(tag, "setControlModeAutoFocus: ")));
                 break;
             case AFC:
                 preferencesManager.setControlMode(SettingDefinitions.ControlMode.AUTO_FOCUS_CONTINUE);
                 addDisposable(keyedStore.setValue(controlModeKey, SettingDefinitions.ControlMode.AUTO_FOCUS_CONTINUE)
                         .subscribe(() -> {
                             //do nothing
-                        }, RxUtil.logErrorConsumer(tag, "setControlModeAutoFocusContinuous: ")));
+                        }, UxErrorHandle.logErrorConsumer(tag, "setControlModeAutoFocusContinuous: ")));
                 break;
             case MANUAL:
                 preferencesManager.setControlMode(SettingDefinitions.ControlMode.MANUAL_FOCUS);
                 addDisposable(keyedStore.setValue(controlModeKey, SettingDefinitions.ControlMode.MANUAL_FOCUS)
                         .subscribe(() -> {
                             //do nothing
-                        }, RxUtil.logErrorConsumer(tag, "setControlModeManualFocus: ")));
+                        }, UxErrorHandle.logErrorConsumer(tag, "setControlModeManualFocus: ")));
                 break;
             default:
                 break;

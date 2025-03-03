@@ -52,7 +52,7 @@ import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.FrameLayoutWidget;
 import dji.v5.ux.core.communication.GlobalPreferencesManager;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 import dji.v5.ux.core.util.SettingDefinitions;
 import dji.v5.ux.core.util.SettingDefinitions.ControlMode;
 import dji.v5.ux.core.util.SettingDefinitions.GimbalIndex;
@@ -165,7 +165,7 @@ public class FPVInteractionWidget extends FrameLayoutWidget<Object> implements V
         return Flowable.combineLatest(widgetModel.getControlMode(), widgetModel.isAeLocked(), Pair::new)
                 .observeOn(SchedulerProvider.ui())
                 .subscribe(values -> updateViewVisibility(values.first, values.second),
-                        RxUtil.logErrorConsumer(TAG, "reactToUpdateVisibility: "));
+                        UxErrorHandle.logErrorConsumer(TAG, "reactToUpdateVisibility: "));
     }
 
     private void updateViewVisibility(ControlMode controlMode, boolean isAeLocked) {
@@ -232,7 +232,7 @@ public class FPVInteractionWidget extends FrameLayoutWidget<Object> implements V
                             .firstOrError()
                             .observeOn(SchedulerProvider.ui())
                             .subscribe((Pair<SettingDefinitions.ControlMode, Boolean> values) -> updateTarget(values.first, values.second, targetX, targetY),
-                                    RxUtil.logErrorConsumer(TAG, "Update Target: ")));
+                                    UxErrorHandle.logErrorConsumer(TAG, "Update Target: ")));
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -289,6 +289,7 @@ public class FPVInteractionWidget extends FrameLayoutWidget<Object> implements V
     @Override
     public void updateCameraSource(@NonNull ComponentIndexType cameraIndex, @NonNull CameraLensType lensType) {
         widgetModel.updateCameraSource(cameraIndex, lensType);
+        exposureMeterView.updateCameraSource(cameraIndex, lensType);
     }
 
     @NonNull
@@ -321,12 +322,14 @@ public class FPVInteractionWidget extends FrameLayoutWidget<Object> implements V
                         .observeOn(SchedulerProvider.ui())
                         .subscribe(() -> {
                             //do nothing
-                        }, RxUtil.logErrorConsumer(TAG, "updateTarget: ")));
+                        }, UxErrorHandle.logErrorConsumer(TAG, "updateTarget: ")));
                 addDisposable(widgetModel.updateMetering(targetX, targetY)
                         .observeOn(SchedulerProvider.ui())
                         .subscribe(() -> {
                             // do nothing
-                        }, throwable -> onExposureMeterSetFail(newControlMode)));
+                        }, throwable ->
+                                // 仅仅打印日志，不重新设置测光参数
+                                UxErrorHandle.logErrorConsumer(TAG, "onExposureMeterSetFail: ").accept(throwable)));
             }
         } else if (touchFocusEnabled && isInBounds()) {
             focusTargetView.clickEvent(absTargetX, absTargetY);
@@ -343,21 +346,6 @@ public class FPVInteractionWidget extends FrameLayoutWidget<Object> implements V
                 && viewWidth - absTargetX > widthOffset
                 && absTargetY > heightOffset
                 && viewHeight - absTargetY > heightOffset;
-    }
-
-    private void onExposureMeterSetFail(ControlMode controlMode) {
-        if (oldAbsTargetX > 0 && oldAbsTargetY > 0) {
-            addDisposable(widgetModel
-                    .setControlMode(exposureMeterView.clickEvent(controlMode,
-                            oldAbsTargetX,
-                            oldAbsTargetY,
-                            viewWidth,
-                            viewHeight))
-                    .observeOn(SchedulerProvider.ui())
-                    .subscribe(() -> {
-                        //do nothing
-                    }, RxUtil.logErrorConsumer(TAG, "onExposureMeterSetFail: ")));
-        }
     }
 
     private void onFocusTargetSetFail() {
@@ -420,7 +408,7 @@ public class FPVInteractionWidget extends FrameLayoutWidget<Object> implements V
                                 .observeOn(SchedulerProvider.ui())
                                 .subscribe(() -> {
                                     //do nothing
-                                }, RxUtil.logErrorConsumer(TAG, "rotate gimbal: ")));
+                                }, UxErrorHandle.logErrorConsumer(TAG, "rotate gimbal: ")));
                     }
                 });
     }

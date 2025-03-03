@@ -11,7 +11,7 @@ import dji.v5.ux.core.base.SchedulerProvider
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.getString
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import io.reactivex.rxjava3.core.CompletableObserver
 import io.reactivex.rxjava3.disposables.Disposable
 
@@ -88,7 +88,7 @@ class RTKKeepStatusWidget @JvmOverloads constructor(
         widgetModel.setRTKKeepStatusEnable(isChecked)
             .observeOn(SchedulerProvider.ui())
             .subscribe(object : CompletableObserver {
-                override fun onSubscribe(d: Disposable?) {
+                override fun onSubscribe(d: Disposable) {
                     //Do nothing
                 }
 
@@ -96,9 +96,9 @@ class RTKKeepStatusWidget @JvmOverloads constructor(
                     //Do nothing
                 }
 
-                override fun onError(e: Throwable?) {
+                override fun onError(e: Throwable) {
                     setRTKSwitch(!isChecked)
-                    RxUtil.logErrorConsumer(TAG, "canEnableRTK: ")
+                    UxErrorHandle.logErrorConsumer(TAG, "canEnableRTK: ")
                 }
             })
     }

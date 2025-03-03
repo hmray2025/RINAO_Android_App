@@ -55,8 +55,7 @@ import dji.v5.ux.core.base.ICameraIndex;
 import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-import dji.v5.ux.core.util.ProductUtil;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
@@ -78,10 +77,6 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
     private ImageView storageStatusOverlayImageView;
     private Drawable startShootPhotoDrawable;
     private Drawable stopShootPhotoDrawable;
-    private Drawable startShootPhotoHasselbladDrawable;
-    private Drawable stopShootPhotoHasselbladDrawable;
-    @ColorInt
-    private int progressRingHasselbladColor;
     @ColorInt
     private int progressRingColor;
     private Map<StorageIconState, Drawable> storageInternalIconMap;
@@ -145,7 +140,7 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
     @Override
     protected void reactToModelChanges() {
         addReaction(widgetModel.isShootingPhoto().observeOn(SchedulerProvider.ui())
-                .subscribe(this::onIsShootingPhotoChange, RxUtil.logErrorConsumer(TAG, "isShootingPhoto: ")));
+                .subscribe(this::onIsShootingPhotoChange, UxErrorHandle.logErrorConsumer(TAG, "isShootingPhoto: ")));
         addReaction(reactToCanStartOrStopShootingPhoto());
         addReaction(reactToPhotoStateAndPhotoStorageState());
         addReaction(buttonDownModel.isShutterButtonDownProcessor().toFlowable()
@@ -192,6 +187,7 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
         if (!widgetModel.isPhotoMode()) {
             return;
         }
+
         Single<Boolean> stop = widgetModel.canStopShootingPhoto().firstOrError();
         Single<Boolean> start = widgetModel.canStartShootingPhoto().firstOrError();
 
@@ -204,7 +200,7 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
                     return Completable.complete();
                 }).observeOn(SchedulerProvider.ui())
                 .subscribe(() -> {
-                }, RxUtil.logErrorConsumer(TAG, "Start Stop Shoot Photo")));
+                }, UxErrorHandle.logErrorConsumer(TAG, "Start Stop Shoot Photo")));
     }
     //endregion
 
@@ -282,6 +278,7 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
     }
 
     private void onIsShootingPhotoChange(boolean isShootingPhoto) {
+
         borderProgressRingView.setIndeterminate(isShootingPhoto);
         if (isShootingPhoto) {
             cameraActionSound.playCapturePhoto();
@@ -292,14 +289,14 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
         return Flowable.combineLatest(widgetModel.getCameraPhotoState(), widgetModel.getCameraStorageState(), Pair::new)
                 .observeOn(SchedulerProvider.ui())
                 .subscribe(values -> updateCameraForegroundResource(values.first, values.second),
-                        RxUtil.logErrorConsumer(TAG, "reactToPhotoStateAndPhotoStorageState "));
+                        UxErrorHandle.logErrorConsumer(TAG, "reactToPhotoStateAndPhotoStorageState "));
     }
 
     private Disposable reactToCanStartOrStopShootingPhoto() {
         return Flowable.combineLatest(widgetModel.canStartShootingPhoto(), widgetModel.canStopShootingPhoto(), Pair::new)
                 .observeOn(SchedulerProvider.ui())
                 .subscribe(values -> updateImages(values.first, values.second),
-                        RxUtil.logErrorConsumer(TAG, "reactToCanStartOrStopShootingPhoto: "));
+                        UxErrorHandle.logErrorConsumer(TAG, "reactToCanStartOrStopShootingPhoto: "));
     }
 
     private void checkAndUpdatePhotoStateAndPhotoStorageState() {
@@ -310,7 +307,7 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
                     .firstOrError()
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(values -> updateCameraForegroundResource(values.first, values.second),
-                            RxUtil.logErrorConsumer(TAG, "checkAndUpdatePhotoStateAndPhotoStorageState ")));
+                            UxErrorHandle.logErrorConsumer(TAG, "checkAndUpdatePhotoStateAndPhotoStorageState ")));
         }
     }
 
@@ -323,31 +320,21 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
                     .firstOrError()
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(values -> updateImages(values.first, values.second),
-                            RxUtil.logErrorConsumer(TAG, "checkAndUpdateCanStartOrStopShootingPhoto: ")));
+                            UxErrorHandle.logErrorConsumer(TAG, "checkAndUpdateCanStartOrStopShootingPhoto: ")));
         }
     }
 
     private void updateImages(boolean canStartShootingPhoto, boolean canStopShootingPhoto) {
         if (!canStopShootingPhoto) {
             enableAction(canStartShootingPhoto);
-            centerImageView.setImageDrawable(ProductUtil.isHasselbladCamera() ? startShootPhotoHasselbladDrawable : startShootPhotoDrawable);
+            centerImageView.setImageDrawable(startShootPhotoDrawable);
         } else {
             enableAction(true);
-            centerImageView.setImageDrawable(ProductUtil.isHasselbladCamera() ? stopShootPhotoHasselbladDrawable : stopShootPhotoDrawable);
+            centerImageView.setImageDrawable(stopShootPhotoDrawable);
         }
 
         storageStatusOverlayImageView.setVisibility(canStopShootingPhoto ? View.GONE : View.VISIBLE);
-        if (ProductUtil.isHasselbladCamera()) {
-            borderProgressRingView.setRingColor(progressRingHasselbladColor);
-        } else {
-            borderProgressRingView.setRingColor(progressRingColor);
-        }
-
-        if (canStartShootingPhoto) {
-            // This for bug where burst mode sometimes does not return value for onIsShootingPhotoChange
-            // and ring spins forever
-            borderProgressRingView.setIndeterminate(false);
-        }
+        borderProgressRingView.setRingColor(progressRingColor);
     }
 
     private void enableAction(boolean isEnabled) {
@@ -357,10 +344,7 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
     private void initDefaults() {
         startShootPhotoDrawable = getResources().getDrawable(R.drawable.uxsdk_shape_circle);
         stopShootPhotoDrawable = getResources().getDrawable(R.drawable.uxsdk_ic_shutter_stop);
-        startShootPhotoHasselbladDrawable = getResources().getDrawable(R.drawable.uxsdk_selector_hasselblad_shoot_photo);
-        stopShootPhotoHasselbladDrawable = getResources().getDrawable(R.drawable.uxsdk_ic_hasselblad_shutter_stop);
         setProgressRingColor(Color.WHITE);
-        setProgressRingHasselbladColor(getResources().getColor(R.color.uxsdk_shoot_photo_hasselblad_ring));
         setInternalStorageIcon(StorageIconState.NOT_INSERTED, R.drawable.uxsdk_ic_internal_storage_not_inserted);
         setInternalStorageIcon(StorageIconState.SLOW, R.drawable.uxsdk_ic_internal_storage_slow);
         setInternalStorageIcon(StorageIconState.FULL, R.drawable.uxsdk_ic_internal_storage_full);
@@ -377,7 +361,6 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
 
         setForegroundIconBackground(typedArray.getDrawable(R.styleable.ShootPhotoWidget_uxsdk_foregroundIconBackground));
         setProgressRingColor(typedArray.getColor(R.styleable.ShootPhotoWidget_uxsdk_progressRingColor, Color.WHITE));
-        setProgressRingHasselbladColor(typedArray.getColor(R.styleable.ShootPhotoWidget_uxsdk_progressRingHasselbladColor, getResources().getColor(R.color.uxsdk_shoot_photo_hasselblad_ring)));
 
         initShootPhotoDrawable(typedArray);
         initInternalStorageIcon(typedArray);
@@ -428,12 +411,6 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
         }
         if (typedArray.getDrawable(R.styleable.ShootPhotoWidget_uxsdk_shootPhotoStopIcon) != null) {
             stopShootPhotoDrawable = typedArray.getDrawable(R.styleable.ShootPhotoWidget_uxsdk_shootPhotoStopIcon);
-        }
-        if (typedArray.getDrawable(R.styleable.ShootPhotoWidget_uxsdk_shootPhotoStartHasselbladIcon) != null) {
-            startShootPhotoHasselbladDrawable = typedArray.getDrawable(R.styleable.ShootPhotoWidget_uxsdk_shootPhotoStartHasselbladIcon);
-        }
-        if (typedArray.getDrawable(R.styleable.ShootPhotoWidget_uxsdk_shootPhotoStopHasselbladIcon) != null) {
-            stopShootPhotoHasselbladDrawable = typedArray.getDrawable(R.styleable.ShootPhotoWidget_uxsdk_shootPhotoStopHasselbladIcon);
         }
     }
     //endregion
@@ -494,67 +471,6 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
      */
     public void setStopShootPhotoDrawable(@Nullable Drawable drawable) {
         stopShootPhotoDrawable = drawable;
-        checkAndUpdateCanStartOrStopShootingPhoto();
-    }
-
-    /**
-     * Get the current icon for start shooting photo for Hasselblad camera
-     *
-     * @return Drawable currently used
-     */
-    @Nullable
-    public Drawable getStartShootHasselbladPhotoDrawable() {
-        return startShootPhotoHasselbladDrawable;
-    }
-
-    /**
-     * Set the current icon for start shooting photo for Hasselblad camera
-     *
-     * @param resourceId to be used
-     */
-    public void setStartShootHasselbladPhotoDrawable(@DrawableRes int resourceId) {
-        setStartShootHasselbladPhotoDrawable(getResources().getDrawable(resourceId));
-    }
-
-    /**
-     * Set the current icon for start shooting photo for Hasselblad camera
-     *
-     * @param drawable to be used
-     */
-    public void setStartShootHasselbladPhotoDrawable(@Nullable Drawable drawable) {
-        startShootPhotoHasselbladDrawable = drawable;
-        checkAndUpdateCanStartOrStopShootingPhoto();
-    }
-
-    /**
-     * Get the current icon for stop shooting photo for Hasselblad camera
-     * Currently on Mavic 2 Pro
-     *
-     * @return Drawable currently used
-     */
-    @Nullable
-    public Drawable getStopShootHasselbladPhotoDrawable() {
-        return stopShootPhotoHasselbladDrawable;
-    }
-
-    /**
-     * Set the icon for stop shooting photo for Hasselblad camera
-     * Currently on Mavic 2 Pro
-     *
-     * @param resourceId to be used
-     */
-    public void setStopShootHasselbladPhotoDrawable(@DrawableRes int resourceId) {
-        setStopShootHasselbladPhotoDrawable(getResources().getDrawable(resourceId));
-    }
-
-    /**
-     * Set the icon for stop shooting photo for Hasselblad camera
-     * Currently on Mavic 2 Pro
-     *
-     * @param drawable to be used
-     */
-    public void setStopShootHasselbladPhotoDrawable(@Nullable Drawable drawable) {
-        stopShootPhotoHasselbladDrawable = drawable;
         checkAndUpdateCanStartOrStopShootingPhoto();
     }
 
@@ -699,28 +615,6 @@ public class ShootPhotoWidget extends ConstraintLayoutWidget<Object> implements 
      */
     public void setProgressRingColor(@ColorInt int color) {
         progressRingColor = color;
-        checkAndUpdateCanStartOrStopShootingPhoto();
-    }
-
-    /**
-     * Get the color of the progress ring when the camera is Hasselblad
-     * Currently on Mavic 2 Pro
-     *
-     * @return integer representing color
-     */
-    @ColorInt
-    public int getProgressRingHasselbladColor() {
-        return progressRingHasselbladColor;
-    }
-
-    /**
-     * Set the color of the progress ring when the camera is Hasselblad
-     * Currently on Mavic 2 Pro
-     *
-     * @param color integer value
-     */
-    public void setProgressRingHasselbladColor(@ColorInt int color) {
-        progressRingHasselbladColor = color;
         checkAndUpdateCanStartOrStopShootingPhoto();
     }
     //endregion

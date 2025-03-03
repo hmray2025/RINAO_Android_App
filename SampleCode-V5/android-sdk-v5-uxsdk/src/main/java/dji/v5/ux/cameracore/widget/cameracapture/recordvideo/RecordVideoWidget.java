@@ -58,8 +58,7 @@ import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
 import dji.v5.ux.core.util.CameraUtil;
-import dji.v5.ux.core.util.ProductUtil;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 import io.reactivex.rxjava3.core.Completable;
 
 /**
@@ -82,8 +81,6 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
     private Map<StorageIconState, Drawable> storageSDCardIconMap;
     private Drawable recordVideoStartDrawable;
     private Drawable recordVideoStopDrawable;
-    private Drawable recordVideoStartHasselbladDrawable;
-    private Drawable recordVideoStopHasselbladDrawable;
     private CameraActionSound cameraActionSound;
     //endregion
 
@@ -143,13 +140,13 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
     protected void reactToModelChanges() {
         addReaction(widgetModel.getRecordingTimeInSeconds()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(this::updateRecordingTime, RxUtil.logErrorConsumer(TAG, "record time: ")));
+                .subscribe(this::updateRecordingTime, UxErrorHandle.logErrorConsumer(TAG, "record time: ")));
         addReaction(widgetModel.getRecordingState()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(recordingState -> onIsRecordingVideoChange(recordingState, true), RxUtil.logErrorConsumer(TAG, "is recording: ")));
+                .subscribe(recordingState -> onIsRecordingVideoChange(recordingState, true), UxErrorHandle.logErrorConsumer(TAG, "is recording: ")));
         addReaction(widgetModel.getCameraVideoStorageState()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(this::updateCameraForegroundResource, RxUtil.logErrorConsumer(TAG, "camera storage update: ")));
+                .subscribe(this::updateCameraForegroundResource, UxErrorHandle.logErrorConsumer(TAG, "camera storage update: ")));
         addReaction(buttonDownModel.isRecordButtonDownProcessor().toFlowable()
                 .observeOn(SchedulerProvider.ui())
                 .subscribe(aBoolean -> {
@@ -203,15 +200,13 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
                 return Completable.complete();
             }
         }).observeOn(SchedulerProvider.ui()).subscribe(() -> {
-        }, RxUtil.logErrorConsumer(TAG, "START STOP VIDEO"));
+        }, UxErrorHandle.logErrorConsumer(TAG, "START STOP VIDEO"));
     }
 
     //region private helpers
     private void initDefaults() {
         recordVideoStartDrawable = getResources().getDrawable(R.drawable.uxsdk_selector_start_record_video);
         recordVideoStopDrawable = getResources().getDrawable(R.drawable.uxsdk_selector_stop_record_video);
-        recordVideoStartHasselbladDrawable = getResources().getDrawable(R.drawable.uxsdk_ic_hasselblad_shutter_start);
-        recordVideoStopHasselbladDrawable = getResources().getDrawable(R.drawable.uxsdk_ic_hasselblad_shutter_stop);
         setInternalStorageIcon(StorageIconState.NOT_INSERTED, R.drawable.uxsdk_ic_internal_storage_not_inserted);
         setInternalStorageIcon(StorageIconState.SLOW, R.drawable.uxsdk_ic_internal_storage_slow);
         setInternalStorageIcon(StorageIconState.FULL, R.drawable.uxsdk_ic_internal_storage_full);
@@ -292,13 +287,6 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
         if (typedArray.getDrawable(R.styleable.RecordVideoWidget_uxsdk_recordStopIcon) != null) {
             recordVideoStopDrawable = typedArray.getDrawable(R.styleable.RecordVideoWidget_uxsdk_recordStopIcon);
         }
-
-        if (typedArray.getDrawable(R.styleable.RecordVideoWidget_uxsdk_recordStartHasselbladIcon) != null) {
-            recordVideoStartHasselbladDrawable = typedArray.getDrawable(R.styleable.RecordVideoWidget_uxsdk_recordStartHasselbladIcon);
-        }
-        if (typedArray.getDrawable(R.styleable.RecordVideoWidget_uxsdk_recordStopHasselbladIcon) != null) {
-            recordVideoStopHasselbladDrawable = typedArray.getDrawable(R.styleable.RecordVideoWidget_uxsdk_recordStopHasselbladIcon);
-        }
     }
 
     private void updateCameraForegroundResource(CameraVideoStorageState cameraVideoStorageState) {
@@ -358,8 +346,8 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
 
     private void onIsRecordingVideoChange(RecordingState recordingState, boolean playSound) {
         boolean isRecordingVideo = recordingState == RecordingState.RECORDING_IN_PROGRESS;
-        Drawable recordStart = ProductUtil.isHasselbladCamera() ? recordVideoStartHasselbladDrawable : recordVideoStartDrawable;
-        Drawable recordStop = ProductUtil.isHasselbladCamera() ? recordVideoStopHasselbladDrawable : recordVideoStopDrawable;
+        Drawable recordStart = recordVideoStartDrawable;
+        Drawable recordStop = recordVideoStopDrawable;
         centerImageView.setImageDrawable(isRecordingVideo ? recordStop : recordStart);
         videoTimerTextView.setVisibility(isRecordingVideo ? View.VISIBLE : View.INVISIBLE);
         storageStatusOverlayImageView.setVisibility(isRecordingVideo ? View.GONE : View.VISIBLE);
@@ -377,7 +365,7 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
             addDisposable(widgetModel.getCameraVideoStorageState().firstOrError()
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(this::updateCameraForegroundResource,
-                            RxUtil.logErrorConsumer(TAG, "check and update camera foreground resource: ")));
+                            UxErrorHandle.logErrorConsumer(TAG, "check and update camera foreground resource: ")));
         }
     }
 
@@ -386,7 +374,7 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
             addDisposable(widgetModel.getRecordingState().firstOrError()
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(recordingState -> onIsRecordingVideoChange(recordingState, false),
-                            RxUtil.logErrorConsumer(TAG, "check and update camera foreground resource: ")));
+                            UxErrorHandle.logErrorConsumer(TAG, "check and update camera foreground resource: ")));
         }
     }
     //endregion
@@ -448,67 +436,6 @@ public class RecordVideoWidget extends ConstraintLayoutWidget<Object> implements
      */
     public void setRecordVideoStopDrawable(@Nullable Drawable drawable) {
         recordVideoStopDrawable = drawable;
-        checkAndUpdateCenterImageView();
-    }
-
-    /**
-     * Get the current icon for start video recording for Hasselblad camera
-     *
-     * @return Drawable currently used
-     */
-    @Nullable
-    public Drawable getRecordVideoHasselbladDrawable() {
-        return recordVideoStartHasselbladDrawable;
-    }
-
-    /**
-     * Set the current icon for start video recording for Hasselblad camera
-     *
-     * @param resourceId to be used
-     */
-    public void setRecordVideoHasselbladDrawable(@DrawableRes int resourceId) {
-        setRecordVideoHasselbladDrawable(getResources().getDrawable(resourceId));
-    }
-
-    /**
-     * Set the current icon for start video recording for Hasselblad camera
-     *
-     * @param drawable to be used
-     */
-    public void setRecordVideoHasselbladDrawable(@Nullable Drawable drawable) {
-        recordVideoStartHasselbladDrawable = drawable;
-        checkAndUpdateCenterImageView();
-    }
-
-    /**
-     * Get the current icon for stop video recording for Hasselblad camera
-     * Currently on Mavic 2 Pro
-     *
-     * @return Drawable currently used
-     */
-    @Nullable
-    public Drawable getRecordVideoStopHasselbladDrawable() {
-        return recordVideoStopHasselbladDrawable;
-    }
-
-    /**
-     * Set the icon for stop video recording for Hasselblad camera
-     * Currently on Mavic 2 Pro
-     *
-     * @param resourceId to be used
-     */
-    public void setRecordVideoStopHasselbladDrawable(@DrawableRes int resourceId) {
-        setRecordVideoStopHasselbladDrawable(getResources().getDrawable(resourceId));
-    }
-
-    /**
-     * Set the icon for stop video recording for Hasselblad camera
-     * Currently on Mavic 2 Pro
-     *
-     * @param drawable to be used
-     */
-    public void setRecordVideoStopHasselbladDrawable(@Nullable Drawable drawable) {
-        recordVideoStopHasselbladDrawable = drawable;
         checkAndUpdateCenterImageView();
     }
 

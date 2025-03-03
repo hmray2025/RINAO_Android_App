@@ -52,13 +52,13 @@ import java.text.DecimalFormat
  * @property defaultStyle - Resource id for style used for defining the default setup
  * of the widget.
  */
-abstract class BaseTelemetryWidget<T> @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
-        val widgetType: WidgetType,
-        protected val widgetTheme: Int = 0,
-        @StyleRes protected val defaultStyle: Int
+abstract class BaseTelemetryWidget<T : Any> @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    val widgetType: WidgetType,
+    protected val widgetTheme: Int = 0,
+    @StyleRes protected val defaultStyle: Int
 ) : ConstraintLayoutWidget<T>(context, attrs, defStyleAttr) {
 
     private val guidelineLeft: Guideline = findViewById(R.id.guideline_left)
@@ -406,11 +406,15 @@ abstract class BaseTelemetryWidget<T> @JvmOverloads constructor(
         typedArray.getDrawableAndUse(R.styleable.BaseTelemetryWidget_uxsdk_label_background) {
             labelBackground = it
         }
-        labelVisibility = typedArray.getBoolean(R.styleable.BaseTelemetryWidget_uxsdk_label_visibility,
-                labelVisibility)
+        labelVisibility = typedArray.getBoolean(
+            R.styleable.BaseTelemetryWidget_uxsdk_label_visibility,
+            labelVisibility
+        )
         labelString =
-                typedArray.getString(R.styleable.BaseTelemetryWidget_uxsdk_label_string,
-                        getString(R.string.uxsdk_string_default_value))
+            typedArray.getString(
+                R.styleable.BaseTelemetryWidget_uxsdk_label_string,
+                getString(R.string.uxsdk_string_default_value)
+            )
 
         typedArray.getResourceIdAndUse(R.styleable.BaseTelemetryWidget_uxsdk_value_text_appearance) {
             setValueTextAppearance(it)
@@ -427,14 +431,18 @@ abstract class BaseTelemetryWidget<T> @JvmOverloads constructor(
         typedArray.getDrawableAndUse(R.styleable.BaseTelemetryWidget_uxsdk_value_background) {
             valueBackground = it
         }
-        valueVisibility = typedArray.getBoolean(R.styleable.BaseTelemetryWidget_uxsdk_value_visibility,
-                valueVisibility)
+        valueVisibility = typedArray.getBoolean(
+            R.styleable.BaseTelemetryWidget_uxsdk_value_visibility,
+            valueVisibility
+        )
         typedArray.getIntegerAndUse(R.styleable.BaseTelemetryWidget_uxsdk_value_gravity) {
             valueTextGravity = it
         }
         valueString =
-                typedArray.getString(R.styleable.BaseTelemetryWidget_uxsdk_value_string,
-                        getString(R.string.uxsdk_string_default_value))
+            typedArray.getString(
+                R.styleable.BaseTelemetryWidget_uxsdk_value_string,
+                getString(R.string.uxsdk_string_default_value)
+            )
 
         typedArray.getResourceIdAndUse(R.styleable.BaseTelemetryWidget_uxsdk_unit_text_appearance) {
             setUnitTextAppearance(it)
@@ -451,11 +459,15 @@ abstract class BaseTelemetryWidget<T> @JvmOverloads constructor(
         typedArray.getDrawableAndUse(R.styleable.BaseTelemetryWidget_uxsdk_unit_background) {
             unitBackground = it
         }
-        unitVisibility = typedArray.getBoolean(R.styleable.BaseTelemetryWidget_uxsdk_unit_visibility,
-                unitVisibility)
+        unitVisibility = typedArray.getBoolean(
+            R.styleable.BaseTelemetryWidget_uxsdk_unit_visibility,
+            unitVisibility
+        )
         unitString =
-                typedArray.getString(R.styleable.BaseTelemetryWidget_uxsdk_unit_string,
-                        getString(R.string.uxsdk_string_default_value))
+            typedArray.getString(
+                R.styleable.BaseTelemetryWidget_uxsdk_unit_string,
+                getString(R.string.uxsdk_string_default_value)
+            )
 
         typedArray.getDrawableAndUse(R.styleable.BaseTelemetryWidget_uxsdk_widget_icon) {
             widgetIcon = it
@@ -466,8 +478,10 @@ abstract class BaseTelemetryWidget<T> @JvmOverloads constructor(
         typedArray.getDrawableAndUse(R.styleable.BaseTelemetryWidget_uxsdk_widget_icon_background) {
             widgetIconBackground = it
         }
-        widgetIconVisibility = typedArray.getBoolean(R.styleable.BaseTelemetryWidget_uxsdk_widget_icon_visibility,
-                widgetIconVisibility)
+        widgetIconVisibility = typedArray.getBoolean(
+            R.styleable.BaseTelemetryWidget_uxsdk_widget_icon_visibility,
+            widgetIconVisibility
+        )
         typedArray.getDimensionAndUse(R.styleable.BaseTelemetryWidget_uxsdk_widget_padding_left) {
             contentPaddingLeft = it.toInt()
         }

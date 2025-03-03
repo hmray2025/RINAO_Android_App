@@ -28,7 +28,7 @@ import java.util.List;
 //Doc key: DJIMap_DJIMapView
 /**
  * A View that contains a `DJIMapViewInternal` and initializes it based on the given
- * defaultProvider attribute. If no attribute is given, the provider will be AMaps.
+ * defaultProvider attribute. If no attribute is given, the provider will be Maplibre.
  *
  * All the life cycle methods must be forwarded from the Activity or Fragment containing this view
  * to the corresponding ones in this class. In particular, the following methods must be forwarded:
@@ -49,8 +49,8 @@ public class DJIMapView extends FrameLayout {
     private static final String TAG = LogUtils.getTag(DJIMapView.class.getSimpleName());
     private DJIMapViewInternal internalMapView;
     // private static final int MAP_PROVIDER_GOOGLEMAP = 0x1;
-    private static final int MAP_PROVIDER_AMAP = 0x2;
-    //private static final int MAP_PROVIDER_MAPBOX = 0x3;
+
+    private static final int MAP_PROVIDER_MAPLibre = 0x3;
 
     public DJIMapView(@NonNull Context context) {
         this(context, null);
@@ -64,7 +64,7 @@ public class DJIMapView extends FrameLayout {
         super(context, attrs, defStyleAttr);
 
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.DJIMapView);
-        int defaultProvider = typedArray.getInt(R.styleable.DJIMapView_defaultProvider, MAP_PROVIDER_AMAP);
+        int defaultProvider = typedArray.getInt(R.styleable.DJIMapView_defaultProvider, MAP_PROVIDER_MAPLibre);
         MapkitOptions.Builder builder = new MapkitOptions.Builder();
         builder.addMapProvider(defaultProvider);
         initialise((Activity) context, builder.build());

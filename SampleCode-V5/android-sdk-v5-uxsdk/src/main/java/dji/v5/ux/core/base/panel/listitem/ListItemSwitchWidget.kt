@@ -43,7 +43,7 @@ import dji.v5.ux.core.util.ViewIDGenerator
  * This is the base class to be used for
  * switch type list item.
  */
-abstract class ListItemSwitchWidget<T> @JvmOverloads constructor(
+abstract class ListItemSwitchWidget<T : Any> @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,

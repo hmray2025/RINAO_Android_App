@@ -1,7 +1,5 @@
 package dji.v5.ux.mapkit.core.models;
 
-import com.mapbox.mapboxsdk.geometry.LatLng;
-
 import dji.v5.ux.mapkit.core.utils.DJIGpsUtils;
 
 //Doc key: DJIMap_DJILatLng
@@ -9,9 +7,9 @@ import dji.v5.ux.mapkit.core.utils.DJIGpsUtils;
  *  Represents a point which includes latitude, longitude, altitude,  and accuracy
  *  info on a map.
  */
-public class DJILatLng extends LatLng {
+public class DJILatLng {
 
-   // private static final String TAG = DJILatLng.class.getSimpleName();
+    // private static final String TAG = DJILatLng.class.getSimpleName();
 
     private static final float ACCURACY_GPS_FINE = 16.0f;
     // private static final double ZERO_DEBOUNCE_THRESHOLD = 0.00000001d;
@@ -26,7 +24,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_constructor1
     /**
      *  Creates a new `DJILatLng` object with the coordinates (latitude, longitude).
-     *  
+     *
      *  @param latitude The latitude of the map point.
      *  @param longitude The longitude of the map point.
      */
@@ -37,7 +35,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_constructor2
     /**
      *  Creates a new `DJILatLng` object with the coordinates (latitude, longitude, altitude).
-     *  
+     *
      *  @param latitude The latitude of the map point.
      *  @param longitude The longitude of the map point.
      *  @param altitude The altitude of the map point.
@@ -49,7 +47,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_constructor3
     /**
      *  Creates a new `DJILatLng` object with four related parameters.
-     *  
+     *
      *  @param latitude The latitude of the map point.
      *  @param longitude The longitude of the map point.
      *  @param altitude The altitude of the map point.
@@ -62,7 +60,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_constructor4
     /**
      *  Creates a new `DJILatLng` object with five related parameters.
-     *  
+     *
      *  @param latitude The latitude of the map point.
      *  @param longitude The longitude of the map point.
      *  @param altitude The altitude of the map point.
@@ -76,7 +74,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_constructor5
     /**
      *  Creates a new `DJILatLng` object with five related parameters.
-     *  
+     *
      *  @param latitude The latitude of the map point.
      *  @param longitude The longitude of the map point.
      *  @param altitude The altitude of the map point.
@@ -96,7 +94,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_constructor6
     /**
      *  Creates a new `DJILatLng` object with a `DJILatLng` parameter.
-     *  
+     *
      *  @param latLng A `DJILatLng` object
      */
     public DJILatLng(DJILatLng latLng) {
@@ -106,7 +104,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_getLatitude
     /**
      *  Gets the latitude of the map point.
-     *  
+     *
      *  @return The latitude of the map point.
      */
     public double getLatitude() {
@@ -116,7 +114,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_setLatitude
     /**
      *  Sets the latitude of the map point.
-     *  
+     *
      *  @param latitude The latitude of the map point.
      */
     public void setLatitude(double latitude) {
@@ -126,7 +124,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_getLongitude
     /**
      *  Gets the longitude of the map point.
-     *  
+     *
      *  @return The longitude of the map point.
      */
     public double getLongitude() {
@@ -136,7 +134,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_setLongitude
     /**
      *  Sets the longitude of the map point.
-     *  
+     *
      *  @param longitude The longitude of the map point.
      */
     public void setLongitude(double longitude) {
@@ -146,7 +144,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_getAltitude
     /**
      *  Gets the altitude of the map point.
-     *  
+     *
      *  @return The altitude of the map point.
      */
     public double getAltitude() {
@@ -156,7 +154,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_getAccuracy
     /**
      *  Gets the accuracy of the map point.
-     *  
+     *
      *  @return The accuracy of the map point.
      */
     public float getAccuracy() {
@@ -166,7 +164,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_setAccuracy
     /**
      *  Sets the accuracy of the map point.
-     *  
+     *
      *  @param accuracy The accuracy of the map point.
      */
     public void setAccuracy(float accuracy) {
@@ -176,7 +174,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_getTime
     /**
      *  Gets the time of the map point.
-     *  
+     *
      *  @return The time of the map point.
      */
     public long getTime() {
@@ -186,7 +184,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_setTime
     /**
      *  Sets the time of the map point.
-     *  
+     *
      *  @param time The accuracy of the point.
      */
     public void setTime(long time) {
@@ -196,7 +194,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_getElapsedRealtimeNanos
     /**
      *  Gets the time in elapsed real-time of the map point.
-     *  
+     *
      *  @return The time in elapsed real-time of the point.
      */
     public long getElapsedRealtimeNanos() {
@@ -206,7 +204,7 @@ public class DJILatLng extends LatLng {
     //Doc key: DJIMap_DJILatLng_setElapsedRealtimeNanos
     /**
      *  Sets the time in elapsed real-time of the map point.
-     *  
+     *
      *  @param elapsedRealtimeNanos The time in elapsed real-time of the point.
      */
     public void setElapsedRealtimeNanos(long elapsedRealtimeNanos) {

@@ -42,7 +42,7 @@ import dji.v5.ux.core.base.ICameraIndex;
 import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.FrameLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 
 /**
  * Widget can be used to switch between shoot photo mode and record video mode
@@ -141,7 +141,7 @@ public class PhotoVideoSwitchWidget extends FrameLayoutWidget<Object> implements
                 .observeOn(SchedulerProvider.ui())
                 .subscribe(
                         () -> {
-                        }, RxUtil.logErrorConsumer(TAG, "Switch camera Mode")
+                        }, UxErrorHandle.logErrorConsumer(TAG, "Switch camera Mode")
                 );
     }
 
@@ -181,7 +181,7 @@ public class PhotoVideoSwitchWidget extends FrameLayoutWidget<Object> implements
         if (!isInEditMode()) {
             addDisposable(widgetModel.isPictureMode().firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(this::updateUI, RxUtil.logErrorConsumer(TAG, "Update UI ")));
+                    .subscribe(this::updateUI, UxErrorHandle.logErrorConsumer(TAG, "Update UI ")));
         }
     }
     //endregion

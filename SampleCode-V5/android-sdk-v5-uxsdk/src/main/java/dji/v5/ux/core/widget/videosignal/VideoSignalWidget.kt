@@ -49,7 +49,7 @@ import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.*
 import dji.v5.ux.core.widget.videosignal.VideoSignalWidget.ModelState.*
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 
 /**
  * This widget shows the strength of the video signal between the
@@ -230,7 +230,7 @@ open class VideoSignalWidget @JvmOverloads constructor(
         if (!isInEditMode) {
             addDisposable(widgetModel.productConnection.firstOrError()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(Consumer { this.updateIconColor(it) }, RxUtil.logErrorConsumer(TAG, "Update Icon Color "))
+                .subscribe(Consumer { this.updateIconColor(it) }, UxErrorHandle.logErrorConsumer(TAG, "Update Icon Color "))
             )
         }
     }
@@ -280,9 +280,7 @@ open class VideoSignalWidget @JvmOverloads constructor(
     //endregion
 
     //region Customization
-    override fun getIdealDimensionRatioString(): String {
-        return getString(R.string.uxsdk_widget_video_signal_ratio)
-    }
+    override fun getIdealDimensionRatioString() = null
 
     /**
      * Set the resource ID for the video display icon

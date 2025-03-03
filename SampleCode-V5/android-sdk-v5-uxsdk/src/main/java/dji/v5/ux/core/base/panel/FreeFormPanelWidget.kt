@@ -54,7 +54,7 @@ import kotlin.random.Random
  * The class provides helper methods to add, remove and get view/widget in a pane.
  *
  */
-abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
+abstract class FreeFormPanelWidget<T : Any> @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
@@ -63,7 +63,8 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
     context,
     attrs,
     defStyleAttr,
-    configuration) {
+    configuration
+) {
 
 
     //region Fields
@@ -229,21 +230,25 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
         proportions[proportions.lastIndex] = 1.0f - sum + proportions[proportions.lastIndex]
 
         if (splitType == SplitType.HORIZONTAL) {
-            set.createHorizontalChain(paneId,
+            set.createHorizontalChain(
+                paneId,
                 ConstraintSet.LEFT,
                 paneId,
                 ConstraintSet.RIGHT,
                 childrenIdList,
                 weights,
-                ConstraintSet.CHAIN_SPREAD)
+                ConstraintSet.CHAIN_SPREAD
+            )
         } else {
-            set.createVerticalChain(paneId,
+            set.createVerticalChain(
+                paneId,
                 ConstraintSet.TOP,
                 paneId,
                 ConstraintSet.BOTTOM,
                 childrenIdList,
                 weights,
-                ConstraintSet.CHAIN_SPREAD)
+                ConstraintSet.CHAIN_SPREAD
+            )
         }
         set.applyTo(this)
 
@@ -476,6 +481,7 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
                 set.connect(widgetView.id, ConstraintSet.TOP, paneId, ConstraintSet.TOP)
                 set.connect(widgetView.id, ConstraintSet.BOTTOM, paneId, ConstraintSet.BOTTOM)
             }
+
             ViewAlignment.TOP -> {
                 set.constrainHeight(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.constrainWidth(widgetView.id, 0)
@@ -483,6 +489,7 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
                 set.connect(widgetView.id, ConstraintSet.RIGHT, paneId, ConstraintSet.RIGHT)
                 set.connect(widgetView.id, ConstraintSet.TOP, paneId, ConstraintSet.TOP)
             }
+
             ViewAlignment.BOTTOM -> {
                 set.constrainHeight(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.constrainWidth(widgetView.id, 0)
@@ -490,6 +497,7 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
                 set.connect(widgetView.id, ConstraintSet.RIGHT, paneId, ConstraintSet.RIGHT)
                 set.connect(widgetView.id, ConstraintSet.BOTTOM, paneId, ConstraintSet.BOTTOM)
             }
+
             ViewAlignment.LEFT -> {
                 set.constrainHeight(widgetView.id, 0)
                 set.constrainWidth(widgetView.id, ConstraintSet.WRAP_CONTENT)
@@ -497,6 +505,7 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
                 set.connect(widgetView.id, ConstraintSet.TOP, paneId, ConstraintSet.TOP)
                 set.connect(widgetView.id, ConstraintSet.BOTTOM, paneId, ConstraintSet.BOTTOM)
             }
+
             ViewAlignment.RIGHT -> {
                 set.constrainHeight(widgetView.id, 0)
                 set.constrainWidth(widgetView.id, ConstraintSet.WRAP_CONTENT)
@@ -504,24 +513,28 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
                 set.connect(widgetView.id, ConstraintSet.TOP, paneId, ConstraintSet.TOP)
                 set.connect(widgetView.id, ConstraintSet.BOTTOM, paneId, ConstraintSet.BOTTOM)
             }
+
             ViewAlignment.LEFT_TOP -> {
                 set.constrainHeight(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.constrainWidth(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.connect(widgetView.id, ConstraintSet.LEFT, paneId, ConstraintSet.LEFT)
                 set.connect(widgetView.id, ConstraintSet.TOP, paneId, ConstraintSet.TOP)
             }
+
             ViewAlignment.LEFT_BOTTOM -> {
                 set.constrainHeight(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.constrainWidth(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.connect(widgetView.id, ConstraintSet.LEFT, paneId, ConstraintSet.LEFT)
                 set.connect(widgetView.id, ConstraintSet.BOTTOM, paneId, ConstraintSet.BOTTOM)
             }
+
             ViewAlignment.RIGHT_TOP -> {
                 set.constrainHeight(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.constrainWidth(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.connect(widgetView.id, ConstraintSet.RIGHT, paneId, ConstraintSet.RIGHT)
                 set.connect(widgetView.id, ConstraintSet.TOP, paneId, ConstraintSet.TOP)
             }
+
             ViewAlignment.RIGHT_BOTTOM -> {
                 set.constrainHeight(widgetView.id, ConstraintSet.WRAP_CONTENT)
                 set.constrainWidth(widgetView.id, ConstraintSet.WRAP_CONTENT)
@@ -574,10 +587,12 @@ abstract class FreeFormPanelWidget<T> @JvmOverloads constructor(
         for ((_, pane) in visiblePaneMap) {
             // If background assist is enabled apply random color to view background
             if (isBackgroundAssist) {
-                val color: Int = Color.argb(255,
+                val color: Int = Color.argb(
+                    255,
                     Random.nextInt(256),
                     Random.nextInt(256),
-                    Random.nextInt(256))
+                    Random.nextInt(256)
+                )
                 pane.background.setBackgroundColor(color)
             }
             // If label assist is enabled add debug label to text view

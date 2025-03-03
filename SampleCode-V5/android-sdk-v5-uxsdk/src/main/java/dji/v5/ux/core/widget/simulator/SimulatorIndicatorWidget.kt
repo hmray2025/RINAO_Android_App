@@ -32,7 +32,6 @@ import android.util.Pair
 import android.view.View
 import androidx.annotation.DrawableRes
 import androidx.core.content.res.use
-import dji.v5.utils.common.LogUtils
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.functions.Consumer
@@ -41,9 +40,8 @@ import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.base.SchedulerProvider
 import dji.v5.ux.core.base.widget.IconButtonWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
-import dji.v5.ux.core.communication.OnStateChangeCallback
 import dji.v5.ux.core.extension.*
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget.ModelState
 import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget.ModelState.ProductConnected
 import dji.v5.ux.core.widget.simulator.SimulatorIndicatorWidget.ModelState.SimulatorStateUpdated
@@ -145,7 +143,7 @@ open class SimulatorIndicatorWidget @JvmOverloads constructor(
             .observeOn(SchedulerProvider.ui())
             .subscribe(
                 Consumer { values: Pair<Boolean, Boolean> -> updateUI(values.first, values.second) },
-                RxUtil.logErrorConsumer(TAG, "react to Focus Mode Change: ")
+                UxErrorHandle.logErrorConsumer(TAG, "react to Focus Mode Change: ")
             )
     }
 

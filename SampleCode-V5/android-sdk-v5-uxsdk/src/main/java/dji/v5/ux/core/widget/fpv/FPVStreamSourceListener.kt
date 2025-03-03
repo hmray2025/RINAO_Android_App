@@ -1,7 +1,7 @@
 package dji.v5.ux.core.widget.fpv
 
 import dji.sdk.keyvalue.value.common.CameraLensType
-import dji.v5.common.video.stream.PhysicalDevicePosition
+import dji.sdk.keyvalue.value.common.ComponentIndexType
 
 /**
  * Class Description
@@ -12,6 +12,5 @@ import dji.v5.common.video.stream.PhysicalDevicePosition
  * Copyright (c) 2022, DJI All Rights Reserved.
  */
 interface FPVStreamSourceListener {
-
-    fun onStreamSourceUpdated(devicePosition: PhysicalDevicePosition, lensType: CameraLensType)
+    fun onStreamSourceUpdated(devicePosition: ComponentIndexType, lensType: CameraLensType)
 }

@@ -56,7 +56,7 @@ import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
 import dji.v5.ux.core.util.CameraUtil;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 
 /**
  * Shows the camera's current capacity and other information for internal and SD card storage
@@ -132,15 +132,15 @@ public class CameraConfigStorageWidget extends ConstraintLayoutWidget<Object> im
     protected void reactToModelChanges() {
         addReaction(widgetModel.getImageFormat()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(this::updateImageFormatText, RxUtil.logErrorConsumer(TAG, "reactToUpdateImageFormat")));
+                .subscribe(this::updateImageFormatText, UxErrorHandle.logErrorConsumer(TAG, "reactToUpdateImageFormat")));
 
         addReaction(widgetModel.getCameraStorageState()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(this::updateStatus, RxUtil.logErrorConsumer(TAG, "reactToUpdateStatus")));
+                .subscribe(this::updateStatus, UxErrorHandle.logErrorConsumer(TAG, "reactToUpdateStatus")));
 
         addReaction(widgetModel.getCameraColor()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(this::updateColor, RxUtil.logErrorConsumer(TAG, "reactToUpdateColor")));
+                .subscribe(this::updateColor, UxErrorHandle.logErrorConsumer(TAG, "reactToUpdateColor")));
     }
     //endregion
 
@@ -223,7 +223,7 @@ public class CameraConfigStorageWidget extends ConstraintLayoutWidget<Object> im
         if (!isInEditMode()) {
             addDisposable(widgetModel.getCameraStorageState().firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(this::updateForegroundDrawable, RxUtil.logErrorConsumer(TAG, "checkAndUpdateForegroundImage")));
+                    .subscribe(this::updateForegroundDrawable, UxErrorHandle.logErrorConsumer(TAG, "checkAndUpdateForegroundImage")));
         }
     }
     //endregion

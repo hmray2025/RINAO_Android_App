@@ -29,7 +29,7 @@ public class MMapView extends MapView implements DJIMapViewInternal {
     @Override
     public void getDJIMapAsync(final DJIMapView.OnDJIMapReadyCallback callback) {
         if(callback != null) {
-            getMapAsync(mapboxMap -> mapboxMap.setStyle(Style.MAPBOX_STREETS, style -> {
+            getMapAsync(mapboxMap -> mapboxMap.setStyle(MaplibreStyle.MAPBOX_STREETS, style -> {
                 MaplibreMapDelegate map = new MaplibreMapDelegate(mapboxMap, getContext(), MMapView.this, style);
                 callback.onDJIMapReady(map);
             }));

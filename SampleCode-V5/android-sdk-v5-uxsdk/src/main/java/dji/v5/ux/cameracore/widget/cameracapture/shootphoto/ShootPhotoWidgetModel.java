@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import androidx.annotation.NonNull;
 import dji.sdk.keyvalue.key.CameraKey;
 import dji.sdk.keyvalue.key.KeyTools;
+import dji.sdk.keyvalue.utils.ProductUtil;
+import dji.sdk.keyvalue.value.camera.CameraMode;
 import dji.sdk.keyvalue.value.camera.CameraShootPhotoMode;
 import dji.sdk.keyvalue.value.camera.CameraStorageInfo;
 import dji.sdk.keyvalue.value.camera.CameraStorageInfos;
@@ -42,11 +44,13 @@ import dji.sdk.keyvalue.value.camera.SDCardLoadState;
 import dji.sdk.keyvalue.value.camera.SSDOperationState;
 import dji.sdk.keyvalue.value.common.CameraLensType;
 import dji.sdk.keyvalue.value.common.ComponentIndexType;
+import dji.v5.manager.KeyManager;
 import dji.v5.ux.core.base.DJISDKModel;
 import dji.v5.ux.core.base.ICameraIndex;
 import dji.v5.ux.core.base.WidgetModel;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
 import dji.v5.ux.core.module.FlatCameraModule;
+import dji.v5.ux.core.util.CameraUtil;
 import dji.v5.ux.core.util.DataProcessor;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -217,6 +221,7 @@ public class ShootPhotoWidgetModel extends WidgetModel implements ICameraIndex {
     public void updateCameraSource(@NonNull ComponentIndexType cameraIndex, @NonNull CameraLensType lensType) {
         this.cameraIndex = cameraIndex;
         this.lensType = lensType;
+        flatCameraModule.updateCameraSource(cameraIndex,lensType);
         restart();
     }
 
@@ -325,7 +330,13 @@ public class ShootPhotoWidgetModel extends WidgetModel implements ICameraIndex {
     }
 
     public boolean isPhotoMode(){
-        return flatCameraModule.getCameraModeDataProcessor().getValue().isPhotoMode();
+        return flatCameraModule.getCameraModeDataProcessor().getValue().isPhotoMode()
+                || (flatCameraModule.getCameraModeDataProcessor().getValue() == CameraMode.VIDEO_NORMAL && isSupportShootPhoto());
+    }
+
+    private boolean isSupportShootPhoto(){
+        CameraType cameraType = KeyManager.getInstance().getValue(KeyTools.createKey(CameraKey.KeyCameraType ,cameraIndex) ,CameraType.NOT_SUPPORTED);
+        return cameraType == CameraType.M3T || cameraType == CameraType.M3E || cameraType == CameraType.M3M || cameraType == CameraType.ZENMUSE_H20T;
     }
 
     //region Helpers

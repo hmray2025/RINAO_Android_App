@@ -46,7 +46,7 @@ import dji.v5.ux.core.util.ViewIDGenerator
  * This is the base class to be used for radio button type list item
  * The class represents the item with icon, item name and radio group options
  */
-abstract class ListItemRadioButtonWidget<T> @JvmOverloads constructor(
+abstract class ListItemRadioButtonWidget<T : Any> @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
@@ -195,8 +195,10 @@ abstract class ListItemRadioButtonWidget<T> @JvmOverloads constructor(
 
     protected fun setSelected(index: Int) {
         radioGroup.setOnCheckedChangeListener(null)
-        val radioButton: RadioButton? = radioGroup.getChildAt(index) as RadioButton
-        radioButton?.isChecked = true
+        radioGroup.getChildAt(index)?.let {
+            val radioButton: RadioButton = it as RadioButton
+            radioButton.isChecked = true
+        }
         radioGroup.setOnCheckedChangeListener(this)
     }
 

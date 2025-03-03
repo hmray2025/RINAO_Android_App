@@ -37,7 +37,7 @@ import io.reactivex.rxjava3.processors.PublishProcessor
 import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.panel.systemstatus.SmartListInternalModel
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 
 /**
  * The [String] to identify a widget.
@@ -121,10 +121,10 @@ abstract class SmartListModel @JvmOverloads constructor(
         widgetModel?.setup()
         addDisposable(widgetModel!!.productConnection.observeOn(SchedulerProvider.ui())
                 .subscribe(Consumer { onProductConnectionChanged(it) },
-                        RxUtil.logErrorConsumer("SmartListModel", "Error on Product changed. ")))
+                        UxErrorHandle.logErrorConsumer("SmartListModel", "Error on Product changed. ")))
         addDisposable(widgetModel!!.aircraftModel.observeOn(SchedulerProvider.ui())
                 .subscribe(Consumer { onAircraftModelChanged(it) },
-                        RxUtil.logErrorConsumer("SmartListModel", "Error on Aircraft Model Changed. ")))
+                        UxErrorHandle.logErrorConsumer("SmartListModel", "Error on Aircraft Model Changed. ")))
 
         inSetUp()
 

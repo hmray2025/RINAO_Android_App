@@ -144,7 +144,7 @@ public class PhotoVideoSwitchWidgetModel extends WidgetModel implements ICameraI
 
     public void changeToPhotoMode() {
         CameraMode currentMode = flatCameraModule.getCameraModeDataProcessor().getValue();
-        if (currentMode.isPhotoMode()){
+        if (currentMode.isPhotoMode() || isSupportChangeMode()){
             return;
         }
         flatCameraModule.setCameraMode(djiSdkModel, CameraMode.PHOTO_NORMAL).subscribe();
@@ -176,5 +176,10 @@ public class PhotoVideoSwitchWidgetModel extends WidgetModel implements ICameraI
         this.lensType = lensType;
         flatCameraModule.updateCameraSource(cameraIndex, lensType);
         restart();
+    }
+
+    private boolean isSupportChangeMode() {
+        CameraMode currentMode = flatCameraModule.getCameraModeDataProcessor().getValue();
+        return currentMode.isVideoMode() && isRecordingDataProcessor.getValue();
     }
 }

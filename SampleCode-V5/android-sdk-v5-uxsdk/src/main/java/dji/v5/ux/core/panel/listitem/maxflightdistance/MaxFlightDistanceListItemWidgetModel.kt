@@ -24,8 +24,8 @@
 package dji.v5.ux.core.panel.listitem.maxflightdistance
 
 import dji.sdk.keyvalue.key.FlightControllerKey
-import dji.sdk.keyvalue.value.common.IntMinMax
 import dji.sdk.keyvalue.key.KeyTools
+import dji.sdk.keyvalue.value.common.IntValueConfig
 import io.reactivex.rxjava3.core.Flowable
 import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.base.WidgetModel
@@ -50,7 +50,7 @@ class MaxFlightDistanceListItemWidgetModel(
 
     private val maxFlightDistanceEnabledProcessor: DataProcessor<Boolean> = DataProcessor.create(false)
     private val maxFlightDistanceProcessor: DataProcessor<Int> = DataProcessor.create(0)
-    private val maxFlightDistanceRangeProcessor: DataProcessor<IntMinMax> = DataProcessor.create(IntMinMax())
+    private val maxFlightDistanceRangeProcessor: DataProcessor<IntValueConfig> = DataProcessor.create(IntValueConfig())
     private val unitTypeProcessor: DataProcessor<UnitType> = DataProcessor.create(UnitType.METRIC)
     private val maxFlightDistanceStateProcessor: DataProcessor<MaxFlightDistanceState> = DataProcessor.create(ProductDisconnected)
     private val noviceModeProcessor: DataProcessor<Boolean> = DataProcessor.create(false)
@@ -62,11 +62,19 @@ class MaxFlightDistanceListItemWidgetModel(
         get() = maxFlightDistanceStateProcessor.toFlowable()
 
     override fun inSetup() {
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyDistanceLimitEnabled), maxFlightDistanceEnabledProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyDistanceLimit), maxFlightDistanceProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyDistanceLimitRange), maxFlightDistanceRangeProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyDistanceLimitEnabled), maxFlightDistanceEnabledProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyDistanceLimit), maxFlightDistanceProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyDistanceLimitRange), maxFlightDistanceRangeProcessor)
         bindDataProcessor(GlobalPreferenceKeys.create(GlobalPreferenceKeys.UNIT_TYPE), unitTypeProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyNoviceModeEnabled), noviceModeProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyNoviceModeEnabled), noviceModeProcessor)
         preferencesManager?.setUpListener()
         preferencesManager?.let { unitTypeProcessor.onNext(it.unitType) }
     }
@@ -128,7 +136,9 @@ class MaxFlightDistanceListItemWidgetModel(
      * @return Completable to determine status of action
      */
     fun toggleFlightDistanceAvailability(): Completable {
-        return djiSdkModel.setValue(KeyTools.createKey(FlightControllerKey.KeyDistanceLimitEnabled), !maxFlightDistanceEnabledProcessor.value)
+        return djiSdkModel.setValue(
+            KeyTools.createKey(
+                FlightControllerKey.KeyDistanceLimitEnabled), !maxFlightDistanceEnabledProcessor.value)
     }
 
     /**
@@ -142,7 +152,9 @@ class MaxFlightDistanceListItemWidgetModel(
         } else {
             flightDistance
         }
-        return djiSdkModel.setValue(KeyTools.createKey(FlightControllerKey.KeyDistanceLimit), tempFlightDistance)
+        return djiSdkModel.setValue(
+            KeyTools.createKey(
+                FlightControllerKey.KeyDistanceLimit), tempFlightDistance)
 
     }
 

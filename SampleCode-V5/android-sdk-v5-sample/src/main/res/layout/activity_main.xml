@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (c) 2018-2020 DJI
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all
+  ~ copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ~ SOFTWARE.
+  ~
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ECECEC"
+    tools:context=".DJIMainActivity">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/left_side"
+        android:layout_width="450dp"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/view_info_panel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:id="@+id/view_base_info"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:background="@drawable/rounded_white_bg"
+                android:padding="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="100dp"
+                    app:srcCompat="@drawable/rinao_logo"
+                    android:layout_margin="10dp"/>
+
+
+                <TextView
+                    android:id="@+id/text_view_version"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="4dp"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    tools:text="@string/sdk_version" />
+
+                <TextView
+                    android:id="@+id/text_view_is_debug"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="4dp"
+                    android:gravity="center"
+                    android:text="@string/is_sdk_debug"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/reconnect_ws"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:foreground="?selectableItemBackground"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="70dp"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/rounded_gray_bg"
+                    android:enabled="true"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:text="@string/ws_reconnect"
+                    android:textColor="@color/selector_enable_button" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:id="@+id/status_panel">
+
+                    <ImageView
+                        android:id="@+id/image1"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        app:srcCompat="@drawable/hard_drives_fill"
+                        app:layout_constraintVertical_chainStyle="spread"
+                        app:layout_constraintRight_toLeftOf="@+id/imageDot1"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <ImageView
+                        android:id="@+id/imageDot1"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        app:srcCompat="@drawable/dots_three_outline_fill"
+                        app:layout_constraintVertical_chainStyle="spread"
+                        app:layout_constraintRight_toLeftOf="@+id/image2"
+                        app:layout_constraintLeft_toRightOf="@id/image1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:visibility="visible"/>
+
+                    <ImageView
+                        android:id="@+id/serverStatus"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/uxsdk_ic_alert_good"
+                        app:layout_constraintVertical_chainStyle="spread"
+                        app:layout_constraintRight_toLeftOf="@+id/image2"
+                        app:layout_constraintLeft_toRightOf="@id/image1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:visibility="invisible"/>
+
+                    <ImageView
+                        android:id="@+id/image2"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        app:srcCompat="@drawable/game_controller_fill"
+                        app:layout_constraintRight_toLeftOf="@+id/imageDot2"
+                        app:layout_constraintVertical_chainStyle="spread"
+                        app:layout_constraintLeft_toRightOf="@+id/imageDot1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
+
+                    <ImageView
+                        android:id="@+id/imageDot2"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        app:srcCompat="@drawable/dots_three_outline_fill"
+                        app:layout_constraintVertical_chainStyle="spread"
+                        app:layout_constraintRight_toLeftOf="@+id/image3"
+                        app:layout_constraintLeft_toRightOf="@id/image2"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:visibility="visible"/>
+
+                    <ImageView
+                        android:id="@+id/droneStatus"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/uxsdk_ic_alert_good"
+                        app:layout_constraintVertical_chainStyle="spread"
+                        app:layout_constraintRight_toLeftOf="@+id/image3"
+                        app:layout_constraintLeft_toRightOf="@id/image2"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:visibility="invisible"/>
+
+                    <ImageView
+                        android:id="@+id/image3"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        app:srcCompat="@drawable/airplane_tilt_fill"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintVertical_chainStyle="spread"
+                        app:layout_constraintLeft_toRightOf="@+id/imageDot2"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"/>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp">
+                <TextView
+                    android:id="@+id/text_view_registered"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="4dp"
+                    android:text="@string/unregistered"
+                    android:textColor="@color/gray"
+                    android:textSize="10sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <TextView
+                    android:id="@+id/text_view_package_product_category"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="4dp"
+                    android:text="@string/package_product_category"
+                    android:textColor="@color/gray"
+                    android:textSize="10sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/right_side"
+        android:layout_height="match_parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/left_side"
+        app:layout_constraintTop_toTopOf="parent"
+        android:padding="10dp"
+        android:layout_width="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingBottom="8dp"
+                android:background="@drawable/rounded_white_bg">
+
+                <Button
+                    android:id="@+id/default_layout_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:elevation="10dp"
+                    android:foreground="?selectableItemBackground"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/rounded_gray_bg"
+                    android:enabled="false"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:text="@string/fly_now"
+                    android:textColor="@color/selector_enable_button"
+                    android:layout_marginVertical="20dp"
+                    android:layout_marginHorizontal="20dp"
+                    android:textSize="20sp"/>
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="150dp"
+                    app:srcCompat="@drawable/mavicphoto"
+                    android:layout_margin="10dp"/>
+
+                <TextView
+                    android:id="@+id/text_view_product_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_margin="4dp"
+                    android:gravity="center"
+                    android:text="@string/product_name"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+            </LinearLayout>
+        <Button
+            android:id="@+id/settings_button"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:foreground="?selectableItemBackground"
+            android:background="@drawable/gear_six_fill"
+            android:padding="8dp"
+            android:textColor="@color/selector_enable_button"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="15dp"
+            android:layout_marginBottom="15dp"/>
+
+        <TextView
+            android:id="@+id/text_core_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="test test"
+            android:textColor="@color/green"
+            android:textSize="9dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:padding="10dp"
+            android:paddingRight="10dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/settings_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:background="@drawable/rounded_white_bg"
+        android:padding="16dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@id/left_side"
+            android:layout_width="200dp"
+            android:layout_height="0dp"
+            android:paddingTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <Button
+                android:id="@+id/close_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/x_circle_fill"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:fontFamily="sans-serif-black"
+                android:text="Settings"
+                android:textColor="@color/black"
+                android:textSize="30sp"
+                app:layout_constraintBottom_toBottomOf="@id/close_button"
+                app:layout_constraintStart_toEndOf="@id/close_button"
+                app:layout_constraintTop_toTopOf="@id/close_button" />
+
+            <LinearLayout
+                app:layout_constraintTop_toBottomOf="@id/close_button"
+                app:layout_constraintStart_toStartOf="parent"
+                android:id="@+id/settings_scrollspy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_margin="@dimen/uxsdk_14_dp"
+                android:paddingBottom="8dp">
+                <TextView
+                    android:id="@+id/server_scrollspy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Server"
+                    android:textSize="@dimen/uxsdk_24_dp">
+                </TextView>
+                <TextView
+                    android:id="@+id/sartopo_scrollspy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sartopo"
+                    android:textSize="@dimen/uxsdk_24_dp">
+                </TextView>
+                <TextView
+                    android:id="@+id/livestream_scrollspy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Livestream"
+                    android:textSize="@dimen/uxsdk_24_dp">
+                </TextView>
+                <TextView
+                    android:id="@+id/quickactions_scrollspy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quick Actions"
+                    android:textSize="@dimen/uxsdk_24_dp">
+                </TextView>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/right_side_settings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="8dp"
+            android:elevation="10dp"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/left_side">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/scroll_view_settings">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/rounded_gray_bg"
+                    android:orientation="vertical">
+
+                    <dji.sampleV5.aircraft.settingswidgets.ServerWidget
+                        android:id="@+id/server_widget"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/uxsdk_350_dp"
+                        android:padding="8dp"
+                        android:visibility="visible" />
+
+                    <dji.sampleV5.aircraft.settingswidgets.SartopoWidget
+                        android:id="@+id/sartopo_widget"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/uxsdk_350_dp"
+                        android:padding="8dp"
+                        android:visibility="visible" />
+
+                    <dji.sampleV5.aircraft.settingswidgets.LivestreamWidget
+                        android:id="@+id/livestream_widget"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/uxsdk_350_dp"
+                        android:padding="8dp"
+                        android:visibility="visible" />
+
+                    <LinearLayout
+                        android:id="@+id/quickactions_widget"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical"
+                        android:paddingBottom="@dimen/uxsdk_100_dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/close_button">
+
+                        <TextView
+                            android:id="@+id/quickactions_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Quick Actions"
+                            android:layout_marginLeft="@dimen/uxsdk_8_dp"
+                            android:textSize="@dimen/uxsdk_24_dp"
+                            android:textStyle="bold"
+                            android:textColor="@color/uxsdk_black">
+                        </TextView>
+
+                        <Button
+                            android:id="@+id/widget_list_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginLeft="24dp"
+                            android:layout_marginRight="24dp"
+                            android:background="@drawable/rounded_white_bg"
+                            android:enabled="false"
+                            android:foreground="?selectableItemBackground"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:text="@string/widget_list"
+                            android:textColor="@color/selector_enable_button" />
+
+                        <Button
+                            android:id="@+id/testing_tool_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginLeft="24dp"
+                            android:layout_marginRight="24dp"
+                            android:background="@drawable/rounded_white_bg"
+                            android:enabled="true"
+                            android:foreground="?selectableItemBackground"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:text="@string/testing_tools"
+                            android:textColor="@color/selector_enable_button" />
+
+                        <Button
+                            android:id="@+id/repair_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginLeft="24dp"
+                            android:layout_marginRight="24dp"
+                            android:background="@drawable/rounded_white_bg"
+                            android:enabled="true"
+                            android:foreground="?selectableItemBackground"
+                            android:gravity="center"
+                            android:padding="8dp"
+                            android:text="Pair Drone"
+                            android:textColor="@color/selector_enable_button" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </ScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>

@@ -392,7 +392,7 @@ class SlidingDialog @JvmOverloads constructor(
         attrs?.width = width
         attrs?.height = height
         attrs?.y = yOffset
-        attrs?.flags = attrs?.flags?.and(WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv())
+        attrs?.flags = (attrs?.flags ?: 0).and(WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv())
         attrs?.gravity = gravity
         window?.attributes = attrs
         window?.setWindowAnimations(R.style.UXSDKDialogWindowAnim)

@@ -61,7 +61,8 @@ class ReturnHomeWidgetModel(
     private val returnHomeDataProcessor: DataProcessor<ReturnHomeState> = DataProcessor.create(ReturnHomeState.DISCONNECTED)
     private val isCancelReturnToHomeDisabledProcessor: DataProcessor<Boolean> = DataProcessor.create(false)
     private val rcModeDataProcessor: DataProcessor<RCMode> = DataProcessor.create(RCMode.UNKNOWN)
-//    private val flyZoneReturnToHomeStateProcessor: DataProcessor<FlyZoneReturnToHomeState> = DataProcessor.create(FlyZoneReturnToHomeState.UNKNOWN)
+
+    //    private val flyZoneReturnToHomeStateProcessor: DataProcessor<FlyZoneReturnToHomeState> = DataProcessor.create(FlyZoneReturnToHomeState.UNKNOWN)
     private val flightModeProcessor: DataProcessor<FCFlightMode> = DataProcessor.create(FCFlightMode.UNKNOWN)
     private val autoRTHReasonProcessor: DataProcessor<FCAutoRTHReason> = DataProcessor.create(FCAutoRTHReason.UNKNOWN)
     private val unitTypeProcessor: DataProcessor<UnitConversionUtil.UnitType> = DataProcessor.create(UnitConversionUtil.UnitType.METRIC)
@@ -79,10 +80,18 @@ class ReturnHomeWidgetModel(
      */
     val distanceToHome: ReturnHomeDistance
         get() {
-            val goHomeHeightKey: DJIKey<Int> = KeyTools.createKey(FlightControllerKey.KeyGoHomeHeight)
-            val homeLocationKey: DJIKey<LocationCoordinate2D> = KeyTools.createKey(FlightControllerKey.KeyHomeLocation)
-            val currentHeightKey: DJIKey<Double> = KeyTools.createKey(FlightControllerKey.KeyAltitude)
-            val aircraftLocationKey: DJIKey<LocationCoordinate2D> = KeyTools.createKey(FlightControllerKey.KeyAircraftLocation)
+            val goHomeHeightKey: DJIKey<Int> = KeyTools.createKey(
+                FlightControllerKey.KeyGoHomeHeight
+            )
+            val homeLocationKey: DJIKey<LocationCoordinate2D> = KeyTools.createKey(
+                FlightControllerKey.KeyHomeLocation
+            )
+            val currentHeightKey: DJIKey<Double> = KeyTools.createKey(
+                FlightControllerKey.KeyAltitude
+            )
+            val aircraftLocationKey: DJIKey<LocationCoordinate2D> = KeyTools.createKey(
+                FlightControllerKey.KeyAircraftLocation
+            )
             var currentHeight = 0f
             var goHomeHeight = 0f
             var homeLatitude = Double.NaN
@@ -92,14 +101,10 @@ class ReturnHomeWidgetModel(
             val unitType = unitTypeProcessor.value
 
             djiSdkModel.getCacheValue(currentHeightKey)?.let {
-                if (unitType == UnitConversionUtil.UnitType.IMPERIAL) {
-                    currentHeight = UnitConversionUtil.convertMetersToFeet(currentHeight.toFloat())
-                }
+                currentHeight = it.toFloat()
             }
             djiSdkModel.getCacheValue(goHomeHeightKey)?.let {
-                if (unitType == UnitConversionUtil.UnitType.IMPERIAL) {
-                    goHomeHeight = UnitConversionUtil.convertMetersToFeet(goHomeHeight.toFloat())
-                }
+                goHomeHeight = it.toFloat()
             }
             djiSdkModel.getCacheValue(homeLocationKey)?.let {
                 homeLatitude = it.latitude
@@ -150,30 +155,62 @@ class ReturnHomeWidgetModel(
      * Performs return to home action
      */
     fun performReturnHomeAction(): Completable {
-        return djiSdkModel.performActionWithOutResult(KeyTools.createKey(FlightControllerKey.KeyStartGoHome))
+        return djiSdkModel.performActionWithOutResult(
+            KeyTools.createKey(
+                FlightControllerKey.KeyStartGoHome
+            )
+        )
     }
 
     /**
      * Performs cancel return to home action
      */
     fun performCancelReturnHomeAction(): Completable {
-        return djiSdkModel.performActionWithOutResult(KeyTools.createKey(FlightControllerKey.KeyStopGoHome))
+        return djiSdkModel.performActionWithOutResult(
+            KeyTools.createKey(
+                FlightControllerKey.KeyStopGoHome
+            )
+        )
     }
 
     //endregion
 
     //region Lifecycle
     override fun inSetup() {
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyIsFlying), isFlyingDataProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyIsInLandingMode), isAutoLandingDataProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyAreMotorsOn), areMotorsOnDataProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyFCFlightMode), flightModeProcessor) {
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyIsFlying
+            ), isFlyingDataProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyIsInLandingMode
+            ), isAutoLandingDataProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyAreMotorsOn
+            ), areMotorsOnDataProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyFCFlightMode
+            ), flightModeProcessor
+        ) {
             isGoingHomeDataProcessor.onNext(it == FCFlightMode.GO_HOME || it == FCFlightMode.AUTO_LANDING)
         }
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyAutoRTHReason), autoRTHReasonProcessor){
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyAutoRTHReason
+            ), autoRTHReasonProcessor
+        ) {
             isCancelReturnToHomeDisabledProcessor.onNext(it == FCAutoRTHReason.MC_PROTECT_GOHOME)
         }
-        bindDataProcessor(KeyTools.createKey(RemoteControllerKey.KeyRcMachineMode), rcModeDataProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                RemoteControllerKey.KeyRcMachineMode
+            ), rcModeDataProcessor
+        )
 //        val flyZoneReturnToHomeState: DJIKey = FlightControllerKey.create(FlightControllerKey.RETURN_TO_HOME_STATE)
 //        bindDataProcessor(flyZoneReturnToHomeState, flyZoneReturnToHomeStateProcessor)
         val unitKey = UXKeys.create(GlobalPreferenceKeys.UNIT_TYPE)

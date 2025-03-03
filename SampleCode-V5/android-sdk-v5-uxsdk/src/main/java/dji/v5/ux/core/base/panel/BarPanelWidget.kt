@@ -57,16 +57,17 @@ import dji.v5.ux.core.util.ViewIDGenerator
  *
  * @property orientation The current BarPanelWidget orientation.
  */
-abstract class BarPanelWidget<T> @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
-        val orientation: BarPanelWidgetOrientation
+abstract class BarPanelWidget<T : Any> @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    val orientation: BarPanelWidgetOrientation
 ) : PanelWidget<PanelItem, T>(
-        context,
-        attrs,
-        defStyleAttr,
-        PanelWidgetConfiguration(context, orientation.toPanelWidgetType())) {
+    context,
+    attrs,
+    defStyleAttr,
+    PanelWidgetConfiguration(context, orientation.toPanelWidgetType())
+) {
 
     //region Customization Properties
     /**
@@ -196,11 +197,11 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
 
     private fun setUpContainers() {
         val guidelineOrientation =
-                if (orientation == BarPanelWidgetOrientation.HORIZONTAL) {
-                    ConstraintSet.VERTICAL_GUIDELINE
-                } else {
-                    ConstraintSet.HORIZONTAL_GUIDELINE
-                }
+            if (orientation == BarPanelWidgetOrientation.HORIZONTAL) {
+                ConstraintSet.VERTICAL_GUIDELINE
+            } else {
+                ConstraintSet.HORIZONTAL_GUIDELINE
+            }
         midGuideline.id = ViewIDGenerator.generateViewId()
         addView(midGuideline)
 
@@ -278,24 +279,26 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
             val barPanelItem = panelItems[index]
             val ratioString = barPanelItem.ratioString ?: defaultRatioString
             val widgetSizeDescription = barPanelItem.widgetSizeDescription
-                    ?: WidgetSizeDescription(WidgetSizeDescription.SizeType.RATIO,
-                            widthDimension = WidgetSizeDescription.Dimension.EXPAND,
-                            heightDimension = WidgetSizeDescription.Dimension.EXPAND)
+                ?: WidgetSizeDescription(
+                    WidgetSizeDescription.SizeType.RATIO,
+                    widthDimension = WidgetSizeDescription.Dimension.EXPAND,
+                    heightDimension = WidgetSizeDescription.Dimension.EXPAND
+                )
             val currentView = barPanelItem.view
 
             if (widgetSizeDescription.sizeType == WidgetSizeDescription.SizeType.OTHER
-                    && !widgetSizeDescription.widthShouldWrap()
-                    && !(isFirstItem(index) || isLastItem(panelItems, index))) {
+                && !widgetSizeDescription.widthShouldWrap()
+                && !(isFirstItem(index) || isLastItem(panelItems, index))) {
                 throw IllegalStateException("Should not add a fill view in the middle of the list")
             }
 
             // Set size constraints
             val width =
-                    if (widgetSizeDescription.widthShouldWrap()) ViewGroup.LayoutParams.WRAP_CONTENT
-                    else 0
+                if (widgetSizeDescription.widthShouldWrap()) ViewGroup.LayoutParams.WRAP_CONTENT
+                else 0
             val height =
-                    if (widgetSizeDescription.heightShouldWrap()) ViewGroup.LayoutParams.WRAP_CONTENT
-                    else 0
+                if (widgetSizeDescription.heightShouldWrap()) ViewGroup.LayoutParams.WRAP_CONTENT
+                else 0
             constraintSet.constrainWidth(currentView.id, width)
             constraintSet.constrainHeight(currentView.id, height)
             if (widgetSizeDescription.sizeType == WidgetSizeDescription.SizeType.RATIO) {
@@ -320,57 +323,59 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
     private fun connectToPreviousView(constraintSet: ConstraintSet, panelItems: MutableList<PanelItem>, currentIndex: Int, isLeft: Boolean) {
         val currentPanelItem = panelItems[currentIndex]
         val panelItemSide =
+            if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.START
+            else ConstraintSet.TOP
+        val endID =
+            if (isFirstItem(currentIndex)) {
+                if (isLeft) ConstraintSet.PARENT_ID
+                else midGuideline.id
+            } else {
+                panelItems[currentIndex - 1].view.id
+            }
+        val endSide =
+            if (isFirstItem(currentIndex)) {
                 if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.START
                 else ConstraintSet.TOP
-        val endID =
-                if (isFirstItem(currentIndex)) {
-                    if (isLeft) ConstraintSet.PARENT_ID
-                    else midGuideline.id
-                } else {
-                    panelItems[currentIndex - 1].view.id
-                }
-        val endSide =
-                if (isFirstItem(currentIndex)) {
-                    if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.START
-                    else ConstraintSet.TOP
-                } else {
-                    if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.END
-                    else ConstraintSet.BOTTOM
-                }
+            } else {
+                if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.END
+                else ConstraintSet.BOTTOM
+            }
         constraintSet.connect(
-                currentPanelItem.view.id,
-                panelItemSide,
-                endID,
-                endSide,
-                getStartTopMargin(currentIndex))
+            currentPanelItem.view.id,
+            panelItemSide,
+            endID,
+            endSide,
+            getStartTopMargin(currentIndex)
+        )
     }
 
     private fun connectToNextView(constraintSet: ConstraintSet, panelItems: MutableList<PanelItem>, currentIndex: Int, isLeft: Boolean) {
         val currentPanelItem = panelItems[currentIndex]
         val panelItemSide =
+            if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.END
+            else ConstraintSet.BOTTOM
+        val endID =
+            if (isLastItem(panelItems, currentIndex)) {
+                if (isLeft) midGuideline.id
+                else ConstraintSet.PARENT_ID
+            } else {
+                panelItems[currentIndex + 1].view.id
+            }
+        val endSide =
+            if (isLastItem(panelItems, currentIndex)) {
                 if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.END
                 else ConstraintSet.BOTTOM
-        val endID =
-                if (isLastItem(panelItems, currentIndex)) {
-                    if (isLeft) midGuideline.id
-                    else ConstraintSet.PARENT_ID
-                } else {
-                    panelItems[currentIndex + 1].view.id
-                }
-        val endSide =
-                if (isLastItem(panelItems, currentIndex)) {
-                    if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.END
-                    else ConstraintSet.BOTTOM
-                } else {
-                    if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.START
-                    else ConstraintSet.TOP
-                }
+            } else {
+                if (orientation == BarPanelWidgetOrientation.HORIZONTAL) ConstraintSet.START
+                else ConstraintSet.TOP
+            }
         constraintSet.connect(
-                currentPanelItem.view.id,
-                panelItemSide,
-                endID,
-                endSide,
-                getEndBottomMargin(panelItems, currentIndex))
+            currentPanelItem.view.id,
+            panelItemSide,
+            endID,
+            endSide,
+            getEndBottomMargin(panelItems, currentIndex)
+        )
     }
 
     private fun setChainStyle(panelItems: MutableList<PanelItem>, chainStyle: Int) {
@@ -409,7 +414,7 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
     //region Populate BarPanelWidget
     @Throws(UnsupportedOperationException::class)
     override fun getWidget(@IntRange(from = 0) index: Int): PanelItem? =
-            throw UnsupportedOperationException("Try getLeftPanelItem or getRightPanelItem instead")
+        throw UnsupportedOperationException("Try getLeftPanelItem or getRightPanelItem instead")
 
     @Throws(UnsupportedOperationException::class)
     override fun addWidgets(panelItems: Array<PanelItem>) {
@@ -428,7 +433,7 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
 
     @Throws(UnsupportedOperationException::class)
     override fun removeWidget(@IntRange(from = 0) index: Int): PanelItem? =
-            throw UnsupportedOperationException("Try removeLeftPanelItem or removeRightPanelItem instead")
+        throw UnsupportedOperationException("Try removeLeftPanelItem or removeRightPanelItem instead")
 
     /**
      * Remove all [PanelItem]s from both left and right lists of this BarPanelWidget.
@@ -519,7 +524,7 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
     }
 
     private fun getLeftWidget(@IntRange(from = 0) index: Int, panelItems: MutableList<PanelItem>): PanelItem? =
-            panelItems.getOrNull(index)
+        panelItems.getOrNull(index)
 
     private fun addPanelItems(fromPanelItems: Array<PanelItem>, toPanelItems: MutableList<PanelItem>) {
         toPanelItems.addAll(fromPanelItems)
@@ -562,7 +567,7 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
      * Checks if item at [index] is at the last item of the [list].
      */
     protected fun isLastItem(list: MutableList<PanelItem>, @IntRange(from = 0) index: Int): Boolean =
-            index == list.size - 1
+        index == list.size - 1
 
     /**
      * Add views from each [PanelItem] into the parent ConstraintLayout.
@@ -574,30 +579,30 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
     private fun PanelItem.getDefaultItemMarginLeft(): Int = this.itemMarginLeft ?: itemsMarginLeft
     private fun PanelItem.getDefaultItemMarginTop(): Int = this.itemMarginTop ?: itemsMarginTop
     private fun PanelItem.getDefaultItemMarginRight(): Int = this.itemMarginRight
-            ?: itemsMarginRight
+        ?: itemsMarginRight
 
     private fun PanelItem.getDefaultItemMarginBottom(): Int = this.itemMarginBottom
-            ?: itemsMarginBottom
+        ?: itemsMarginBottom
 
     private fun WidgetSizeDescription.widthShouldWrap() =
-            widthDimension == WidgetSizeDescription.Dimension.WRAP
+        widthDimension == WidgetSizeDescription.Dimension.WRAP
 
 
     private fun WidgetSizeDescription.heightShouldWrap(): Boolean =
-            heightDimension == WidgetSizeDescription.Dimension.WRAP
+        heightDimension == WidgetSizeDescription.Dimension.WRAP
 
     private fun getStartTopMargin(index: Int): Int {
         val margin =
-                if (orientation == BarPanelWidgetOrientation.HORIZONTAL) itemsMarginLeft
-                else itemsMarginTop
+            if (orientation == BarPanelWidgetOrientation.HORIZONTAL) itemsMarginLeft
+            else itemsMarginTop
         return if (isFirstItem(index)) margin
         else itemSpacing / 2
     }
 
     private fun getEndBottomMargin(panelItems: MutableList<PanelItem>, index: Int): Int {
         val margin =
-                if (orientation == BarPanelWidgetOrientation.HORIZONTAL) itemsMarginRight
-                else itemsMarginBottom
+            if (orientation == BarPanelWidgetOrientation.HORIZONTAL) itemsMarginRight
+            else itemsMarginBottom
         return if (isLastItem(panelItems, index)) margin
         else itemSpacing / 2
     }
@@ -630,7 +635,7 @@ abstract class BarPanelWidget<T> @JvmOverloads constructor(
          * Convert [BarPanelWidgetOrientation] into a [PanelWidgetType]
          */
         fun toPanelWidgetType(): PanelWidgetType =
-                if (this == HORIZONTAL) PanelWidgetType.BAR_HORIZONTAL
-                else PanelWidgetType.BAR_VERTICAL
+            if (this == HORIZONTAL) PanelWidgetType.BAR_HORIZONTAL
+            else PanelWidgetType.BAR_VERTICAL
     }
 }

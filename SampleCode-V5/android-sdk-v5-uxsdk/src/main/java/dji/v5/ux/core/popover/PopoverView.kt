@@ -192,7 +192,7 @@ class PopoverView(context: Context,
         postInvalidate()
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         if (!enableDropShadow) {

@@ -18,6 +18,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.geometry.LatLngBounds
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.utils.BitmapUtils
+import dji.v5.ux.mapkit.maplibre.map.MaplibreStyle
 
 private const val FEATURE_ID_PREFIX = "FEATURE_ID_PREFIX"
 private const val MARKER_ICON_ID_PREFIX = "MARKER_ICON_ID_PREFIX"
@@ -105,7 +106,12 @@ fun fromDJIBitmapDescriptor(context: Context, descriptor: DJIBitmapDescriptor?):
 
 fun fromDJILatLng(latLng: DJILatLng): LatLng = LatLng(latLng.latitude, latLng.longitude, latLng.altitude)
 
-fun fromLatLng(latLng: LatLng): DJILatLng = DJILatLng(latLng.latitude, latLng.longitude, latLng.altitude)
+fun fromLatLng(latLng: LatLng?): DJILatLng {
+    latLng?.let {
+        return DJILatLng(it.latitude, it.longitude, it.altitude)
+    }
+    return DJILatLng(Double.NaN, Double.NaN, Double.NaN)
+}
 
 fun fromCameraPosition(cameraPosition: CameraPosition): DJICameraPosition = DJICameraPosition.Builder()
         .target(fromLatLng(cameraPosition.target))
@@ -140,9 +146,9 @@ fun fromDJICameraUpdate(cameraUpdate: DJICameraUpdate, cameraPosition: CameraPos
 
 fun fromMapType(mapType: DJIMap.MapType): String {
     return when (mapType) {
-        DJIMap.MapType.NORMAL -> Style.MAPBOX_STREETS
-        DJIMap.MapType.HYBRID -> Style.SATELLITE_STREETS
-        DJIMap.MapType.SATELLITE -> Style.SATELLITE
+        DJIMap.MapType.NORMAL -> MaplibreStyle.MAPBOX_STREETS
+        DJIMap.MapType.HYBRID -> MaplibreStyle.SATELLITE_STREETS
+        DJIMap.MapType.SATELLITE ->  MaplibreStyle.SATELLITE
         else -> throw IllegalArgumentException("$mapType is not implemented")
     }
 }

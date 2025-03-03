@@ -82,12 +82,13 @@ public class MapWidgetModel extends WidgetModel {
 
         @Override
         public void onSeriousWarningNotificationUpdate(@NonNull FlySafeSeriousWarningInformation info) {
-            // No code
+//            flyZoneInformationDataProcessor.onNext(info.getFlyZoneInformation());
         }
 
         @Override
         public void onReturnToHomeNotificationUpdate(@NonNull FlySafeReturnToHomeInformation info) {
             // No code
+
         }
 
         @Override

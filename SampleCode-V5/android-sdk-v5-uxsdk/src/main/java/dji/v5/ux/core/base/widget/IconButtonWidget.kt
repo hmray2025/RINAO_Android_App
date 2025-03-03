@@ -42,10 +42,10 @@ import dji.v5.ux.core.extension.*
  * Abstract class that represents a widget with a single Image View.
  * The class provides functionality and customizations for widgets to reuse
  */
-abstract class IconButtonWidget<T> @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+abstract class IconButtonWidget<T : Any> @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : ConstraintLayoutWidget<T>(context, attrs, defStyleAttr), View.OnClickListener {
 
     //region Fields

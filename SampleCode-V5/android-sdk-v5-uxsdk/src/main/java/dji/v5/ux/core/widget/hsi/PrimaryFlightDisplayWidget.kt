@@ -2,14 +2,12 @@ package dji.v5.ux.core.widget.hsi
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
-import dji.v5.ux.R
+import android.view.LayoutInflater
 import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
+import dji.v5.ux.databinding.UxsdkPrimaryFlightDisplayWidgetBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import kotlinx.android.synthetic.main.uxsdk_liveview_pfd_attitude_display_widget.view.*
-import kotlinx.android.synthetic.main.uxsdk_primary_flight_display_widget.view.*
 
 /**
  * Class Description
@@ -25,33 +23,35 @@ open class PrimaryFlightDisplayWidget @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : ConstraintLayoutWidget<PrimaryFlightDisplayWidget.ModelState>(context, attrs, defStyleAttr) {
 
+    private lateinit var binding: UxsdkPrimaryFlightDisplayWidgetBinding
+
     private val widgetModel by lazy {
         PrimaryFlightDisplayModel(DJISDKModel.getInstance(), ObservableInMemoryKeyedStore.getInstance())
     }
 
     override fun initView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
-        View.inflate(context, R.layout.uxsdk_primary_flight_display_widget, this)
+        binding = UxsdkPrimaryFlightDisplayWidgetBinding.inflate(LayoutInflater.from(context),this,true)
     }
 
     override fun reactToModelChanges() {
         addDisposable(widgetModel.velocityProcessor.toFlowable().observeOn(AndroidSchedulers.mainThread()).subscribe {
-            fpv_attitude.setSpeedX(it.x.toFloat())
-            fpv_attitude.setSpeedY(it.y.toFloat())
-            fpv_attitude.setSpeedZ(it.z.toFloat())
+            binding.fpvAttitude.setSpeedX(it.x.toFloat())
+            binding.fpvAttitude.setSpeedY(it.y.toFloat())
+            binding.fpvAttitude.setSpeedZ(it.z.toFloat())
 
         })
         addDisposable(widgetModel.aircraftAttitudeProcessor.toFlowable().observeOn(AndroidSchedulers.mainThread()).subscribe {
-            fpv_attitude.setPitch(it.pitch.toFloat())
-            fpv_attitude.setRoll(it.roll.toFloat())
-            fpv_attitude.setYaw(it.yaw.toFloat())
+            binding.fpvAttitude.setPitch(it.pitch.toFloat())
+            binding.fpvAttitude.setRoll(it.roll.toFloat())
+            binding.fpvAttitude.setYaw(it.yaw.toFloat())
 
         })
         setVideoViewSize(1440, 1080)
     }
 
     //可以通过fpvWidget获取真实的video长宽比
-    fun setVideoViewSize(videoViewWidth: Int, videoViewHeight: Int) {
-        fpv_attitude.setVideoViewSize(videoViewWidth, videoViewHeight)
+    private fun setVideoViewSize(videoViewWidth: Int, videoViewHeight: Int) {
+        binding.fpvAttitude.setVideoViewSize(videoViewWidth, videoViewHeight)
     }
 
     override fun getIdealDimensionRatioString(): String? {

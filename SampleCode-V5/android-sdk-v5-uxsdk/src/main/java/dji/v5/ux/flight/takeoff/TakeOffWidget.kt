@@ -48,7 +48,7 @@ import dji.v5.ux.core.communication.GlobalPreferencesManager
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.*
 import dji.v5.ux.core.ui.SlidingDialog
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.util.UnitConversionUtil
 import dji.v5.ux.R
 import dji.v5.ux.flight.takeoff.TakeOffWidget.ModelState
@@ -422,7 +422,7 @@ open class TakeOffWidget @JvmOverloads constructor(
                                     performCancelLandAction()
                                 }
                                 uiUpdateStateProcessor.onNext(DialogActionCancelled(dialogType))
-                            }, RxUtil.logErrorConsumer(TAG, "Update takeoff Landing State")))
+                            }, UxErrorHandle.logErrorConsumer(TAG, "Update takeoff Landing State")))
                 }
 
                 override fun onSlideChecked(dialog: DialogInterface?, checked: Boolean) {
@@ -434,7 +434,7 @@ open class TakeOffWidget @JvmOverloads constructor(
                 override fun onCheckBoxChecked(dialog: DialogInterface?, checked: Boolean) {
                     uiUpdateStateProcessor.onNext(DialogCheckboxCheckChanged(dialogType))
                     checkBoxChecked = checked
-                    updateTakeOffDialogMessage()
+//                    updateTakeOffDialogMessage()
                 }
             })
 
@@ -573,7 +573,7 @@ open class TakeOffWidget @JvmOverloads constructor(
                                             resources.getString(R.string.uxsdk_take_off_message, takeOffHeightString)
                                         })
                                 ?.setDialogMessageTextSize(dialogMessageTextSize)
-                    }, RxUtil.logErrorConsumer(TAG, "Update Takeoff Message ")))
+                    }, UxErrorHandle.logErrorConsumer(TAG, "Update Takeoff Message ")))
         }
     }
 
@@ -660,6 +660,9 @@ open class TakeOffWidget @JvmOverloads constructor(
             TakeOffLandingState.WAITING_FOR_LANDING_CONFIRMATION -> showLandingConfirmationDialog()
             TakeOffLandingState.READY_TO_TAKE_OFF,
             TakeOffLandingState.TAKE_OFF_DISABLED -> slidingDialog?.dismiss()
+            else -> {
+                //do nothing
+            }
         }
     }
 
@@ -686,7 +689,7 @@ open class TakeOffWidget @JvmOverloads constructor(
             addDisposable(widgetModel.takeOffLandingState.firstOrError()
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(Consumer { this.updateTakeOffStatus(it) },
-                            RxUtil.logErrorConsumer(TAG, "Update Take Off Landing State ")))
+                            UxErrorHandle.logErrorConsumer(TAG, "Update Take Off Landing State ")))
         }
     }
 

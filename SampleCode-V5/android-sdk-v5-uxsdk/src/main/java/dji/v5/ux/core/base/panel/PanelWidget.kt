@@ -66,11 +66,11 @@ import dji.v5.ux.core.util.ViewUtil
  *
  * @param panelWidgetConfiguration * The default [PanelWidgetConfiguration].
  */
-abstract class PanelWidget<S, T> @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
-        protected val panelWidgetConfiguration: PanelWidgetConfiguration
+abstract class PanelWidget<S : Any, T : Any> @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    protected val panelWidgetConfiguration: PanelWidgetConfiguration
 ) : ConstraintLayoutWidget<T>(context, attrs, defStyleAttr), Navigable {
 
     //region Public Properties
@@ -287,8 +287,8 @@ abstract class PanelWidget<S, T> @JvmOverloads constructor(
             titleTextView = titleBarView.findViewById(R.id.text_view_title)
             titleTextView?.text = panelWidgetConfiguration.panelTitle
             titleTextView?.visibility =
-                    if (panelWidgetConfiguration.showTitleBar) View.VISIBLE
-                    else View.GONE
+                if (panelWidgetConfiguration.showTitleBar) View.VISIBLE
+                else View.GONE
 
             parentTopId = titleBarContainer.id
             this.titleBarContainer = titleBarContainer

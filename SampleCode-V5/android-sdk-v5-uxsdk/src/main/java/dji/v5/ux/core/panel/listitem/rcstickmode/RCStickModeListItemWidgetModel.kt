@@ -26,12 +26,11 @@ package dji.v5.ux.core.panel.listitem.rcstickmode
 import dji.sdk.keyvalue.key.RemoteControllerKey
 import dji.sdk.keyvalue.value.remotecontroller.ControlMode
 import dji.v5.et.create
-import dji.v5.utils.common.LogUtils
 import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.base.WidgetModel
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.util.DataProcessor
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
@@ -81,7 +80,7 @@ class RCStickModeListItemWidgetModel(
                 getControlStickMode()
                     .subscribe(
                         { updateCurrentStickMode(it) },
-                        RxUtil.logErrorConsumer(TAG, "getMappingStyle ")
+                        UxErrorHandle.logErrorConsumer(TAG, "getMappingStyle ")
                     )
             )
         } else {

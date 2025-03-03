@@ -94,9 +94,7 @@ class PerceptionStateWidget @JvmOverloads constructor(
         super.onDetachedFromWindow()
     }
 
-    override fun getIdealDimensionRatioString(): String? {
-        return getString(R.string.uxsdk_widget_default_ratio)
-    }
+    override fun getIdealDimensionRatioString() = null
 
     override fun reactToModelChanges() {
         addReaction(widgetModel.perceptionInfo

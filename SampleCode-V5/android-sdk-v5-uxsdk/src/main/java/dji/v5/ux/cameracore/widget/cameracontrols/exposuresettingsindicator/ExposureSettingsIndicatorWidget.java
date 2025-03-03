@@ -45,7 +45,7 @@ import dji.v5.ux.core.base.ICameraIndex;
 import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.FrameLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 
 /**
  * Widget indicates the current exposure mode.
@@ -130,7 +130,7 @@ public class ExposureSettingsIndicatorWidget extends FrameLayoutWidget<Object> i
             addDisposable(widgetModel.getExposureMode()
                     .firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(this::updateUI, RxUtil.logErrorConsumer(TAG, "get exposure mode")));
+                    .subscribe(this::updateUI, UxErrorHandle.logErrorConsumer(TAG, "get exposure mode")));
         }
     }
 

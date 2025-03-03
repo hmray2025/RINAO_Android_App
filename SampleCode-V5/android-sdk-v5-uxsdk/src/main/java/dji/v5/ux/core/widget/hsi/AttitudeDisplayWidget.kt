@@ -23,7 +23,7 @@ import io.reactivex.rxjava3.core.Observable
 import java.util.*
 
 open class AttitudeDisplayWidget @JvmOverloads constructor(context: Context?, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
-    ConstraintLayoutWidget<Boolean?>(
+    ConstraintLayoutWidget<Boolean>(
         context!!, attrs, defStyleAttr) {
     var mAttitudeDashBoard: AttitudeDashBoard? = null
     var mTvAslText: TextView? = null
@@ -68,7 +68,7 @@ open class AttitudeDisplayWidget @JvmOverloads constructor(context: Context?, at
     }
 
     private fun updateAltitude() {
-        mCompositeDisposable.add(Observable.create { emitter: ObservableEmitter<Any?> ->
+        mCompositeDisposable.add(Observable.create { emitter: ObservableEmitter<Any> ->
             val lat = if (mDroneLocation != null) mDroneLocation!!.latitude else Double.NaN
             val lon = if (mDroneLocation != null) mDroneLocation!!.longitude else Double.NaN
             val aslValue = GpsUtils.egm96Altitude(mHomePointAltitude + mAltitude, lat, lon)
