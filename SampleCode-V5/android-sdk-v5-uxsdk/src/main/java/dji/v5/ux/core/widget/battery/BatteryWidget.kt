@@ -47,7 +47,7 @@ import dji.v5.ux.core.base.WidgetSizeDescription
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.*
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.widget.battery.BatteryWidget.ModelState
 import dji.v5.ux.core.widget.battery.BatteryWidget.ModelState.BatteryStateUpdated
 import dji.v5.ux.core.widget.battery.BatteryWidget.ModelState.ProductConnected
@@ -333,7 +333,7 @@ open class BatteryWidget @JvmOverloads constructor(
         if (!isInEditMode) {
             addDisposable(widgetModel.batteryState.firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(Consumer { this.updateUI(it) }, RxUtil.logErrorConsumer(TAG, "Update UI ")))
+                    .subscribe(Consumer { this.updateUI(it) }, UxErrorHandle.logErrorConsumer(TAG, "Update UI ")))
         }
     }
 
@@ -341,7 +341,7 @@ open class BatteryWidget @JvmOverloads constructor(
         if (!isInEditMode) {
             addDisposable(widgetModel.batteryState.firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(Consumer { this.updateIconRatio(it) }, RxUtil.logErrorConsumer(TAG, "Update icon dimension ratio ")))
+                    .subscribe(Consumer { this.updateIconRatio(it) }, UxErrorHandle.logErrorConsumer(TAG, "Update icon dimension ratio ")))
         }
     }
 

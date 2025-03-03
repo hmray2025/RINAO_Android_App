@@ -3,7 +3,7 @@ package dji.v5.ux.core.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import dji.v5.common.video.stream.PhysicalDevicePosition;
+import dji.sdk.keyvalue.value.common.ComponentIndexType;
 
 /**
  * Class Description
@@ -26,16 +26,16 @@ public class CommonUtils {
         return list;
     }
 
-    public static SettingDefinitions.GimbalIndex getGimbalIndex(PhysicalDevicePosition devicePosition) {
+    public static SettingDefinitions.GimbalIndex getGimbalIndex(ComponentIndexType devicePosition) {
         if (devicePosition == null){
             return SettingDefinitions.GimbalIndex.UNKONWN;
         }
         switch (devicePosition) {
-            case PORTSIDE:
+            case LEFT_OR_MAIN:
                 return SettingDefinitions.GimbalIndex.PORT;
-            case STARBOARD:
+            case RIGHT:
                 return SettingDefinitions.GimbalIndex.STARBOARD;
-            case UPSIDE:
+            case UP:
                 return SettingDefinitions.GimbalIndex.TOP;
             default:
                 return SettingDefinitions.GimbalIndex.UNKONWN;

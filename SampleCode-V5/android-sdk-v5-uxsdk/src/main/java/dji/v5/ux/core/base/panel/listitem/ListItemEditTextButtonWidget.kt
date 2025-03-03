@@ -54,7 +54,7 @@ import dji.v5.ux.core.util.ViewIDGenerator
  * The class represents the item with icon, item name and editable fields
  * @property widgetType - The [WidgetType] of the current widget.
  */
-abstract class ListItemEditTextButtonWidget<T> @JvmOverloads constructor(
+abstract class ListItemEditTextButtonWidget<T : Any> @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,

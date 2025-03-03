@@ -16,7 +16,6 @@ import dji.v5.ux.R
 import dji.v5.ux.core.base.SchedulerProvider
 import dji.v5.ux.core.extension.showShortToast
 import dji.v5.ux.core.ui.component.PaletteItemDecoration
-import kotlinx.android.synthetic.main.uxsdk_camera_status_action_item_content.view.*
 import kotlin.math.roundToInt
 
 /**

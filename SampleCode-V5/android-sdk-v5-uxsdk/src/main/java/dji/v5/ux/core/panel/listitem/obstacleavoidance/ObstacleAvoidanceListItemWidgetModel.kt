@@ -23,13 +23,14 @@
 
 package dji.v5.ux.core.panel.listitem.obstacleavoidance
 
-import dji.sdk.keyvalue.key.FlightAssistantKey
 import dji.sdk.keyvalue.key.FlightControllerKey
 import dji.sdk.keyvalue.value.flightcontroller.ObstacleActionType
+import dji.v5.common.callback.CommonCallbacks
+import dji.v5.common.error.IDJIError
 import dji.v5.et.create
-import dji.v5.et.set
+import dji.v5.manager.aircraft.perception.PerceptionManager
+import dji.v5.manager.aircraft.perception.data.ObstacleAvoidanceType
 import dji.v5.ux.core.base.DJISDKModel
-import dji.v5.ux.core.base.SchedulerProvider
 import dji.v5.ux.core.base.WidgetModel
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.util.DataProcessor
@@ -43,35 +44,51 @@ private const val TAG = "ObstacleAvoidanceListItemWidgetModel"
  */
 class ObstacleAvoidanceListItemWidgetModel(
     djiSdkModel: DJISDKModel,
-    keyedStore: ObservableInMemoryKeyedStore
+    keyedStore: ObservableInMemoryKeyedStore,
 ) : WidgetModel(djiSdkModel, keyedStore) {
 
     val obstacleActionTypeProcessor = DataProcessor.create(ObstacleActionType.UNKNOWN)
 
-    private val horizontalObstacleAvoidanceEnabledProcessor = DataProcessor.create(false)
-    private val innerObstacleActionTypeProcessor = DataProcessor.create(ObstacleActionType.UNKNOWN)
+    private val flyControlConnectionProcessor = DataProcessor.create(false)
+
 
     fun setObstacleActionType(type: ObstacleActionType): Completable {
         return Completable.create {
-            FlightAssistantKey.KeyOmniHorizontalObstacleAvoidanceEnabled.create().set(true, {
-                FlightControllerKey.KeyObstacleActionType.create().set(type, {
+            PerceptionManager.getInstance().setObstacleAvoidanceType(getObstacleAvoidanceType(type), object :
+                CommonCallbacks.CompletionCallback {
+                override fun onSuccess() {
                     it.onComplete()
-                })
+                }
+
+                override fun onFailure(error: IDJIError) {
+                    it.onError(Throwable("setObstacleAvoidanceType failed!"))
+                }
             })
         }
     }
 
     override fun inSetup() {
-        bindDataProcessor(FlightAssistantKey.KeyOmniHorizontalObstacleAvoidanceEnabled.create(), horizontalObstacleAvoidanceEnabledProcessor)
-        bindDataProcessor(FlightControllerKey.KeyObstacleActionType.create(), innerObstacleActionTypeProcessor)
+        bindDataProcessor(FlightControllerKey.KeyConnection.create(), flyControlConnectionProcessor)
     }
 
     private fun updateObstacleActionType() {
-        if (!horizontalObstacleAvoidanceEnabledProcessor.value) {
+        if (!flyControlConnectionProcessor.value) {
             obstacleActionTypeProcessor.onNext(ObstacleActionType.UNKNOWN)
             return
         }
-        obstacleActionTypeProcessor.onNext(innerObstacleActionTypeProcessor.value)
+        PerceptionManager.getInstance().getObstacleAvoidanceType(object :
+            CommonCallbacks.CompletionCallbackWithParam<ObstacleAvoidanceType> {
+            override fun onSuccess(t: ObstacleAvoidanceType?) {
+                if (t != null) {
+                    obstacleActionTypeProcessor.onNext(getObstacleActionType(t))
+                }
+            }
+
+            override fun onFailure(error: IDJIError) {
+                //do nothing
+            }
+        })
+
     }
 
     override fun inCleanup() {
@@ -80,5 +97,26 @@ class ObstacleAvoidanceListItemWidgetModel(
 
     override fun updateStates() {
         updateObstacleActionType()
+    }
+
+    fun getObstacleActionType(obstacleAvoidanceType: ObstacleAvoidanceType?): ObstacleActionType {
+        val obstacleActionType: ObstacleActionType = when (obstacleAvoidanceType) {
+            ObstacleAvoidanceType.BRAKE -> ObstacleActionType.STOP
+            ObstacleAvoidanceType.CLOSE -> ObstacleActionType.CLOSE
+            else -> ObstacleActionType.APAS
+        }
+        return obstacleActionType
+    }
+
+    private fun getObstacleAvoidanceType(obstacleActionType: ObstacleActionType?): ObstacleAvoidanceType? {
+        if (obstacleActionType == null) {
+            return null
+        }
+        val obstacleAvoidanceType: ObstacleAvoidanceType = when (obstacleActionType) {
+                ObstacleActionType.STOP -> ObstacleAvoidanceType.BRAKE
+                ObstacleActionType.APAS -> ObstacleAvoidanceType.BYPASS
+                else -> ObstacleAvoidanceType.CLOSE
+            }
+        return obstacleAvoidanceType
     }
 }

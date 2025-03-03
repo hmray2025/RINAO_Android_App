@@ -38,6 +38,7 @@ import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import androidx.annotation.ColorInt;
@@ -46,6 +47,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import dji.sdk.keyvalue.value.common.LocationCoordinate2D;
 import dji.sdk.keyvalue.value.common.LocationCoordinate3D;
+import dji.v5.common.utils.GpsUtils;
 import dji.v5.manager.aircraft.flysafe.info.FlyZoneInformation;
 import dji.v5.manager.aircraft.flysafe.info.FlyZoneLicenseInfo;
 import dji.v5.manager.areacode.AreaCode;
@@ -57,10 +59,9 @@ import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
 import dji.v5.ux.core.util.MathUtil;
-import dji.v5.ux.core.util.RxUtil;
 import dji.v5.ux.core.util.SettingDefinitions;
+import dji.v5.ux.core.util.UxErrorHandle;
 import dji.v5.ux.core.util.ViewUtil;
-import dji.v5.ux.mapkit.amap.provider.AMapProvider;
 import dji.v5.ux.mapkit.core.Mapkit;
 import dji.v5.ux.mapkit.core.camera.DJICameraUpdate;
 import dji.v5.ux.mapkit.core.camera.DJICameraUpdateFactory;
@@ -83,6 +84,8 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
+import static dji.v5.ux.map.MapWidgetModel.INVALID_COORDINATE;
+
 /**
  * MapWidget displays the aircraft's state and information on the map. This
  * includes aircraft location, home location, aircraft trail path, aircraft
@@ -92,6 +95,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
 
     //region  Constants
     private static final int COUNTER_REFRESH_THRESHOLD = 200;
+    private static final int MAX_FLY_ZONE_SHOW_ON_MAP = 50;
     private static final int FLIGHT_ANIM_DURATION = 130;
     private static final int ROTATION_ANIM_DURATION = 100;
     private static final int AIRCRAFT_MARKER_ELEVATION = 7;
@@ -153,6 +157,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
 
     //region direction to home fields
     private DJIPolyline homeLine;
+    private List<FlyZoneInformation> flyZoneInformationList;
     private boolean homeDirectionEnabled = true;
     @ColorInt
     private int homeDirectionColor = Color.GREEN;
@@ -185,6 +190,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     @Override
     protected void initView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         inflate(context, R.layout.uxsdk_widget_map, this);
+
         if (!isInEditMode()) {
             widgetModel = new MapWidgetModel(DJISDKModel.getInstance(),
                     ObservableInMemoryKeyedStore.getInstance());
@@ -200,6 +206,46 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
 
     @Override
     protected void reactToModelChanges() {
+        addReaction(reactToHeadingChanges());
+        addReaction(widgetModel.getHomeLocation()
+                .observeOn(SchedulerProvider.ui())
+                .subscribe(this::updateHomeLocation));
+        addReaction(widgetModel.getAircraftLocation()
+                .observeOn(SchedulerProvider.ui())
+                .subscribe(this::updateAircraftLocation));
+        addReaction(Flowable.combineLatest(
+                        widgetModel.flyZoneInformationDataProcessor.toFlowable(),
+                        widgetModel.getHomeLocation(),
+                        Pair::new
+                ).map(pair -> {
+                    List<FlyZoneInformation> infos = new ArrayList<>(pair.first);
+                    if (pair.second.getLatitude() == MapWidgetModel.INVALID_COORDINATE) {
+                        return new ArrayList<FlyZoneInformation>();
+                    }
+                    Collections.sort(infos, (o1, o2) -> {
+                        double d1 = GpsUtils.distance(
+                                o1.getCircleCenter().getLatitude(),
+                                o1.getCircleCenter().getLongitude(),
+                                pair.second.getLatitude(),
+                                pair.second.getLongitude()
+                        );
+                        double d2 = GpsUtils.distance(
+                                o2.getCircleCenter().getLatitude(),
+                                o2.getCircleCenter().getLongitude(),
+                                pair.second.getLatitude(),
+                                pair.second.getLongitude()
+                        );
+                        return (int) (d1 - d2);
+                    });
+                    if (infos.size() > MAX_FLY_ZONE_SHOW_ON_MAP) {
+                        infos = infos.subList(0, MAX_FLY_ZONE_SHOW_ON_MAP);
+                    }
+                    return infos;
+                })
+                .subscribeOn(SchedulerProvider.io())
+                .observeOn(SchedulerProvider.ui())
+                .subscribe(this::onFlyZoneListUpdate));
+
         addReaction(widgetModel.getProductConnection().observeOn(SchedulerProvider.ui()).subscribe(connected -> {
             if (connected) {
                 addReaction(reactToHeadingChanges());
@@ -395,11 +441,8 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
             case HERE:
                 // removed
                 break;
-            case AMAP:
-                initAMap(null);
-                break;
             case MAPLIBRE:
-                initMapLibreMap(accessToken, null);
+                initMapLibreMap(getContext(), null);
                 break;
             case GOOGLE:
                 initGoogleMap(null);
@@ -423,7 +466,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                 .subscribe(values -> {
                     updateAircraftHeading(values.first.floatValue());
                     setGimbalHeading(values.first.floatValue(), values.second.floatValue());
-                }, RxUtil.logErrorConsumer(TAG, "react to Heading Update "));
+                }, UxErrorHandle.logErrorConsumer(TAG, "react to Heading Update "));
     }
 
     /**
@@ -547,8 +590,8 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
      * Updates the aircraft's home location on the map
      */
     private void updateHomeLocation(LocationCoordinate2D homeLocation) {
-        if (homeLocation.getLatitude() == MapWidgetModel.INVALID_COORDINATE
-                || homeLocation.getLongitude() == MapWidgetModel.INVALID_COORDINATE) return;
+        if (homeLocation.getLatitude() == INVALID_COORDINATE
+                || homeLocation.getLongitude() == INVALID_COORDINATE) return;
         DJILatLng homePosition = new DJILatLng(homeLocation.getLatitude(), homeLocation.getLongitude());
         if (map == null || !homePosition.isAvailable()) return;
         if (homeMarker != null) {
@@ -596,6 +639,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     }
 
     private void onFlyZoneListUpdate(List<FlyZoneInformation> flyZoneInformationList) {
+        this.flyZoneInformationList = flyZoneInformationList;
         flyZoneHelper.onFlyZoneListUpdate(flyZoneInformationList);
     }
 
@@ -740,8 +784,8 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
      */
     private void updateAircraftLocation(LocationCoordinate3D locationCoordinate3D) {
         if (map == null) return;
-        if (locationCoordinate3D.getLatitude() == MapWidgetModel.INVALID_COORDINATE
-                || locationCoordinate3D.getLongitude() == MapWidgetModel.INVALID_COORDINATE) return;
+        if (locationCoordinate3D.getLatitude() == INVALID_COORDINATE
+                || locationCoordinate3D.getLongitude() == INVALID_COORDINATE) return;
 
         final DJILatLng aircraftPosition = new DJILatLng(locationCoordinate3D.getLatitude(), locationCoordinate3D.getLongitude());
         if (aircraftMarker != null) {
@@ -966,7 +1010,6 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
      *                 initializing.
      */
     public void initAMap(@Nullable final OnMapReadyListener listener) {
-
         mapView = new AMapProvider().dispatchMapViewRequest(getContext(), null);
         addView((ViewGroup) mapView, 0);
         mapView.getDJIMapAsync(map -> {
@@ -979,18 +1022,27 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     /**
      * Initializes the MapWidget with Mapbox.
      *
-     * @param listener          The OnMapReadyListener which will invoke the onMapReady method when the map has finished
-     *                          initializing.
-     * @param mapboxAccessToken The API access token from Mapbox.
+     * @param listener The OnMapReadyListener which will invoke the onMapReady method when the map has finished
+     *                 initializing.
+     * @param context  The API access context from Mapbox.
      */
-    public void initMapLibreMap(@NonNull String mapboxAccessToken, @Nullable final OnMapReadyListener listener) {
-        Mapkit.mapboxAccessToken(mapboxAccessToken);
+    public void initMapLibreMap(@NonNull Context context, @Nullable final OnMapReadyListener listener) {
+        Mapkit.init(context);
         mapView = new MaplibreProvider().dispatchMapViewRequest(getContext(), null);
         addView((ViewGroup) mapView, 0);
         mapView.getDJIMapAsync(map -> {
-            this.map = map;
-            postInit(listener);
             flyZoneHelper.initializeMap(map);
+            this.map = map;
+//            postInit(listener);
+//            flyZoneHelper.initializeMap(map);
+            postInit(mapLib -> {
+                if (flyZoneInformationList != null) {
+                    onFlyZoneListUpdate(flyZoneInformationList);
+                }
+                if (listener != null) {
+                    listener.onMapReady(mapLib);
+                }
+            });
         });
     }
 
@@ -1011,11 +1063,11 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
                         if (listener != null) {
                             listener.onMapReady(map);
                         }
-                    }, RxUtil.logErrorConsumer(TAG, "updateAircraftAndHomeLocation")));
+                    }, UxErrorHandle.logErrorConsumer(TAG, "updateAircraftAndHomeLocation")));
         });
         map.setOnMarkerClickListener(marker -> {
             String title = marker.getTitle();
-            if (title != null && title.length() > 0
+            if (title != null && !title.isEmpty()
                     && !GIMBAL_YAW_MARKER.equals(title)
                     && !AIRCRAFT_MARKER.equals(title)
                     && !HOME_MARKER.equals(title)
@@ -1029,11 +1081,11 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         addDisposable(widgetModel.getAircraftLocation()
                 .firstOrError()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(this::updateAircraftLocation, RxUtil.logErrorConsumer(TAG, "updateAircraftLocation")));
+                .subscribe(this::updateAircraftLocation, UxErrorHandle.logErrorConsumer(TAG, "updateAircraftLocation")));
         addDisposable(widgetModel.getHomeLocation()
                 .firstOrError()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(this::updateHomeLocation, RxUtil.logErrorConsumer(TAG, "updateHomeLocation")));
+                .subscribe(this::updateHomeLocation, UxErrorHandle.logErrorConsumer(TAG, "updateHomeLocation")));
     }
 
     private void emitMarkerClickEvent(DJIMarker marker) {
@@ -1476,6 +1528,7 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
         isAutoFrameMapBounds = isEnabled;
         autoFrameMapBounds();
     }
+
     /**
      * Map Centering Options.
      */

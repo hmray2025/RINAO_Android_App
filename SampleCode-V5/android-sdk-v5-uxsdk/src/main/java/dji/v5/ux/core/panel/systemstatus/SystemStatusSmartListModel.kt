@@ -108,24 +108,23 @@ open class SystemStatusSmartListModel @JvmOverloads constructor(
         }
     }
 
-
     override fun createWidget(widgetID: WidgetID): View {
         return when (SystemStatusListItem.from(widgetID)) {
-            OVERVIEW_STATUS -> OverviewListItemWidget(context, attrs)
-            RTH_ALTITUDE -> ReturnToHomeAltitudeListItemWidget(context, attrs)
-            FLIGHT_MODE -> FlightModeListItemWidget(context, attrs)
-            RC_STICK_MODE -> RCStickModeListItemWidget(context, attrs)
-            RC_BATTERY -> RCBatteryListItemWidget(context, attrs)
-            AIRCRAFT_BATTERY_TEMPERATURE -> AircraftBatteryTemperatureListItemWidget(context, attrs)
-            SD_CARD_STATUS -> SDCardStatusListItemWidget(context, attrs)
-            EMMC_STATUS -> EMMCStatusListItemWidget(context, attrs)
-            MAX_ALTITUDE -> MaxAltitudeListItemWidget(context, attrs)
-            MAX_FLIGHT_DISTANCE -> MaxFlightDistanceListItemWidget(context, attrs)
-            TRAVEL_MODE -> TravelModeListItemWidget(context, attrs)
-            UNIT_MODE -> UnitModeListItemWidget(context, attrs)
-            SSD_STATUS -> SSDStatusListItemWidget(context, attrs)
-            NOVICE_MODE -> NoviceModeListItemWidget(context, attrs)
-            OBSTACLE_AVOIDANCE -> ObstacleAvoidanceListItemWidget(context, attrs)
+            OVERVIEW_STATUS -> OverviewListItemWidget(context)
+            RTH_ALTITUDE -> ReturnToHomeAltitudeListItemWidget(context)
+            FLIGHT_MODE -> FlightModeListItemWidget(context)
+            RC_STICK_MODE -> RCStickModeListItemWidget(context)
+            RC_BATTERY -> RCBatteryListItemWidget(context)
+            AIRCRAFT_BATTERY_TEMPERATURE -> AircraftBatteryTemperatureListItemWidget(context)
+            SD_CARD_STATUS -> SDCardStatusListItemWidget(context)
+            EMMC_STATUS -> EMMCStatusListItemWidget(context)
+            MAX_ALTITUDE -> MaxAltitudeListItemWidget(context)
+            MAX_FLIGHT_DISTANCE -> MaxFlightDistanceListItemWidget(context)
+            TRAVEL_MODE -> TravelModeListItemWidget(context)
+            UNIT_MODE -> UnitModeListItemWidget(context)
+            SSD_STATUS -> SSDStatusListItemWidget(context)
+            NOVICE_MODE -> NoviceModeListItemWidget(context)
+            OBSTACLE_AVOIDANCE -> ObstacleAvoidanceListItemWidget(context)
             null -> throw IllegalStateException("The WidgetID ($widgetID) is not recognized.")
         }
     }

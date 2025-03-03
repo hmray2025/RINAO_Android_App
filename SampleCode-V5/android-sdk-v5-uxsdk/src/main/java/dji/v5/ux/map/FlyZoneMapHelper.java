@@ -774,7 +774,8 @@ public class FlyZoneMapHelper {
      */
     @ColorInt
     public int getFlyZoneColor(@NonNull FlyZoneCategory category) {
-        return flyZoneColorMap.get(category);
+        Integer color  = flyZoneColorMap.get(category);
+        return color != null ? color : 0;
     }
 
     /**
@@ -797,7 +798,8 @@ public class FlyZoneMapHelper {
      */
     @IntRange(from = 0, to = 255)
     public int getFlyZoneAlpha(@NonNull FlyZoneCategory category) {
-        return flyZoneAlphaMap.get(category);
+        Integer alpha = flyZoneAlphaMap.get(category);
+        return alpha != null ? alpha :DEFAULT_ALPHA;
     }
 
     /**

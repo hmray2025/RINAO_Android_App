@@ -46,7 +46,7 @@ import dji.v5.ux.core.base.WidgetSizeDescription
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.*
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.widget.flightmode.FlightModeWidget.ModelState
 import dji.v5.ux.core.widget.flightmode.FlightModeWidget.ModelState.FlightModeUpdated
 import dji.v5.ux.core.widget.flightmode.FlightModeWidget.ModelState.ProductConnected
@@ -209,7 +209,7 @@ open class FlightModeWidget @JvmOverloads constructor(
         if (!isInEditMode) {
             addDisposable(widgetModel.flightModeState
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(Consumer { this.updateUI(it) }, RxUtil.logErrorConsumer(TAG, "Update UI ")))
+                    .subscribe(Consumer { this.updateUI(it) }, UxErrorHandle.logErrorConsumer(TAG, "Update UI ")))
         }
     }
     //endregion

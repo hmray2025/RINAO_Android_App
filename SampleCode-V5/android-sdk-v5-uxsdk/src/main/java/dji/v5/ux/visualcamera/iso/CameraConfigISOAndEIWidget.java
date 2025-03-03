@@ -48,7 +48,7 @@ import dji.v5.ux.core.base.ICameraIndex;
 import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.disposables.Disposable;
 
@@ -124,7 +124,7 @@ public class CameraConfigISOAndEIWidget extends ConstraintLayoutWidget<Object> i
         return Flowable.combineLatest(widgetModel.isEIMode(), widgetModel.getISO(), Pair::new)
                 .observeOn(SchedulerProvider.ui())
                 .subscribe(values -> updateTitle(values.first, values.second),
-                        RxUtil.logErrorConsumer(TAG, "react to update title: "));
+                        UxErrorHandle.logErrorConsumer(TAG, "react to update title: "));
     }
 
     private void updateTitle(boolean isEIMode, CameraISO iso) {

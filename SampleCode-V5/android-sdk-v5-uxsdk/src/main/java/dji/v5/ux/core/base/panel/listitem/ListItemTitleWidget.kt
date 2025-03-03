@@ -48,11 +48,11 @@ import kotlin.math.roundToInt
  * @property defaultStyle - Resource id for tyle used for defining the default setup
  * of the widget.
  */
-abstract class ListItemTitleWidget<T> @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
-        @StyleRes protected val defaultStyle: Int
+abstract class ListItemTitleWidget<T : Any> @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    @StyleRes protected val defaultStyle: Int
 ) : ConstraintLayoutWidget<T>(context, attrs, defStyleAttr), View.OnClickListener {
 
     private val listItemTitleTextView = findViewById<TextView>(R.id.text_view_list_item_title)
@@ -233,7 +233,7 @@ abstract class ListItemTitleWidget<T> @JvmOverloads constructor(
 
     @SuppressLint("Recycle")
     private fun initAttributes(context: Context, attrs: AttributeSet?) {
-        context.obtainStyledAttributes(attrs, R.styleable.ListItemTitleWidget,0, defaultStyle).use { typedArray ->
+        context.obtainStyledAttributes(attrs, R.styleable.ListItemTitleWidget, 0, defaultStyle).use { typedArray ->
             typedArray.getResourceIdAndUse(R.styleable.ListItemTitleWidget_uxsdk_list_item_title_appearance) {
                 setListItemTitleTextAppearance(it)
             }
@@ -280,8 +280,10 @@ abstract class ListItemTitleWidget<T> @JvmOverloads constructor(
                 errorValueColor = it
             }
             listItemTitle =
-                    typedArray.getString(R.styleable.ListItemTitleWidget_uxsdk_list_item_title,
-                            getString(R.string.uxsdk_string_default_value))
+                typedArray.getString(
+                    R.styleable.ListItemTitleWidget_uxsdk_list_item_title,
+                    getString(R.string.uxsdk_string_default_value)
+                )
             typedArray.getDrawableAndUse(R.styleable.ListItemTitleWidget_uxsdk_list_item_click_indicator_icon) {
                 clickIndicatorIcon = it
             }

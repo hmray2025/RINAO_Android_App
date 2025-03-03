@@ -50,11 +50,10 @@ import dji.v5.ux.core.base.SchedulerProvider
 import dji.v5.ux.core.base.UXSDKError
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
-import dji.v5.ux.core.communication.OnStateChangeCallback
 import dji.v5.ux.core.extension.*
 import dji.v5.ux.core.ui.HorizontalSeekBar
 import dji.v5.ux.core.util.EditTextNumberInputFilter
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.R
 import dji.v5.ux.training.util.SimulatorPresetUtils
 import dji.v5.ux.training.simulatorcontrol.SimulatorControlWidget.ModelState
@@ -847,7 +846,7 @@ open class SimulatorControlWidget @JvmOverloads constructor(
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(
                         Consumer { this.updateUI(it) },
-                        RxUtil.logErrorConsumer(TAG, "Update Icon ")
+                        UxErrorHandle.logErrorConsumer(TAG, "Update Icon ")
                     )
             )
         }

@@ -58,11 +58,11 @@ import dji.v5.ux.core.util.ViewIDGenerator
  * User can also remove the dividers:
  * android:divider="@null"
  */
-abstract class ListPanelWidget<T> @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0,
-        configuration: PanelWidgetConfiguration
+abstract class ListPanelWidget<T : Any> @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    configuration: PanelWidgetConfiguration
 ) : PanelWidget<View, T>(context, attrs, defStyleAttr, configuration) {
 
     //region Properties
@@ -128,8 +128,8 @@ abstract class ListPanelWidget<T> @JvmOverloads constructor(
             smartListModel?.setUp()
 
             listPanelWidgetBaseModel.widgetList
-                    .observeOn(SchedulerProvider.ui())
-                    .subscribe { updateUI() }
+                .observeOn(SchedulerProvider.ui())
+                .subscribe { updateUI() }
         }
     }
 
@@ -214,7 +214,7 @@ abstract class ListPanelWidget<T> @JvmOverloads constructor(
     private inner class Adapter : BaseAdapter() {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
             val view = listPanelWidgetBaseModel.getWidget(position)
-                    ?: throw IllegalAccessException("View not found at position $position")
+                ?: throw IllegalAccessException("View not found at position $position")
             if (view is Navigable) {
                 view.panelNavigator = this@ListPanelWidget.panelNavigator
             }
@@ -224,7 +224,7 @@ abstract class ListPanelWidget<T> @JvmOverloads constructor(
 
         override fun getItem(position: Int): Any {
             return listPanelWidgetBaseModel.getWidget(position)
-                    ?: throw IllegalAccessException("Item not found at position $position")
+                ?: throw IllegalAccessException("Item not found at position $position")
         }
 
         override fun getItemId(position: Int): Long = position.toLong()

@@ -28,7 +28,6 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Pair
-import android.view.View
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
@@ -40,7 +39,6 @@ import androidx.core.content.res.use
 import dji.v5.manager.diagnostic.DJIDeviceStatus
 import dji.v5.manager.diagnostic.WarningLevel
 import dji.v5.utils.common.DisplayUtil
-import dji.v5.utils.common.LogUtils
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.functions.Consumer
@@ -52,9 +50,8 @@ import dji.v5.ux.core.base.WidgetSizeDescription
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.GlobalPreferencesManager
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
-import dji.v5.ux.core.communication.OnStateChangeCallback
 import dji.v5.ux.core.extension.*
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.util.UnitConversionUtil
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget.ModelState
 import dji.v5.ux.core.widget.systemstatus.SystemStatusWidget.ModelState.ProductConnected
@@ -229,7 +226,7 @@ open class SystemStatusWidget @JvmOverloads constructor(
             .observeOn(SchedulerProvider.ui())
             .subscribe(
                 Consumer { values: Pair<DJIDeviceStatus, Boolean> -> updateVoiceNotification(values.first, values.second) },
-                RxUtil.logErrorConsumer(TAG, "react to Compass Error: ")
+                UxErrorHandle.logErrorConsumer(TAG, "react to Compass Error: ")
             )
     }
 
@@ -243,7 +240,7 @@ open class SystemStatusWidget @JvmOverloads constructor(
         if (!isInEditMode) {
             addDisposable(widgetModel.systemStatus.firstOrError()
                 .observeOn(SchedulerProvider.ui())
-                .subscribe(Consumer { this.updateUI(it) }, RxUtil.logErrorConsumer(TAG, "Update UI "))
+                .subscribe(Consumer { this.updateUI(it) }, UxErrorHandle.logErrorConsumer(TAG, "Update UI "))
             )
         }
     }

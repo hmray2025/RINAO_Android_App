@@ -39,14 +39,13 @@ import dji.v5.utils.common.LogUtils
 import dji.v5.ux.R
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.Disposable
-import io.reactivex.rxjava3.functions.Consumer
 import io.reactivex.rxjava3.processors.PublishProcessor
 import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.base.SchedulerProvider
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.*
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 
 private const val TAG = "RTKEnabledWidget"
 
@@ -201,7 +200,7 @@ open class RTKEnabledWidget @JvmOverloads constructor(
                     } else {
                         setRTKEnabled(isChecked)
                     }
-                }, RxUtil.logErrorConsumer(TAG, "canEnableRTK: ")))
+                }, UxErrorHandle.logErrorConsumer(TAG, "canEnableRTK: ")))
         uiUpdateStateProcessor.onNext(UIState.SwitchChanged(isChecked))
     }
 
@@ -229,7 +228,7 @@ open class RTKEnabledWidget @JvmOverloads constructor(
                     if (rtkEnabled != enabled) {
                         addDisposable(toggleRTK(enabled))
                     }
-                }, RxUtil.logErrorConsumer(TAG, "rtkEnabled: ")))
+                }, UxErrorHandle.logErrorConsumer(TAG, "rtkEnabled: ")))
     }
 
     private fun toggleRTK(enabled: Boolean): Disposable {

@@ -41,7 +41,7 @@ import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.*
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.widget.remotecontrollersignal.RemoteControllerSignalWidget.ModelState
 import dji.v5.ux.core.widget.remotecontrollersignal.RemoteControllerSignalWidget.ModelState.ProductConnected
 import dji.v5.ux.core.widget.remotecontrollersignal.RemoteControllerSignalWidget.ModelState.SignalQualityUpdated
@@ -185,15 +185,13 @@ open class RemoteControllerSignalWidget @JvmOverloads constructor(
         if (!isInEditMode) {
             addDisposable(widgetModel.productConnection.firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(Consumer { this.updateIconColor(it) }, RxUtil.logErrorConsumer(TAG, "Update Icon Color ")))
+                    .subscribe(Consumer { this.updateIconColor(it) }, UxErrorHandle.logErrorConsumer(TAG, "Update Icon Color ")))
         }
     }
     //endregion
 
     //region Customization
-    override fun getIdealDimensionRatioString(): String {
-        return getString(R.string.uxsdk_widget_remote_control_signal_ratio)
-    }
+    override fun getIdealDimensionRatioString() = null
 
     /**
      * Set the [resourceId] for the RC icon

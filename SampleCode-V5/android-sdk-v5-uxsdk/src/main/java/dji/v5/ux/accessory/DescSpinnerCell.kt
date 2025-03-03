@@ -11,7 +11,6 @@ import dji.v5.utils.common.LogUtils
 import dji.v5.ux.R
 import dji.v5.ux.core.extension.hide
 import dji.v5.ux.core.extension.show
-import kotlinx.android.synthetic.main.uxsdk_spinner_desc_layout.view.*
 import java.util.ArrayList
 
 /**
@@ -168,6 +167,14 @@ open class DescSpinnerCell @kotlin.jvm.JvmOverloads constructor(
             mDesc?.text = descText
         }
 
+    }
+
+    open fun getDescText():TextView?{
+        return mDesc
+    }
+
+    open fun getSelectPosition() :Int{
+        return mSelectedPosition;
     }
 
     open fun setEntries(entries: List<String?>) {

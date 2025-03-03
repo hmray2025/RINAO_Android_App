@@ -48,7 +48,7 @@ import dji.v5.ux.core.communication.GlobalPreferencesManager
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.*
 import dji.v5.ux.core.ui.SlidingDialog
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.util.UnitConversionUtil
 import dji.v5.ux.R
 import dji.v5.ux.flight.returnhome.ReturnHomeWidget.ModelState
@@ -485,7 +485,7 @@ open class ReturnHomeWidget @JvmOverloads constructor(
             addDisposable(widgetModel.returnHomeState.firstOrError()
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(Consumer { this.updateReturnHomeState(it) },
-                            RxUtil.logErrorConsumer(TAG, "Update Return Home State ")))
+                            UxErrorHandle.logErrorConsumer(TAG, "Update Return Home State ")))
         }
     }
 

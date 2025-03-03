@@ -27,6 +27,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
@@ -37,15 +38,11 @@ import androidx.annotation.FloatRange
 import androidx.annotation.StyleRes
 import androidx.constraintlayout.widget.Guideline
 import androidx.core.content.res.use
-import dji.v5.common.video.channel.VideoChannelType
-import dji.v5.common.video.decoder.DecoderOutputMode
-import dji.v5.common.video.decoder.DecoderState
-import dji.v5.common.video.decoder.VideoDecoder
-import dji.v5.common.video.interfaces.IVideoDecoder
-import dji.v5.common.video.stream.PhysicalDevicePosition
-import dji.v5.common.video.stream.StreamSource
+import dji.sdk.keyvalue.value.common.CameraLensType
+import dji.sdk.keyvalue.value.common.ComponentIndexType
+import dji.v5.manager.interfaces.ICameraStreamManager
 import dji.v5.utils.common.DisplayUtil
-import dji.v5.utils.common.JsonUtil
+import dji.v5.utils.common.LogPath
 import dji.v5.utils.common.LogUtils
 import dji.v5.ux.R
 import dji.v5.ux.core.base.DJISDKModel
@@ -56,7 +53,7 @@ import dji.v5.ux.core.extension.*
 import dji.v5.ux.core.module.FlatCameraModule
 import dji.v5.ux.core.ui.CenterPointView
 import dji.v5.ux.core.ui.GridLineView
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 import dji.v5.ux.core.widget.fpv.FPVWidget.ModelState
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.functions.Consumer
@@ -70,31 +67,45 @@ private const val LANDSCAPE_ROTATION_ANGLE = 0
  * This widget shows the video feed from the camera.
  */
 open class FPVWidget @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0
-) : ConstraintLayoutWidget<ModelState>(context, attrs, defStyleAttr),
-    SurfaceHolder.Callback {
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+) : ConstraintLayoutWidget<ModelState>(context, attrs, defStyleAttr) {
     private var viewWidth = 0
     private var viewHeight = 0
     private var rotationAngle = 0
+    private var surface: Surface? = null
+    private var width = -1
+    private var height = -1
     private val fpvSurfaceView: SurfaceView = findViewById(R.id.surface_view_fpv)
     private val cameraNameTextView: TextView = findViewById(R.id.textview_camera_name)
     private val cameraSideTextView: TextView = findViewById(R.id.textview_camera_side)
     private val verticalOffset: Guideline = findViewById(R.id.vertical_offset)
     private val horizontalOffset: Guideline = findViewById(R.id.horizontal_offset)
     private var fpvStateChangeResourceId: Int = INVALID_RESOURCE
-    private var videoDecoder: IVideoDecoder? = null
 
-    private val widgetModel: FPVWidgetModel = FPVWidgetModel(
+    private val cameraSurfaceCallback = object : SurfaceHolder.Callback {
+        override fun surfaceCreated(holder: SurfaceHolder) {
+            surface = holder.surface
+            LogUtils.i(LogPath.SAMPLE, "surfaceCreated: ${widgetModel.getCameraIndex()}")
+        }
+
+        override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+            this@FPVWidget.width = width
+            this@FPVWidget.height = height
+            LogUtils.i(LogPath.SAMPLE, "surfaceChanged: ${widgetModel.getCameraIndex()}", "width:$width", ",height:$height")
+            updateCameraStream()
+        }
+
+        override fun surfaceDestroyed(holder: SurfaceHolder) {
+            width = 0
+            height = 0
+            LogUtils.i(LogPath.SAMPLE, "surfaceDestroyed: ${widgetModel.getCameraIndex()}")
+            removeSurfaceBinding()
+        }
+    }
+
+    val widgetModel: FPVWidgetModel = FPVWidgetModel(
         DJISDKModel.getInstance(), ObservableInMemoryKeyedStore.getInstance(), FlatCameraModule()
     )
-
-    var videoChannelType: VideoChannelType = VideoChannelType.PRIMARY_STREAM_CHANNEL
-        set(value) {
-            field = value
-            widgetModel.videoChannelType = value
-        }
 
     /**
      * Whether the video feed source's camera name is visible on the video feed.
@@ -217,8 +228,7 @@ open class FPVWidget @JvmOverloads constructor(
      * The vertical alignment of the camera name and side text views
      */
     var cameraDetailsVerticalAlignment: Float
-        @FloatRange(from = 0.0, to = 1.0)
-        get() {
+        @FloatRange(from = 0.0, to = 1.0) get() {
             val layoutParams: LayoutParams = verticalOffset.layoutParams as LayoutParams
             return layoutParams.guidePercent
         }
@@ -232,8 +242,7 @@ open class FPVWidget @JvmOverloads constructor(
      * The horizontal alignment of the camera name and side text views
      */
     var cameraDetailsHorizontalAlignment: Float
-        @FloatRange(from = 0.0, to = 1.0)
-        get() {
+        @FloatRange(from = 0.0, to = 1.0) get() {
             val layoutParams: LayoutParams = horizontalOffset.layoutParams as LayoutParams
             return layoutParams.guidePercent
         }
@@ -262,8 +271,8 @@ open class FPVWidget @JvmOverloads constructor(
 
     init {
         if (!isInEditMode) {
-            fpvSurfaceView.holder.addCallback(this)
             rotationAngle = LANDSCAPE_ROTATION_ANGLE
+            fpvSurfaceView.holder.addCallback(cameraSurfaceCallback)
         }
         attrs?.let { initAttributes(context, it) }
     }
@@ -292,59 +301,13 @@ open class FPVWidget @JvmOverloads constructor(
         if (!isInEditMode) {
             widgetModel.cleanup()
         }
-        videoDecoder?.destroy()
-        videoDecoder = null
         super.onDetachedFromWindow()
     }
 
     override fun reactToModelChanges() {
-        addReaction(widgetModel.cameraNameProcessor.toFlowable()
-            .observeOn(SchedulerProvider.ui())
-            .subscribe { cameraName: String -> updateCameraName(cameraName) })
-        addReaction(widgetModel.cameraSideProcessor.toFlowable()
-            .observeOn(SchedulerProvider.ui())
-            .subscribe { cameraSide: String -> updateCameraSide(cameraSide) })
-        addReaction(widgetModel.hasVideoViewChanged
-            .observeOn(SchedulerProvider.ui())
-            .subscribe { delayCalculator() })
-    }
-
-    override fun surfaceCreated(holder: SurfaceHolder?) {
-        LogUtils.i(logTag, "surfaceCreated", videoChannelType, videoDecoder == null)
-        if (videoDecoder == null) {
-            videoDecoder = VideoDecoder(
-                context,
-                videoChannelType,
-                DecoderOutputMode.SURFACE_MODE,
-                fpvSurfaceView.holder,
-                fpvSurfaceView.width,
-                fpvSurfaceView.height,
-                true
-            )
-        } else if (videoDecoder?.decoderStatus == DecoderState.PAUSED) {
-            videoDecoder?.onResume()
-        }
-    }
-
-    override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
-        if (videoDecoder == null) {
-            videoDecoder = VideoDecoder(
-                context,
-                videoChannelType,
-                DecoderOutputMode.SURFACE_MODE,
-                fpvSurfaceView.holder,
-                fpvSurfaceView.width,
-                fpvSurfaceView.height,
-                true
-            )
-        } else if (videoDecoder?.decoderStatus == DecoderState.PAUSED) {
-            videoDecoder?.onResume()
-        }
-        LogUtils.i(logTag, "surfaceChanged", videoChannelType, videoDecoder?.videoWidth, videoDecoder?.videoHeight)
-    }
-
-    override fun surfaceDestroyed(holder: SurfaceHolder?) {
-        videoDecoder?.onPause()
+        addReaction(widgetModel.displayMsgProcessor.toFlowable().observeOn(SchedulerProvider.ui()).subscribe { cameraName: String -> updateCameraName(cameraName) })
+        addReaction(widgetModel.cameraSideProcessor.toFlowable().observeOn(SchedulerProvider.ui()).subscribe { cameraSide: String -> updateCameraSide(cameraSide) })
+        addReaction(widgetModel.hasVideoViewChanged.observeOn(SchedulerProvider.ui()).subscribe { delayCalculator() })
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
@@ -363,23 +326,15 @@ open class FPVWidget @JvmOverloads constructor(
     //region Customization
     override fun getIdealDimensionRatioString(): String {
         return getString(R.string.uxsdk_widget_fpv_ratio)
-//        return fpvSurfaceView.textview_aspect_ratio.toString()
     }
 
-    fun updateVideoSource(source: StreamSource, channelType: VideoChannelType) {
-        LogUtils.i(logTag, "updateVideoSource", JsonUtil.toJson(source), channelType)
-        widgetModel.streamSource = source
-        if (videoChannelType != channelType) {
-            changeVideoDecoder(channelType)
+    fun updateVideoSource(source: ComponentIndexType) {
+        LogUtils.i(LogPath.SAMPLE, "updateVideoSource", source, this)
+        widgetModel.updateCameraSource(source, CameraLensType.UNKNOWN)
+        updateCameraStream()
+        if (source == ComponentIndexType.VISION_ASSIST) {
+            widgetModel.enableVisionAssist()
         }
-        videoChannelType = channelType
-    }
-
-    fun getStreamSource() = widgetModel.streamSource
-
-    private fun changeVideoDecoder(channel: VideoChannelType) {
-        LogUtils.i(logTag, "changeVideoDecoder", channel)
-        videoDecoder?.videoChannelType = channel
         fpvSurfaceView.invalidate()
     }
 
@@ -387,11 +342,11 @@ open class FPVWidget @JvmOverloads constructor(
         widgetModel.streamSourceListener = listener
     }
 
-    fun setSurfaceViewZOrderOnTop(onTop:Boolean){
+    fun setSurfaceViewZOrderOnTop(onTop: Boolean) {
         fpvSurfaceView.setZOrderOnTop(onTop)
     }
 
-    fun setSurfaceViewZOrderMediaOverlay(isMediaOverlay:Boolean){
+    fun setSurfaceViewZOrderMediaOverlay(isMediaOverlay: Boolean) {
         fpvSurfaceView.setZOrderMediaOverlay(isMediaOverlay)
     }
 
@@ -400,27 +355,6 @@ open class FPVWidget @JvmOverloads constructor(
     private fun setViewDimensions() {
         viewWidth = measuredWidth
         viewHeight = measuredHeight
-    }
-
-    /**
-     * This method should not to be called until the size of `TextureView` is fixed.
-     */
-    public fun changeView(width: Int, height: Int, relativeWidth: Int, relativeHeight: Int) {
-        val lp = fpvSurfaceView.layoutParams
-        lp.width = width
-        lp.height = height
-        fpvSurfaceView.layoutParams = lp
-        if (width > viewWidth) {
-            fpvSurfaceView.scaleX = width.toFloat() / viewWidth
-        } else {
-            fpvSurfaceView.scaleX = ORIGINAL_SCALE
-        }
-        if (height > viewHeight) {
-            fpvSurfaceView.scaleY = height.toFloat() / viewHeight
-        } else {
-            fpvSurfaceView.scaleY = ORIGINAL_SCALE
-        }
-        gridLineView.adjustDimensions(relativeWidth, relativeHeight)
     }
 
     private fun delayCalculator() {
@@ -448,13 +382,9 @@ open class FPVWidget @JvmOverloads constructor(
     private fun checkAndUpdateCameraName() {
         if (!isInEditMode) {
             addDisposable(
-                widgetModel.cameraNameProcessor.toFlowable()
-                    .firstOrError()
-                    .observeOn(SchedulerProvider.ui())
-                    .subscribe(
-                        Consumer { cameraName: String -> updateCameraName(cameraName) },
-                        RxUtil.logErrorConsumer(TAG, "updateCameraName")
-                    )
+                widgetModel.displayMsgProcessor.toFlowable().firstOrError().observeOn(SchedulerProvider.ui()).subscribe(
+                    { cameraName: String -> updateCameraName(cameraName) }, UxErrorHandle.logErrorConsumer(TAG, "updateCameraName")
+                )
             )
         }
     }
@@ -462,20 +392,15 @@ open class FPVWidget @JvmOverloads constructor(
     private fun checkAndUpdateCameraSide() {
         if (!isInEditMode) {
             addDisposable(
-                widgetModel.cameraSideProcessor.toFlowable()
-                    .firstOrError()
-                    .observeOn(SchedulerProvider.ui())
-                    .subscribe(
-                        Consumer { cameraSide: String -> updateCameraSide(cameraSide) },
-                        RxUtil.logErrorConsumer(TAG, "updateCameraSide")
-                    )
+                widgetModel.cameraSideProcessor.toFlowable().firstOrError().observeOn(SchedulerProvider.ui()).subscribe(
+                    { cameraSide: String -> updateCameraSide(cameraSide) }, UxErrorHandle.logErrorConsumer(TAG, "updateCameraSide")
+                )
             )
         }
     }
 
     private fun updateGridLineVisibility() {
-        gridLineView.visibility = if (isGridLinesEnabled
-            && widgetModel.streamSource?.physicalDevicePosition == PhysicalDevicePosition.NOSE) View.VISIBLE else View.GONE
+        gridLineView.visibility = if (isGridLinesEnabled && widgetModel.getCameraIndex() == ComponentIndexType.FPV) View.VISIBLE else View.GONE
     }
     //endregion
 
@@ -502,10 +427,6 @@ open class FPVWidget @JvmOverloads constructor(
     private fun initAttributes(context: Context, attrs: AttributeSet) {
         context.obtainStyledAttributes(attrs, R.styleable.FPVWidget).use { typedArray ->
             if (!isInEditMode) {
-                typedArray.getIntegerAndUse(R.styleable.FPVWidget_uxsdk_videoChannelType) {
-                    videoChannelType = (VideoChannelType.find(it))
-                    widgetModel.initStreamSource()
-                }
                 typedArray.getBooleanAndUse(R.styleable.FPVWidget_uxsdk_gridLinesEnabled, true) {
                     isGridLinesEnabled = it
                 }
@@ -572,15 +493,26 @@ open class FPVWidget @JvmOverloads constructor(
             }
         }
     }
-    //endregion
 
-    /**
-     * The size of the video feed within this widget
-     *
-     * @property width The width of the video feed within this widget
-     * @property height The height of the video feed within this widget
-     */
-    data class FPVSize(val width: Int, val height: Int)
+    private fun updateCameraStream() {
+        removeSurfaceBinding()
+        surface?.let {
+            widgetModel.putCameraStreamSurface(
+                it,
+                width,
+                height,
+                ICameraStreamManager.ScaleType.CENTER_INSIDE
+            )
+        }
+    }
+
+    private fun removeSurfaceBinding() {
+        if (width <= 0 || height <= 0 || surface == null) {
+            if (surface != null) {
+                widgetModel.removeCameraStreamSurface(surface!!)
+            }
+        }
+    }
 
     /**
      * Get the [ModelState] updates

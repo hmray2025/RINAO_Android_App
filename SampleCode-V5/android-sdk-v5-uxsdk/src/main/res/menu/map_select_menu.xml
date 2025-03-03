@@ -27,8 +27,6 @@
           android:title="@string/uxsdk_provider_here_maps"/>
     <item android:id="@+id/google_map"
           android:title="@string/uxsdk_provider_google_maps" />
-    <item android:id="@+id/amap"
-          android:title="@string/uxsdk_provider_amaps" />
     <item android:id="@+id/mapbox"
           android:title="@string/uxsdk_provider_mapbox" />
 </menu>

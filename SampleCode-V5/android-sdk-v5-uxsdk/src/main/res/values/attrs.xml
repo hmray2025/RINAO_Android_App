@@ -328,11 +328,6 @@
     </declare-styleable>
 
     <declare-styleable name="FPVWidget">
-        <attr name="uxsdk_videoChannelType" format="enum">
-            <enum name="primaryStreamChannel" value="0" />
-            <enum name="secondaryStreamChannel" value="1" />
-            <enum name="extendedStreamChannel" value="2" />
-        </attr>
         <attr name="uxsdk_sourceCameraNameVisibility" format="boolean" />
         <attr name="uxsdk_sourceCameraSideVisibility" format="boolean" />
         <attr name="uxsdk_cameraNameTextAppearance" format="reference" />
@@ -1358,36 +1353,37 @@
     </declare-styleable>
 
     <declare-styleable name="DescSpinnerCell">
-        <attr name="uxsdk_summary" format="string|reference" />
-        <attr name="uxsdk_desc" format="string|reference" />
+        <attr name="uxsdk_summary" />
+        <attr name="uxsdk_desc"/>
         <attr name="uxsdk_entries" format="reference" />
     </declare-styleable>
 
 
-    <attr name="uxsdk_progress" format="integer" min="0"></attr>
-    <attr name="uxsdk_max" format="integer" min="1"></attr>
-    <attr name="uxsdk_progressDrawable" format="reference"></attr>
-    <attr name="uxsdk_progressHeight" format="dimension|reference"></attr>
-    <attr name="uxsdk_thumb" format="reference"></attr>
-    <attr name="uxsdk_secondaryProgress" format="integer" min="0"></attr>
-    <attr name="uxsdk_secondaryThumb" format="reference"></attr>
+    <attr name="uxsdk_progress" format="integer" min="0" />
+    <attr name="uxsdk_max" format="integer" min="1" />
+    <attr name="uxsdk_progressDrawable" format="reference" />
+    <attr name="uxsdk_progressHeight" format="dimension|reference" />
+    <attr name="uxsdk_thumb" format="reference" />
+    <attr name="uxsdk_secondaryProgress" format="integer" min="0" />
+    <attr name="uxsdk_secondaryThumb" format="reference" />
 
     <declare-styleable name="VerticalSeekBar">
-        <attr name="uxsdk_progress"></attr>
-        <attr name="uxsdk_secondaryProgress"></attr>
-        <attr name="uxsdk_max"></attr>
-        <attr name="uxsdk_progressDrawable"></attr>
-        <attr name="uxsdk_progressHeight"></attr>
-        <attr name="uxsdk_thumb"></attr>
-        <attr name="uxsdk_secondaryThumb"></attr>
+        <attr name="uxsdk_progress" />
+        <attr name="uxsdk_secondaryProgress" />
+        <attr name="uxsdk_max" />
+        <attr name="uxsdk_progressDrawable" />
+        <attr name="uxsdk_progressHeight" />
+        <attr name="uxsdk_thumb" />
+        <attr name="uxsdk_secondaryThumb" />
     </declare-styleable>
 
     <style name="DisableSeekBar" parent="@android:style/Theme">
         <item name="android:disabledAlpha">1.0</item>
     </style>
 
+
     <declare-styleable name="FpvTitleValueCell">
-        <attr name="uxsdk_title" format="string|reference" />
+        <attr name="uxsdk_title"/>
         <attr name="uxsdk_value" format="string|reference" />
         <attr name="uxsdk_layout" format="reference" />
     </declare-styleable>
@@ -1462,7 +1458,7 @@
             <enum name="fixed" value="10" />
             <enum name="scrollable" value="11" />
         </attr>
-        <attr name="uxsdk_tab_height" format="dimension"></attr>
+        <attr name="uxsdk_tab_height" format="dimension" />
     </declare-styleable>
 
     <attr name="uxsdk_fadingEdgeColor" format="color"/>
@@ -1471,4 +1467,148 @@
         <attr name="uxsdk_fadingEdgeColor"/>
     </declare-styleable>
 
+    <attr name="uxsdk_topDividerEnable" format="boolean"/>
+    <attr name="uxsdk_topDividerColor" format="color|reference"/>
+    <attr name="uxsdk_topDividerMarginLeft" format="dimension|reference"/>
+    <attr name="uxsdk_topDividerHeight" format="dimension|reference"/>
+    <attr name="uxsdk_bottomDividerEnable" format="boolean"/>
+    <attr name="uxsdk_bottomDividerColor" format="color|reference"/>
+    <attr name="uxsdk_bottomDividerHeight" format="dimension|reference"/>
+    <attr name="uxsdk_bottomDividerMarginLeft" format="dimension|reference"/>
+    <declare-styleable name="DividerConstraintLayout">
+        <attr name="uxsdk_topDividerEnable"/>
+        <attr name="uxsdk_topDividerColor"/>
+        <attr name="uxsdk_topDividerHeight"/>
+        <attr name="uxsdk_topDividerMarginLeft"/>
+        <attr name="uxsdk_bottomDividerEnable"/>
+        <attr name="uxsdk_bottomDividerColor"/>
+        <attr name="uxsdk_bottomDividerHeight"/>
+        <attr name="uxsdk_bottomDividerMarginLeft"/>
+    </declare-styleable>
+
+    <attr name="uxsdk_tabs" format="reference"/>
+    <attr name="uxsdk_select" format="integer"/>
+    <attr name="uxsdk_textColor" format="color|reference"/>
+    <attr name="uxsdk_fixedSize" format="boolean"/>
+    <declare-styleable name="TabModeWidget">
+        <attr name="uxsdk_tabs"/>
+        <attr name="uxsdk_select"/>
+        <attr name="uxsdk_textSize"/>
+        <attr name="uxsdk_textColor"/>
+        <attr name="uxsdk_fixedSize"/>
+    </declare-styleable>
+
+    <declare-styleable name="TabSelectCell">
+        <attr name="uxsdk_title"/>
+        <attr name="uxsdk_summary"/>
+        <attr name="uxsdk_select"/>
+        <attr name="uxsdk_tabs"/>
+        <attr name="uxsdk_desc"/>
+    </declare-styleable>
+    <declare-styleable name="BasicRangeSeekBar">
+        <attr name="uxsdk_bar_min_value" format="float" />
+        <attr name="uxsdk_bar_max_value" format="float" />
+        <attr name="uxsdk_bar_step_value" format="float" />
+        <attr name="uxsdk_bar_height" format="dimension" />
+        <attr name="uxsdk_bar_thumbs_normal" format="reference" />
+        <attr name="uxsdk_bar_left_side_color" format="color" />
+        <attr name="uxsdk_bar_right_side_color" format="color" />
+        <attr name="uxsdk_bar_center_color" format="color" />
+    </declare-styleable>
+
+
+
+    <declare-styleable name="DividerRelativeLayout">
+        <attr name="uxsdk_topDividerEnable"/>
+        <attr name="uxsdk_bottomDividerEnable"/>
+        <attr name="uxsdk_bottomDividerColor"/>
+        <attr name="uxsdk_bottomDividerHeight"/>
+        <attr name="uxsdk_topDividerMarginLeft"/>
+        <attr name="uxsdk_bottomDividerMarginLeft"/>
+    </declare-styleable>
+
+    <declare-styleable name="SwitcherCell">
+        <attr name="uxsdk_title"/>
+        <attr name="uxsdk_titleColor" format="color|reference"/>
+        <attr name="uxsdk_titleTextSize"/>
+        <attr name="uxsdk_summary"/>
+        <attr name="uxsdk_summaryColor" format="color|reference"/>
+        <attr name="uxsdk_summaryTextSize" format="dimension"/>
+        <attr name="uxsdk_switchToggleBg" format="reference"/>
+        <attr name="uxsdk_layout"/>
+        <attr name="uxsdk_checked" format="boolean"/>
+        <attr name="uxsdk_disableHint" format="string|reference"/>
+        <attr name="uxsdk_infoPopupHint" format="string|reference"/>
+        <attr name="uxsdk_showInfoHintIcon" format="boolean"/>
+        <attr name="uxsdk_desc"/>
+        <attr name="uxsdk_descColor" format="color|reference"/>
+        <attr name="uxsdk_descTextSize" format="dimension|reference"/>
+        <attr name="uxsdk_descMarginVertical" format="dimension|reference"/>
+    </declare-styleable>
+
+    <declare-styleable name="EditorCell">
+        <attr name="uxsdk_title"/>
+        <attr name="uxsdk_summary"/>
+        <attr name="uxsdk_tips" format="string|reference"/>
+        <attr name="uxsdk_layout"/>
+        <attr name="uxsdk_value"/>
+        <attr name="uxsdk_number" format="boolean"/>
+        <attr name="uxsdk_minValue" format="integer"/>
+        <attr name="uxsdk_maxValue" format="integer"/>
+        <attr name="uxsdk_tipsTextSize" format="dimension"/>
+        <attr name="uxsdk_summaryTextSize"/>
+        <attr name="uxsdk_titleTextSize"/>
+        <attr name="uxsdk_summaryColor"/>
+        <attr name="uxsdk_editorColor" format="color|reference"/>
+        <attr name="uxsdk_editorBg" format="reference"/>
+        <attr name="uxsdk_editorWidth" format="dimension"/>
+        <attr name="uxsdk_gravityCenter" format="boolean"/>
+    </declare-styleable>
+
+    <declare-styleable name="TabGroupWidget">
+        <attr name="uxsdk_tabs"/>
+        <attr name="uxsdk_fixedSize"/>
+        <attr name="uxsdk_select"/>
+        <attr name="uxsdk_textSize"/>
+        <attr name="uxsdk_textColor"/>
+        <attr name="uxsdk_textBold" format="boolean"/>
+        <attr name="uxsdk_coverStyle" format="integer"/>
+        <attr name="uxsdk_tabsPadding" format="dimension"/>
+    </declare-styleable>
+
+    <declare-styleable name="DividerLinearLayout">
+        <attr name="uxsdk_topDividerEnable"/>
+        <attr name="uxsdk_bottomDividerEnable"/>
+        <attr name="uxsdk_bottomDividerColor"/>
+        <attr name="uxsdk_bottomDividerHeight"/>
+        <attr name="uxsdk_topDividerMarginLeft"/>
+        <attr name="uxsdk_bottomDividerMarginLeft"/>
+    </declare-styleable>
+
+
+
+    <declare-styleable name="TextCell">
+        <attr name="uxsdk_text_cell_subhead" format="string"/>
+        <attr name="uxsdk_text_cell_subheadColor" format="color|reference"/>
+        <attr name="uxsdk_text_cell_title" format="string|reference"/>
+        <attr name="uxsdk_text_cell_titleColor" format="color|reference"/>
+        <attr name="uxsdk_text_cell_titleTextSize" format="dimension"/>
+        <attr name="uxsdk_text_cell_infoImageView" format="reference"/>
+        <attr name="uxsdk_text_cell_arrowRes" format="reference"/>
+        <attr name="uxsdk_text_cell_content" format="string|reference"/>
+        <attr name="uxsdk_text_cell_contentColor" format="color|reference"/>
+        <attr name="uxsdk_text_cell_contentTextSize" format="dimension"/>
+        <attr name="uxsdk_text_cell_arrow" format="integer"/>
+        <attr name="uxsdk_text_cell_drawable" format="string|reference"/>
+        <attr name="uxsdk_text_cell_summary" format="string|reference"/>
+        <attr name="uxsdk_text_cell_summaryColor" format="color|reference"/>
+        <attr name="uxsdk_text_cell_summaryTextSize" format="dimension"/>
+        <attr name="uxsdk_text_cell_showShortLine" format="boolean"/>
+        <attr name="uxsdk_text_cell_showHint" format="boolean"/>
+    </declare-styleable>
+
+    <!--共公的属性，需要单独拿出来定义，这样其他地方想要用到就可以直接用，不需要定义-->
+    <attr name="uxsdk_title" format="string|reference"/>
+    <attr name="uxsdk_summary" format="string|reference"/>
+    <attr name="uxsdk_desc" format="string|reference"/>
 </resources>

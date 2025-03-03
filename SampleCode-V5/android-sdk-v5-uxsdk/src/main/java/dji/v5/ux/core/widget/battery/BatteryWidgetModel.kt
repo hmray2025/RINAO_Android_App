@@ -80,24 +80,88 @@ class BatteryWidgetModel(
         get() = batteryStateProcessor.toFlowable()
 
     override fun inSetup() {
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyChargeRemainingInPercent, ComponentIndexType.LEFT_OR_MAIN), batteryPercentageProcessor1)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyCellVoltages, ComponentIndexType.LEFT_OR_MAIN), batteryVoltageProcessor1)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyBatteryException, ComponentIndexType.LEFT_OR_MAIN), batteryWarningRecordProcessor1)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyChargeRemainingInPercent, ComponentIndexType.RIGHT), batteryPercentageProcessor2)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyCellVoltages, ComponentIndexType.RIGHT), batteryVoltageProcessor2)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyBatteryException, ComponentIndexType.RIGHT), batteryWarningRecordProcessor2)
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyChargeRemainingInPercent, ComponentIndexType.LEFT_OR_MAIN
+            ), batteryPercentageProcessor1
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyCellVoltages, ComponentIndexType.LEFT_OR_MAIN
+            ), batteryVoltageProcessor1
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyBatteryException, ComponentIndexType.LEFT_OR_MAIN
+            ), batteryWarningRecordProcessor1
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyChargeRemainingInPercent, ComponentIndexType.RIGHT
+            ), batteryPercentageProcessor2
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyCellVoltages, ComponentIndexType.RIGHT
+            ), batteryVoltageProcessor2
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyBatteryException, ComponentIndexType.RIGHT
+            ), batteryWarningRecordProcessor2
+        )
 
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyNumberOfConnectedBatteries, ComponentIndexType.AGGREGATION), batteryConnectedProcessor)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyIsAnyBatteryDisconnected, ComponentIndexType.AGGREGATION), isAnyBatteryDisconnectedProcessor)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyIsCellDamaged, ComponentIndexType.AGGREGATION), isCellDamagedDisconnectedProcessor)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyIsFirmwareDifferenceDetected, ComponentIndexType.AGGREGATION), isFirmwareDifferenceDetectedProcessor)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyIsVoltageDifferenceDetected, ComponentIndexType.AGGREGATION), isVoltageDifferenceDetectedProcessor)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyIsLowCellVoltageDetected, ComponentIndexType.AGGREGATION), isLowCellVoltageDetectedProcessor)
-        bindDataProcessor(KeyTools.createKey(BatteryKey.KeyBatteryOverviews, ComponentIndexType.AGGREGATION), batteryOverviewsProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyNumberOfConnectedBatteries, ComponentIndexType.AGGREGATION
+            ), batteryConnectedProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyIsAnyBatteryDisconnected, ComponentIndexType.AGGREGATION
+            ), isAnyBatteryDisconnectedProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyIsCellDamaged, ComponentIndexType.AGGREGATION
+            ), isCellDamagedDisconnectedProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyIsFirmwareDifferenceDetected, ComponentIndexType.AGGREGATION
+            ), isFirmwareDifferenceDetectedProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyIsVoltageDifferenceDetected, ComponentIndexType.AGGREGATION
+            ), isVoltageDifferenceDetectedProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyIsLowCellVoltageDetected, ComponentIndexType.AGGREGATION
+            ), isLowCellVoltageDetectedProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                BatteryKey.KeyBatteryOverviews, ComponentIndexType.AGGREGATION
+            ), batteryOverviewsProcessor
+        )
 
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyBatteryThresholdBehavior), batteryThresholdBehaviorProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyBatteryPercentNeededToGoHome), batteryNeededToGoHomeProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyIsFlying), isAircraftFlyingDataProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyBatteryThresholdBehavior
+            ), batteryThresholdBehaviorProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyBatteryPercentNeededToGoHome
+            ), batteryNeededToGoHomeProcessor
+        )
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyIsFlying
+            ), isAircraftFlyingDataProcessor
+        )
     }
 
     override fun updateStates() {
@@ -131,33 +195,65 @@ class BatteryWidgetModel(
                         )
                     )
                 }
-                else -> {
-                    val voltage = calculateAverageVoltage(batteryVoltageProcessor1.value)
-                    batteryStateProcessor.onNext(
-                        BatteryState.SingleBatteryState(
-                            batteryPercentageProcessor1.value,
-                            voltage,
-                            calculateBatteryStatus(
-                                batteryWarningRecordProcessor1.value,
-                                batteryThresholdBehaviorProcessor.value,
-                                batteryPercentageProcessor1.value,
-                                batteryNeededToGoHomeProcessor.value,
-                                isAircraftFlyingDataProcessor.value,
-                                voltage
-                            )
-                        )
-                    )
-                }
 
+                else -> {
+                    when (findConnectedBattery()) {
+                        ComponentIndexType.LEFT_OR_MAIN -> {
+                            val voltage = calculateAverageVoltage(batteryVoltageProcessor1.value)
+                            batteryStateProcessor.onNext(
+                                BatteryState.SingleBatteryState(
+                                    batteryPercentageProcessor1.value,
+                                    voltage,
+                                    calculateBatteryStatus(
+                                        batteryWarningRecordProcessor1.value,
+                                        batteryThresholdBehaviorProcessor.value,
+                                        batteryPercentageProcessor1.value,
+                                        batteryNeededToGoHomeProcessor.value,
+                                        isAircraftFlyingDataProcessor.value,
+                                        voltage
+                                    )
+                                )
+                            )
+                        }
+
+                        ComponentIndexType.RIGHT -> {
+                            val voltage = calculateAverageVoltage(batteryVoltageProcessor2.value)
+                            batteryStateProcessor.onNext(
+                                BatteryState.SingleBatteryState(
+                                    batteryPercentageProcessor2.value,
+                                    voltage,
+                                    calculateBatteryStatus(
+                                        batteryWarningRecordProcessor2.value,
+                                        batteryThresholdBehaviorProcessor.value,
+                                        batteryPercentageProcessor2.value,
+                                        batteryNeededToGoHomeProcessor.value,
+                                        isAircraftFlyingDataProcessor.value,
+                                        voltage
+                                    )
+                                )
+                            )
+                        }
+
+                        else -> {
+                            // nothing
+                        }
+                    }
+                }
             }
         } else {
             batteryStateProcessor.onNext(BatteryState.DisconnectedState)
         }
     }
 
-
     override fun inCleanup() {
         // No Code
+    }
+
+    private fun findConnectedBattery(): ComponentIndexType {
+        val batteryIndex = batteryOverviewsProcessor.value.filter {
+            it.isConnected
+        }.getOrNull(0)?.index ?: 0
+        return ComponentIndexType.find(batteryIndex)
     }
 
     private fun calculateAverageVoltage(cellVoltages: List<Int>?): Float {
@@ -189,7 +285,7 @@ class BatteryWidgetModel(
         return BatteryStatus.NORMAL
     }
 
-    fun BatteryException.isError(): Boolean {
+    private fun BatteryException.isError(): Boolean {
         return this.firstLevelOverHeating || this.secondLevelOverHeating || this.communicationException
                 || this.hasBrokenCell || this.hasLowVoltageCell || this.shortCircuited
                 || this.firstLevelLowTemperature || this.secondLevelLowTemperature

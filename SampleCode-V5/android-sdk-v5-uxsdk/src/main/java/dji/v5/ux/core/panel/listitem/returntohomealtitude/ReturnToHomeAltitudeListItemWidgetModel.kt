@@ -24,8 +24,8 @@
 package dji.v5.ux.core.panel.listitem.returntohomealtitude
 
 import dji.sdk.keyvalue.key.FlightControllerKey
-import dji.sdk.keyvalue.value.common.IntMinMax
 import dji.sdk.keyvalue.key.KeyTools
+import dji.sdk.keyvalue.value.common.IntValueConfig
 import io.reactivex.rxjava3.core.Flowable
 import dji.v5.ux.core.base.DJISDKModel
 import dji.v5.ux.core.base.WidgetModel
@@ -56,7 +56,7 @@ class ReturnToHomeAltitudeListItemWidgetModel(
     private val unitTypeProcessor: DataProcessor<UnitType> = DataProcessor.create(UnitType.METRIC)
     private val returnToHomeAltitudeStateProcessor: DataProcessor<ReturnToHomeAltitudeState> = DataProcessor.create(ProductDisconnected)
     private val noviceModeProcessor: DataProcessor<Boolean> = DataProcessor.create(false)
-    private val maxFlightHeightRangeProcessor: DataProcessor<IntMinMax> = DataProcessor.create(IntMinMax())
+    private val maxFlightHeightRangeProcessor: DataProcessor<IntValueConfig> = DataProcessor.create(IntValueConfig())
 
     /**
      * Get the return to home altitude state
@@ -65,12 +65,20 @@ class ReturnToHomeAltitudeListItemWidgetModel(
         get() = returnToHomeAltitudeStateProcessor.toFlowable()
 
     override fun inSetup() {
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyGoHomeHeight), returnToHomeAltitudeProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyHeightLimit), maxFlightAltitudeProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyHeightLimitRange), maxFlightHeightRangeProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyGoHomeHeight), returnToHomeAltitudeProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyHeightLimit), maxFlightAltitudeProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyHeightLimitRange), maxFlightHeightRangeProcessor)
         val unitTypeKey = GlobalPreferenceKeys.create(GlobalPreferenceKeys.UNIT_TYPE)
         bindDataProcessor(unitTypeKey, unitTypeProcessor)
-        bindDataProcessor(KeyTools.createKey(FlightControllerKey.KeyNoviceModeEnabled), noviceModeProcessor)
+        bindDataProcessor(
+            KeyTools.createKey(
+                FlightControllerKey.KeyNoviceModeEnabled), noviceModeProcessor)
         preferencesManager?.setUpListener()
         preferencesManager?.let { unitTypeProcessor.onNext(it.unitType) }
     }
@@ -142,7 +150,9 @@ class ReturnToHomeAltitudeListItemWidgetModel(
         } else {
             returnToHomeAltitude
         }
-        return djiSdkModel.setValue(KeyTools.createKey(FlightControllerKey.KeyGoHomeHeight), tempAltitude)
+        return djiSdkModel.setValue(
+            KeyTools.createKey(
+                FlightControllerKey.KeyGoHomeHeight), tempAltitude)
     }
 
     /**

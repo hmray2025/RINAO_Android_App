@@ -44,7 +44,7 @@ import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.FrameLayoutWidget;
 import dji.v5.ux.core.communication.GlobalPreferencesManager;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 import dji.v5.ux.core.util.SettingDefinitions.ControlMode;
 
 /**
@@ -122,7 +122,7 @@ public class FocusExposureSwitchWidget extends FrameLayoutWidget<Object> impleme
                     .observeOn(SchedulerProvider.ui())
                     .subscribe(() -> {
                         //do nothing
-                    }, RxUtil.logErrorConsumer(TAG, "switchControlMode: ")));
+                    }, UxErrorHandle.logErrorConsumer(TAG, "switchControlMode: ")));
         }
     }
 
@@ -166,7 +166,7 @@ public class FocusExposureSwitchWidget extends FrameLayoutWidget<Object> impleme
         if (!isInEditMode()) {
             addDisposable(widgetModel.getControlMode().firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(this::updateUI, RxUtil.logErrorConsumer(TAG, "Update UI ")));
+                    .subscribe(this::updateUI, UxErrorHandle.logErrorConsumer(TAG, "Update UI ")));
         }
     }
 

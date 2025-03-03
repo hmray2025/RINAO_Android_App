@@ -10,15 +10,13 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import dji.sdk.keyvalue.value.common.CameraLensType;
 import dji.sdk.keyvalue.value.common.ComponentIndexType;
 import dji.sdk.keyvalue.value.common.DoubleMinMax;
-import dji.sdk.keyvalue.value.gimbal.GimbalAttitudeRange;
-import dji.v5.utils.common.LogUtils;
 import dji.v5.ux.R;
 import dji.v5.ux.core.base.DJISDKModel;
 import dji.v5.ux.core.base.ICameraIndex;
@@ -539,6 +537,7 @@ public class GimbalPitchBarWidget extends FrameLayoutWidget<Boolean> implements 
     public void updateCameraSource(@NonNull ComponentIndexType cameraIndex, @NonNull CameraLensType lensType) {
         widgetModel.updateCameraSource(cameraIndex, lensType);
 
+        Log.e("testMM" ,"updateCameraSource" + componentIndexType + "---" + cameraIndex);
         if (componentIndexType != cameraIndex) {
             componentIndexType = cameraIndex;
             onStop();
@@ -552,6 +551,7 @@ public class GimbalPitchBarWidget extends FrameLayoutWidget<Boolean> implements 
         if (getCameraIndex().value() >= 3 || widgetModel.getGimbalAttitudeInDegreesProcessorList().size() <= 0) {
             return;
         }
+
         compositeDisposable.add(widgetModel.getGimbalAttitudeInDegreesProcessorList().get(getCameraIndex().value()).toFlowable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(attitude -> (int) Math.round(attitude.getPitch()))
@@ -560,6 +560,9 @@ public class GimbalPitchBarWidget extends FrameLayoutWidget<Boolean> implements 
 
         compositeDisposable.add(widgetModel.getGimbalAttitudeGimbalAttitudeRangeProcessorList().get(getCameraIndex().value()).toFlowable().subscribe(gimbalAttitudeRange -> {
             DoubleMinMax pitch = gimbalAttitudeRange.getPitch();
+            if (pitch == null){
+                return;
+            }
             int pitchMax = (int) Math.round(pitch.getMax());
             int pitchMin = (int) Math.round(pitch.getMin());
             int absMax = Math.abs(pitchMax);
@@ -582,6 +585,7 @@ public class GimbalPitchBarWidget extends FrameLayoutWidget<Boolean> implements 
         super.onAttachedToWindow();
         if (!isInEditMode()) {
             widgetModel.setup();
+            startListener();
         }
     }
 

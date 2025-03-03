@@ -37,13 +37,14 @@ import io.reactivex.rxjava3.processors.PublishProcessor
  * This is a base class for widgets requiring ConstraintLayout.
  * T is the type of Widget State Update, @see[getWidgetStateUpdate].
  */
-abstract class ConstraintLayoutWidget<T> @JvmOverloads constructor(
-        context: Context,
-        attrs: AttributeSet? = null,
-        defStyleAttr: Int = 0
+abstract class ConstraintLayoutWidget<T : Any> @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
 
     protected val logTag = LogUtils.getTag(this)
+
     //region Properties
     private var reactionDisposables: CompositeDisposable? = null
     private var compositeDisposable: CompositeDisposable? = null
@@ -116,7 +117,7 @@ abstract class ConstraintLayoutWidget<T> @JvmOverloads constructor(
      * By default the widget size is a ratio
      */
     open val widgetSizeDescription: WidgetSizeDescription =
-            WidgetSizeDescription(WidgetSizeDescription.SizeType.RATIO)
+        WidgetSizeDescription(WidgetSizeDescription.SizeType.RATIO)
 
     //endregion
     //region Reactions

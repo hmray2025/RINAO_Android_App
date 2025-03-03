@@ -13,7 +13,6 @@ import dji.v5.ux.core.base.widget.FrameLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.ui.RangeSeekBar
 import dji.v5.ux.core.ui.component.StreamPaletteRangeSeekbar
-import kotlinx.android.synthetic.main.uxsdk_camera_status_action_item_content.view.*
 
 /**
 = * M3M 码流调色条

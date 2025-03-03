@@ -42,7 +42,7 @@ import java.lang.StringBuilder
  * This is a base class for widgets requiring FrameLayout.
  * T is the type of Widget State Update, @see[getWidgetStateUpdate].
  */
-abstract class FrameLayoutWidget<T> @JvmOverloads constructor(
+abstract class FrameLayoutWidget<T : Any> @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,

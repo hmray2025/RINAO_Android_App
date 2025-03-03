@@ -20,7 +20,7 @@ import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.extension.getString
 import dji.v5.ux.core.extension.showLongToast
 import dji.v5.utils.common.AndUtil
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
 
 class GpsSignalPopoverView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0,
@@ -245,7 +245,7 @@ class GpsSignalPopoverView @JvmOverloads constructor(
                 } else {
                     gpsSignalWidgetModel.setRTKEnable(isChecked)
                 }
-            }, RxUtil.logErrorConsumer(tag, "canEnableRTK:")))
+            }, UxErrorHandle.logErrorConsumer(tag, "canEnableRTK:")))
     }
 
 

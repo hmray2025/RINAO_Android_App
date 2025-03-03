@@ -46,7 +46,7 @@ import dji.v5.ux.core.base.ICameraIndex;
 import dji.v5.ux.core.base.SchedulerProvider;
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget;
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore;
-import dji.v5.ux.core.util.RxUtil;
+import dji.v5.ux.core.util.UxErrorHandle;
 import dji.v5.ux.core.util.ViewUtil;
 
 /**
@@ -150,14 +150,14 @@ public class AutoExposureLockWidget extends ConstraintLayoutWidget<Object> imple
                 .observeOn(SchedulerProvider.ui())
                 .subscribe(() -> {
                     // Do nothing
-                }, RxUtil.logErrorConsumer(TAG, "set auto exposure lock: ")));
+                }, UxErrorHandle.logErrorConsumer(TAG, "set auto exposure lock: ")));
     }
 
     private void checkAndUpdateAELock() {
         if (!isInEditMode()) {
             addDisposable(widgetModel.isAutoExposureLockOn().firstOrError()
                     .observeOn(SchedulerProvider.ui())
-                    .subscribe(this::onAELockChange, RxUtil.logErrorConsumer(TAG, "Update AE Lock ")));
+                    .subscribe(this::onAELockChange, UxErrorHandle.logErrorConsumer(TAG, "Update AE Lock ")));
         }
     }
 

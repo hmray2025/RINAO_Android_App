@@ -2,6 +2,7 @@ package dji.v5.ux.cameracore.widget.cameracontrols.exposuresettings
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
 import dji.sdk.keyvalue.value.camera.CameraExposureMode
 import dji.sdk.keyvalue.value.camera.CameraExposureSettings
@@ -18,9 +19,9 @@ import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.core.ui.HorizontalSeekBar
 import dji.v5.ux.core.util.AudioUtil
 import dji.v5.ux.core.util.CameraUtil
-import dji.v5.ux.core.util.RxUtil
+import dji.v5.ux.core.util.UxErrorHandle
+import dji.v5.ux.databinding.UxsdkWidgetIsoEiSettingBinding
 import io.reactivex.rxjava3.functions.Action
-import kotlinx.android.synthetic.main.uxsdk_widget_iso_ei_setting.view.*
 
 /**
  * Class Description
@@ -50,12 +51,14 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
     private var uiIsoValueArray: Array<CameraISO?> = arrayOf()
     private var eiValueArray: IntArray = intArrayOf()
 
+    private lateinit var binding: UxsdkWidgetIsoEiSettingBinding
+
     private val widgetModel by lazy {
         ISOAndEISettingModel(DJISDKModel.getInstance(), ObservableInMemoryKeyedStore.getInstance())
     }
 
     override fun initView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
-        View.inflate(context, R.layout.uxsdk_widget_iso_ei_setting, this)
+        binding = UxsdkWidgetIsoEiSettingBinding.inflate(LayoutInflater.from(context), this)
     }
 
     override fun reactToModelChanges() {
@@ -119,23 +122,23 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
 
         // ISO seekBar
         isISOSeekBarEnabled = false
-        seekbar_iso.progress = 0
-        seekbar_iso.enable(false)
-        seekbar_iso.addOnSeekBarChangeListener(this)
-        seekbar_iso.isBaselineVisibility = false
-        seekbar_iso.setMinValueVisibility(true)
-        seekbar_iso.setMaxValueVisibility(true)
-        seekbar_iso.setMinusVisibility(false)
-        seekbar_iso.setPlusVisibility(false)
-        button_iso_auto.setOnClickListener(this)
+        binding.seekbarIso.progress = 0
+        binding.seekbarIso.enable(false)
+        binding.seekbarIso.addOnSeekBarChangeListener(this)
+        binding.seekbarIso.isBaselineVisibility = false
+        binding.seekbarIso.setMinValueVisibility(true)
+        binding.seekbarIso.setMaxValueVisibility(true)
+        binding.seekbarIso.setMinusVisibility(false)
+        binding.seekbarIso.setPlusVisibility(false)
+        binding.buttonIsoAuto.setOnClickListener(this)
 
         // EI seekBar
-        seekbar_ei.addOnSeekBarChangeListener(this)
-        seekbar_ei.visibility = GONE
-        seekbar_ei.setMinValueVisibility(true)
-        seekbar_ei.setMaxValueVisibility(true)
-        seekbar_ei.setMinusVisibility(false)
-        seekbar_ei.setPlusVisibility(false)
+        binding.seekbarEi.addOnSeekBarChangeListener(this)
+        binding.seekbarEi.visibility = GONE
+        binding.seekbarEi.setMinValueVisibility(true)
+        binding.seekbarEi.setMaxValueVisibility(true)
+        binding.seekbarEi.setMinusVisibility(false)
+        binding.seekbarEi.setPlusVisibility(false)
 
         if (!isInEditMode) {
             widgetModel.setup()
@@ -160,18 +163,18 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
     }
 
     override fun onProgressChanged(view: HorizontalSeekBar, progress: Int, isFromUI: Boolean) {
-        if (view == seekbar_iso) {
+        if (view == binding.seekbarIso) {
             if (isISOLocked) {
-                seekbar_iso.text = LOCKED_ISO_VALUE
+                binding.seekbarIso.text = LOCKED_ISO_VALUE
             } else {
                 if (uiIsoValueArray.isNotEmpty()) {
                     uiCameraISO = CameraUtil.convertISOToInt(uiIsoValueArray[progress])
-                    seekbar_iso.text = uiCameraISO.toString()
+                    binding.seekbarIso.text = uiCameraISO.toString()
                 }
             }
         } else {
             if (progress < eiValueArray.size) {
-                seekbar_ei.text = eiValueArray[progress].toString()
+                binding.seekbarEi.text = eiValueArray[progress].toString()
             }
         }
     }
@@ -183,7 +186,7 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
     override fun onStopTrackingTouch(view: HorizontalSeekBar, progress: Int) {
         isSeekBarTracking = false
         AudioUtil.playSoundInBackground(context, R.raw.uxsdk_camera_ev_center)
-        if (view == seekbar_iso) {
+        if (view == binding.seekbarIso) {
             if (uiIsoValueArray.isNotEmpty()) {
                 val newISO = uiIsoValueArray[progress]
                 newISO?.let {
@@ -206,7 +209,7 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
     }
 
     override fun onClick(v: View?) {
-        if (v == button_iso_auto) {
+        if (v == binding.buttonIsoAuto) {
             isISOAutoSelected = !isISOAutoSelected
             setAutoISO(isISOAutoSelected)
         }
@@ -214,13 +217,13 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
 
     private fun updateWidgetUI() {
         if (widgetModel.isRecordVideoEIMode()) {
-            textview_iso_title.setText(R.string.uxsdk_camera_ei)
-            seekbar_iso_layout.visibility = GONE
-            seekbar_ei.visibility = VISIBLE
+            binding.textviewIsoTitle.setText(R.string.uxsdk_camera_ei)
+            binding.seekbarIsoLayout.visibility = GONE
+            binding.seekbarEi.visibility = VISIBLE
         } else {
-            textview_iso_title.setText(R.string.uxsdk_camera_exposure_iso_title)
-            seekbar_iso_layout.visibility = VISIBLE
-            seekbar_ei.visibility = GONE
+            binding.textviewIsoTitle.setText(R.string.uxsdk_camera_exposure_iso_title)
+            binding.seekbarIsoLayout.visibility = VISIBLE
+            binding.seekbarEi.visibility = GONE
         }
     }
 
@@ -231,14 +234,13 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
     }
 
     private fun onExposureModeUpdated(exposureMode: CameraExposureMode) {
-        if (!CameraUtil.isAutoISOSupportedByProduct()) {
-            if (exposureMode != CameraExposureMode.MANUAL) {
-                isISOAutoSelected = true
-                setAutoISO(isISOAutoSelected)
-            } else {
-                isISOAutoSelected = false
-            }
+        if (exposureMode != CameraExposureMode.MANUAL) {
+            isISOAutoSelected = true
+            setAutoISO(isISOAutoSelected)
+        } else {
+            isISOAutoSelected = false
         }
+
     }
 
     private fun updateISORangeValue(array: Array<CameraISO?>) {
@@ -266,10 +268,10 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
         // Workaround where ISO range updates to single value in AUTO mode
         if (uiIsoValueArray.isNotEmpty()) {
             val minCameraISO = CameraUtil.convertISOToInt(uiIsoValueArray[0])
-            seekbar_iso.setMinValueText(minCameraISO.toString())
+            binding.seekbarIso.setMinValueText(minCameraISO.toString())
             val maxCameraISO = CameraUtil.convertISOToInt(uiIsoValueArray[uiIsoValueArray.size - 1])
-            seekbar_iso.setMaxValueText(maxCameraISO.toString())
-            seekbar_iso.max = uiIsoValueArray.size - 1
+            binding.seekbarIso.setMaxValueText(maxCameraISO.toString())
+            binding.seekbarIso.max = uiIsoValueArray.size - 1
             isISOSeekBarEnabled = true
             updateISOValue(uiIsoValueArray, uiCameraISO)
             // Auto button has relationship with ISO range, so need update this button here.
@@ -280,7 +282,7 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
     }
 
     private fun updateISOEnableStatus() {
-        seekbar_iso.enable(!isISOAutoSelected && isISOSeekBarEnabled)
+        binding.seekbarIso.enable(!isISOAutoSelected && isISOSeekBarEnabled)
     }
 
     private fun checkAutoISO(array: Array<CameraISO?>): Boolean {
@@ -294,14 +296,14 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
 
     private fun updateISOValue(array: Array<CameraISO?>, value: Int) {
         val progress: Int = getISOIndex(array, value)
-        seekbar_iso.progress = progress
+        binding.seekbarIso.progress = progress
     }
 
     private fun updateAutoISOButton() {
         if (isISOAutoSupported && isISOSeekBarEnabled && !widgetModel.isRecordVideoEIMode() && CameraUtil.isAutoISOSupportedByProduct()) {
-            button_iso_auto.visibility = VISIBLE
+            binding.buttonIsoAuto.visibility = VISIBLE
         } else {
-            button_iso_auto.visibility = GONE
+            binding.buttonIsoAuto.visibility = GONE
         }
     }
 
@@ -322,8 +324,8 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
         if (isAuto) {
             newISO = CameraISO.ISO_AUTO
         } else {
-            if (seekbar_iso.progress < uiIsoValueArray.size) {
-                newISO = uiIsoValueArray[seekbar_iso.progress]
+            if (binding.seekbarIso.progress < uiIsoValueArray.size) {
+                newISO = uiIsoValueArray[binding.seekbarIso.progress]
             }
         }
         newISO?.let {
@@ -333,16 +335,16 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
 
     private fun updateISOToCamera(iso: CameraISO) {
         addDisposable(
-            widgetModel.setISO(iso).observeOn(SchedulerProvider.ui()).subscribe(Action { }, RxUtil.errorConsumer({
-                seekbar_iso.restorePreviousProgress()
+            widgetModel.setISO(iso).observeOn(SchedulerProvider.ui()).subscribe(Action { }, UxErrorHandle.errorConsumer({
+                binding.seekbarIso.restorePreviousProgress()
             }, this.toString(), "updateISOToCamera: "))
         )
     }
 
     private fun updateEIToCamera(ei: Int) {
         addDisposable(
-            widgetModel.setEI(EIType.find(ei)).observeOn(SchedulerProvider.ui()).subscribe(Action { }, RxUtil.errorConsumer({
-                seekbar_iso.restorePreviousProgress()
+            widgetModel.setEI(EIType.find(ei)).observeOn(SchedulerProvider.ui()).subscribe(Action { }, UxErrorHandle.errorConsumer({
+                binding.seekbarIso.restorePreviousProgress()
             }, this.toString(), "updateEIToCamera: "))
         )
     }
@@ -350,9 +352,9 @@ open class ISOAndEISettingWidget @JvmOverloads constructor(
     // By referring to DJIGo4 in both iOS and Android version
     // Showing the ISO_FIXED  as locked value 500
     private fun updateISOLocked() {
-        button_iso_auto.visibility = GONE
-        seekbar_iso.enable(false)
-        seekbar_iso.progress = seekbar_iso.max / 2 - 1
+        binding.buttonIsoAuto.visibility = GONE
+        binding.seekbarIso.enable(false)
+        binding.seekbarIso.progress = binding.seekbarIso.max / 2 - 1
     }
 
     sealed class ModelState

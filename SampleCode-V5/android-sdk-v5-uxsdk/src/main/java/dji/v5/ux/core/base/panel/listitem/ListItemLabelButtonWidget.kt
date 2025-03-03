@@ -45,7 +45,7 @@ import dji.v5.ux.core.util.ViewIDGenerator
  * type of list item
  * @property widgetType - The [WidgetType] of the current widget.
  */
-abstract class ListItemLabelButtonWidget<T> @JvmOverloads constructor(
+abstract class ListItemLabelButtonWidget<T : Any> @JvmOverloads constructor(
         context: Context,
         attrs: AttributeSet? = null,
         defStyleAttr: Int = 0,
