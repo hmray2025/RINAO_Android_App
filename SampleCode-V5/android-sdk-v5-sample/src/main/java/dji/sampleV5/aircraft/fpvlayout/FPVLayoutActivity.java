@@ -22,9 +22,6 @@
  */
 
 package dji.sampleV5.aircraft.fpvlayout;
-
-import static com.google.android.gms.common.util.CollectionUtils.listOf;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -291,7 +288,6 @@ public class FPVLayoutActivity extends AppCompatActivity {
         mapWidget.onDestroy();
         MediaDataCenter.getInstance().getCameraStreamManager().removeAvailableCameraUpdatedListener(availableCameraUpdatedListener);
         DJINetworkManager.getInstance().removeNetworkStatusListener(networkStatusListener);
-//        removeChannelStateListener();
     }
 
     @Override
@@ -410,44 +406,6 @@ public class FPVLayoutActivity extends AppCompatActivity {
         return defaultSource;
     }
 
-//    private void initChannelStateListener() {
-//        ComponentIndexType primarySource = getSuitableSource(cameraList, ComponentIndexType.LEFT_OR_MAIN);
-//        primaryChannel =  MediaDataCenter.getInstance().getVideoStreamManager().getAvailableVideoChannel(VideoChannelType.PRIMARY_STREAM_CHANNEL);
-//        primaryChannel?.addVideoChannelStateChangeListener(primaryChannelStateListener);
-//        IVideoChannel secondaryChannel =
-//                MediaDataCenter.getInstance().getVideoStreamManager().getAvailableVideoChannel(VideoChannelType.SECONDARY_STREAM_CHANNEL);
-//        if (primaryChannel != null) {
-//            primaryChannelStateListener = (from, to) -> {
-//                StreamSource primaryStreamSource = primaryChannel.getStreamSource();
-//                if (VideoChannelState.ON == to && primaryStreamSource != null) {
-//                    runOnUiThread(() -> primaryFpvWidget.updateVideoSource(primarySource));
-//                }
-//            };
-//            primaryChannel.addVideoChannelStateChangeListener(primaryChannelStateListener);
-//        }
-//        if (secondaryChannel != null) {
-//            secondaryChannelStateListener = (from, to) -> {
-//                StreamSource secondaryStreamSource = secondaryChannel.getStreamSource();
-//                if (VideoChannelState.ON == to && secondaryStreamSource != null) {
-//                    runOnUiThread(() -> secondaryFPVWidget.updateVideoSource(secondaryStreamSource, VideoChannelType.SECONDARY_STREAM_CHANNEL));
-//                }
-//            };
-//            secondaryChannel.addVideoChannelStateChangeListener(secondaryChannelStateListener);
-//        }
-//    }
-
-//    private void removeChannelStateListener() {
-//        IVideoChannel primaryChannel =
-//                MediaDataCenter.getInstance().getVideoStreamManager().getAvailableVideoChannel(VideoChannelType.PRIMARY_STREAM_CHANNEL);
-//        IVideoChannel secondaryChannel =
-//                MediaDataCenter.getInstance().getVideoStreamManager().getAvailableVideoChannel(VideoChannelType.SECONDARY_STREAM_CHANNEL);
-//        if (primaryChannel != null) {
-//            primaryChannel.removeVideoChannelStateChangeListener(primaryChannelStateListener);
-//        }
-//        if (secondaryChannel != null) {
-//            secondaryChannel.removeVideoChannelStateChangeListener(secondaryChannelStateListener);
-//        }
-//    }
 
     private void onCameraSourceUpdated(ComponentIndexType devicePosition, CameraLensType lensType) {
         LogUtils.i(LogPath.SAMPLE, "onCameraSourceUpdated", devicePosition, lensType);

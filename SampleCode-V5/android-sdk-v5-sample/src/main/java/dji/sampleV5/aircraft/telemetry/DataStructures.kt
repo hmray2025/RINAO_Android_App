@@ -84,3 +84,10 @@ data class SafetyState(
         return warnings[i] ?: "Unknown Warning"
     }
 }
+
+data class JoystickInput(
+    val x: Double,
+    val y: Double,
+    val yaw: Int,
+    val alt: Double,
+)

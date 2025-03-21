@@ -31,6 +31,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -110,6 +112,8 @@ public class DefaultLayoutActivity extends AppCompatActivity {
     protected ConstraintLayout fpvParentView;
     private DrawerLayout mDrawerLayout;
     private TextView gimbalAdjustDone;
+    private final DataProcessor<CameraSource> cameraSourceProcessor = DataProcessor.create(new CameraSource(ComponentIndexType.UNKNOWN,
+            CameraLensType.UNKNOWN));
     private GimbalFineTuneWidget gimbalFineTuneWidget;
     private ComponentIndexType lastDevicePosition = ComponentIndexType.UNKNOWN;
     private CameraLensType lastLensType = CameraLensType.UNKNOWN;
@@ -252,12 +256,12 @@ public class DefaultLayoutActivity extends AppCompatActivity {
                         }
                     }
                 }));
-//        compositeDisposable.add(cameraSourceProcessor.toFlowable()
-//                .observeOn(SchedulerProvider.io())
-//                .throttleLast(500, TimeUnit.MILLISECONDS)
-//                .subscribeOn(SchedulerProvider.io())
-//                .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
-//        );
+        compositeDisposable.add(cameraSourceProcessor.toFlowable()
+                .observeOn(SchedulerProvider.io())
+                .throttleLast(500, TimeUnit.MILLISECONDS)
+                .subscribeOn(SchedulerProvider.io())
+                .subscribe(result -> runOnUiThread(() -> onCameraSourceUpdated(result.devicePosition, result.lensType)))
+        );
         compositeDisposable.add(ObservableInMemoryKeyedStore.getInstance()
                 .addObserver(UXKeys.create(GlobalPreferenceKeys.GIMBAL_ADJUST_CLICKED))
                 .observeOn(SchedulerProvider.ui())

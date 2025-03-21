@@ -25,7 +25,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
     var flightMode = "idle"
 
     var speed = 0.0
-    var gathercoordinate = Coordinate(0.0, 0.0, 0.0)
+    var userJoystickInput = JoystickInput(0.0, 0.0, 0, 0.0)
 
     // Establish WebSocket connection
     private val defaultIP: String = "ws://192.168.0.101:8084"
@@ -63,7 +63,6 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
         currentIP = ip
     }
     fun connectWebSocket() {
-//        val request = Request.Builder().url("ws://192.168.20.169:8084").build()
         var request: Request? = null
         try {
             request = Request.Builder().url(currentIP).build()
@@ -113,7 +112,6 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                 "changeGimbalAngle" -> handleChangeGimbalAngle(args as JSONObject?)
                 "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
                 "ModeMessage" -> handleModeUpdate(args as JSONObject?)
-                "modeJoystick" -> handleJoystickUpdate(args as JSONObject?)
                 else -> Log.d("TuskService", "Unknown action: $action")
             }
         } catch (e: Exception) {
@@ -166,6 +164,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
         // Handle action "FollowWaypoints" with the waypoint list
         try {
             if (args is JSONObject) {
+                Log.v("TuskService", "Handling FollowWaypoints with message: $args")
                 val flightPathArray = args.optJSONArray("flightPath")
                 flightMode = "Path"
                 if (flightPathArray != null) {
@@ -201,7 +200,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                 nextWaypointID = args.getInt("waypointID")
                 plannerAction = args.getString("plannerAction")
                 dwellTime = args.getInt("dwellTime")
-                flightMode = "Waypoint"
+                flightMode = "waypoint"
 
                 Log.d(
                     "WaypointService",
@@ -242,10 +241,15 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                 Log.d("TuskService", "Mode: $flightMode")
                 if (flightMode == "joystick") {
                     val modeInfo = args.getJSONObject("modeInfo")
-                    val x = modeInfo.getDouble("x")
-                    val y = modeInfo.getDouble("y")
-                    val yaw = modeInfo.getInt("yaw")
-                    vehicle!!.userJoystickInput(x.toFloat(), y.toFloat(), yaw)
+                    val flightParams = args.getJSONObject("flightParams")
+                    userJoystickInput = JoystickInput(
+                        modeInfo.getDouble("x"),
+                        modeInfo.getDouble("y"),
+                        modeInfo.getInt("yaw"),
+                        flightParams.getDouble("altitudeCeiling")
+                    )
+                    maxVelocity = flightParams.getDouble("maxSpeed")
+                    maxVelocity *= (10.0 / 36.0)  // Convert from km/h to m/s
                 }
             }
         } catch (e: Exception) {
@@ -283,15 +287,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
         }
     }
 
-    fun getActions() {
-        TODO("Not yet implemented")
-    }
-
     fun postControllerStatus(status: TuskControllerStatus) {
 
     }
-
-//    override fun callReconnectWebsocket() {
-//        connectWebSocket()
-//    }
 }

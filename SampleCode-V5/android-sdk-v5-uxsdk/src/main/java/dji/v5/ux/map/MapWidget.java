@@ -45,6 +45,8 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LifecycleOwner;
+
 import dji.sdk.keyvalue.value.common.LocationCoordinate2D;
 import dji.sdk.keyvalue.value.common.LocationCoordinate3D;
 import dji.v5.common.utils.GpsUtils;
@@ -256,10 +258,6 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
             }
         }));
         addReaction(widgetModel.flyZoneInformationDataProcessor.toFlowable().observeOn(SchedulerProvider.ui()).subscribe(this::onFlyZoneListUpdate));
-//        widgetModel.tuskTelemetryWaypoint.observe((LifecycleOwner) getContext(), tuskData -> {
-//            addTuskWaypointOnMap(tuskData);
-////            clearEverythingBut(tuskMarkers.contains());
-//        });
     }
 
     @Override
@@ -370,7 +368,8 @@ public class MapWidget extends ConstraintLayoutWidget<Object> implements View.On
     private void initMap(String mapBoxAccessToken, TypedArray typedArray) {
         int mapProviderInt = typedArray.getInt(R.styleable.MapWidget_uxsdk_mapProvider, -1);
         if (mapProviderInt >= 0 && (mapProviderInt != 3 || mapBoxAccessToken != null)) {
-            setMapProvider(SettingDefinitions.MapProvider.find(mapProviderInt), mapBoxAccessToken);
+//            setMapProvider(SettingDefinitions.MapProvider.find(mapProviderInt), mapBoxAccessToken);
+            setMapProvider(SettingDefinitions.MapProvider.GOOGLE, mapBoxAccessToken);
         }
         setMapType(DJIMap.MapType.find(typedArray.getInt(R.styleable.MapWidget_uxsdk_djiMap_mapType,
                 DJIMap.MapType.NORMAL.getValue())));

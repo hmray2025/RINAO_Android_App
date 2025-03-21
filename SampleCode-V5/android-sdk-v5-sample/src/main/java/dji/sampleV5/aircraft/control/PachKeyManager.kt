@@ -161,9 +161,6 @@ class PachKeyManager() : IVehicleController {
                     status = if (this@PachKeyManager.actionState.action != "") "Autonomous | ${this@PachKeyManager.actionState.action}" else "Autonomous"
                     prevWaypoint = this@PachKeyManager.telemService.nextWaypoint
                 }
-//                this@PachKeyManager.sendWaypointToMap(wp)
-//                pachModel.updateConnection(this@PachKeyManager.telemService.getConnectionStatus())
-//                pachModel.updateMsg(status)
 
                 sendDataToStatusWidget(status, this@PachKeyManager.telemService.getConnectionStatus())
                 delay(1000)
@@ -171,13 +168,6 @@ class PachKeyManager() : IVehicleController {
         }
     }
 
-//    fun setWaypointListener(listener: WaypointListener) {
-//        this.listener = listener
-//    }
-//
-//    fun isWaypointListenerSet(): Boolean {
-//        return this.listener != null
-//    }
     fun runTesting() {
         KeyManager.getInstance().listen(fiveDKey, this) { _, newValue ->
             mainScope.launch {
@@ -247,13 +237,18 @@ class PachKeyManager() : IVehicleController {
             controller.startTakeOff()
         }
         this@PachKeyManager.actionState.autonomous = true
-        when (telemService.flightMode) {
-            "Waypoint" -> flyHippo()
-            "Path" -> followWaypoints(telemService.waypointList)
-            else -> {
-                Log.v("PachKeyManager", "No valid flight mode detected")
+
+        while (safetyChecks()) {
+            when (telemService.flightMode) {
+                "waypoint" -> flyHippo()
+                "path" -> followPath(telemService.waypointList)
+                "joystick" -> userJoystickControl()
+                else -> {
+                    Log.v("PachKeyManager", "No valid flight mode detected")
+                }
             }
         }
+
         this@PachKeyManager.sendWaypointToMap(DJILatLng(0.0,0.0))
         this@PachKeyManager.actionState.autonomous = false
     }
@@ -284,285 +279,11 @@ class PachKeyManager() : IVehicleController {
         }
     }
 
-//    companion object {
-//        fun sendStreamURL(instance: PachKeyManager, url: String) {
-//            instance.telemService.postStreamURL(StreamInfo(url))
-//        }
-//    }
+
     private fun sendControllerStatus(status: TuskControllerStatus) {
         telemService.postControllerStatus(status)
     }
 
-    // Holder function that registers all necessary keys and handles their operation during changes
-    private fun registerKeys(){
-        // Setup PachKeyManager and define the keys that we want to listen to
-        Log.v("PachKeyManager", "Registering Keys")
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyAircraftLocation3D)
-        ) {
-            stateData = stateData.copy(
-                latitude = it.latitude,
-                longitude = it.longitude,
-                altitude = it.altitude
-            )
-            sendState(stateData)
-            Log.v("PachTelemetry", "KeyAircraftLocation $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyAircraftAttitude)
-        ) {
-            stateData = stateData.copy(
-                roll = it.roll,
-                pitch = it.pitch,
-                yaw = it.yaw)
-            sendState(stateData)
-            Log.d("PachTelemetry", "KeyAircraftAttitude $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyAircraftVelocity)
-        ) {
-            stateData = stateData.copy(
-                velocityX = it.x,
-                velocityY = it.y,
-                velocityZ = it.z)
-            sendState(stateData)
-            Log.d("PachTelemetry", "AircraftVelocity $it")
-            if (sartopo.isURLValid()) {
-                sartopo.sendGetRequest(stateData.longitude!!, stateData.latitude!!)
-            } else {
-                Log.e("Sartopo", "Sartopo URL is not valid\n" +
-                        "Base: ${sartopo.getBaseURL()}\n" +
-                        "Access: ${sartopo.getAccessURL()}\n" +
-                        "ID: ${sartopo.getDeviceID()}\n")
-            }
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyWindSpeed)
-        ) {
-            stateData = stateData.copy(windSpeed = it)
-            sendState(stateData)
-            Log.d("PachTelemetry", "WindSpeed $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyWindDirection)
-        ) {
-            stateData = stateData.copy(windDirection = it.toString())
-            sendState(stateData)
-            Log.d("PachTelemetry", "WindDirection $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyIsFlying)
-        ) {
-            stateData = stateData.copy(isFlying = it)
-            sendState(stateData)
-            Log.d("PachTelemetry", "IsFlying $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyConnection)
-        ) {
-            statusData = statusData.copy(connected = it)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "Connection $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(BatteryKey.KeyChargeRemainingInPercent)
-        ) {
-            statusData = statusData.copy(battery = it)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "Battery Level $it")
-        }
-
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyGPSSatelliteCount)
-        )    {
-                statusData = statusData.copy(gps = it)
-                sendStatus(statusData)
-                Log.d("PachTelemetry", "GPSSatelliteCount $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyGPSSignalLevel)
-        ) {
-            statusData = statusData.copy(gpsSignal = it.value())
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "GPSSignalLevel $it")
-        }
-
-
-        registerKey(
-            KeyTools.createKey(AirLinkKey.KeySignalQuality)
-        ) {
-            statusData = statusData.copy(signalQuality = it)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "SignalQuality $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyGoHomeState)
-        ) {
-            statusData = statusData.copy(goHomeState = it.toString())
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "GoHomeState $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyFlightModeString)
-        ) {
-            statusData = statusData.copy(flightMode = it)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "FlightMode $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyAreMotorsOn)
-        ) {
-            statusData = statusData.copy(motorsOn = it)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "MotorsOn $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(FlightControllerKey.KeyHomeLocation)
-        ) {
-            statusData =
-                statusData.copy(
-                    homeLocationLat = it.latitude,
-                    homeLocationLong = it.longitude)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "HomeLocation $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(GimbalKey.KeyGimbalAttitude)
-        ) {
-            statusData = statusData.copy(gimbalAngle = it.pitch)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "GimbalPitch $it")
-        }
-        registerKey(
-                KeyTools.createKey(FlightControllerKey.KeyGoHomeState)
-        ){
-            statusData = statusData.copy(goHomeStatus = it.toString())
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "GoHomeStatus $it")
-        }
-
-        registerKey(
-                KeyTools.createKey(FlightControllerKey.KeyTakeoffLocationAltitude)
-        ){
-            statusData = statusData.copy(takeoffAltitude = it)
-            sendStatus(statusData)
-            Log.d("PachTelemetry", "TakeoffAltitude $it")
-        }
-
-        // TuskControllerKeys Setup
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyBatteryInfo)
-        ) {
-            controllerStatus = controllerStatus.copy(battery = it.batteryPercent)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachTelemetry", "ControllerBattery $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyPauseButtonDown)
-        ){
-            controllerStatus = controllerStatus.copy(pauseButton = it)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachTelemetry", "PauseButton $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyGoHomeButtonDown)
-        ){
-            controllerStatus = controllerStatus.copy(goHomeButton = it)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachTelemetry", "GoHomeButton $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyStickLeftHorizontal)
-        ){
-            controllerStatus = controllerStatus.copy(leftStickX = it)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachTelemetry", "StickLeftHorizontal $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyStickLeftVertical)
-        ){
-            controllerStatus = controllerStatus.copy(leftStickY = it)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachTelemetry", "StickLeftVertical $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyStickRightHorizontal)
-        ){
-            controllerStatus = controllerStatus.copy(rightStickX = it)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachTelemetry", "StickRightHorizontal $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyStickLeftVertical)
-        ){
-            controllerStatus = controllerStatus.copy(rightStickY = it)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachTelemetry", "StickRightVertical $it")
-        }
-
-        registerKey(
-            KeyTools.createKey(RemoteControllerKey.KeyFiveDimensionPressedStatus)
-        ){
-            controllerStatus = controllerStatus.copy(
-                    fiveDUp = it.upwards,
-                    fiveDDown = it.downwards,
-                    fiveDLeft = it.leftwards,
-                    fiveDRight = it.rightwards,
-                    fiveDPress = it.middlePressed)
-            sendControllerStatus(controllerStatus)
-            Log.d("PachKeyManager", "FiveDButton $it")
-        }
-
-        keyDisposables?.add( // dji key does not work in this instance
-            streamDataProcessor
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    Log.v("PachKeyManager", "is Streaming: $it")
-                    statusData = statusData.copy(isStreaming = it)
-                    sendStatus(statusData)
-                }, {
-                    Log.e("PachKeyManager", "Stream URL Error: $it")
-                })
-
-        )
-        // Continue to do this for the other required keys...
-    }
-
-    private fun initializeFlightParameters() {
-        // Function initializes any static parameters prior to flight
-        // Set battery warning threshold to 30%
-        val batteryWarningValue = 20
-        val batteryThresh = KeyTools.createKey(FlightControllerKey.KeyLowBatteryWarningThreshold)
-        KeyManager.getInstance().setValue(batteryThresh, batteryWarningValue, object : CommonCallbacks.CompletionCallback {
-            override fun onSuccess() {
-                Log.v("PachKeyManager", "Battery threshold set to $batteryWarningValue%")
-            }
-
-            override fun onFailure(error: IDJIError) {
-                Log.e("PachKeyManager", "Error: $error")
-            }
-        })
-    }
 
     private fun <T : Any> registerKey(
         djiKey: DJIKey<T>,
@@ -732,21 +453,9 @@ class PachKeyManager() : IVehicleController {
         return true
     }
 
-    private suspend fun engageGatherAction(){
-        // Function handles the gathering of information.
-        // Called from multiple locations, so this allows for a standardized execution
-        val orbitRadius = 10.0
-        this@PachKeyManager.actionState.action = "Gathering Info"
-        sendAutonomyStatus("GatheringInfo")
-//                diveAndYaw(waypoint.alt-10, 30.0)
-        Log.v("PackKeyManagerHIPPO", "Gathering coordinate: ${telemService.nextWaypoint}")
-        flyOrbitPath(
-            telemService.nextWaypoint,
-            orbitRadius)
-    }
-
     private fun safetyChecks(): Boolean {
         // Function checks all safety information before returning a boolean for proceeding.
+        // Returns true if all safety checks pass, and false if any safety check fails
         // Checks:
         // 1. Is the aircraft flying?
         safetyState.failures[0] = (if (!stateData.isFlying!!) true.also {
@@ -767,6 +476,7 @@ class PachKeyManager() : IVehicleController {
         }
         return true
     }
+
     suspend fun goToAltitude(alt: Double){
         // When called, this function will make the aircraft go to a certain altitude
         while (stateData.altitude!! != alt) {
@@ -802,6 +512,19 @@ class PachKeyManager() : IVehicleController {
             }
             delay(100L)
         }
+    }
+
+    private suspend fun engageGatherAction(){
+        // Function handles the gathering of information.
+        // Called from multiple locations, so this allows for a standardized execution
+        val orbitRadius = 10.0
+        this@PachKeyManager.actionState.action = "Gathering Info"
+        sendAutonomyStatus("GatheringInfo")
+//                diveAndYaw(waypoint.alt-10, 30.0)
+        Log.v("PackKeyManagerHIPPO", "Gathering coordinate: ${telemService.nextWaypoint}")
+        flyOrbitPath(
+            telemService.nextWaypoint,
+            orbitRadius)
     }
 
     suspend fun goToLocationForward(lat: Double, lon: Double, alt: Double){
@@ -857,66 +580,22 @@ class PachKeyManager() : IVehicleController {
         pidController.resetIntegral()
     }
 
-    suspend fun goToLocationFixedYaw(lat: Double, lon: Double, alt: Double, yaw: Double, tolerence: Double = pidController.posTolerance){
-        // Function goes to a coordinate location assuming a fixed yaw angle
-        // compute distance to target location using lat and lon
-        // TODO: There seems to be a control issue with this implementation.
-        //  Aircraft doesn't seem to reach the waypoint in the expected manner. Potential coordinate frame issue.
-        //  Can try checking basic flight control
-        var distance = computeLatLonDistance(lat, lon)
-        while (distance > tolerence) {
-
-            // ((distance > pidController.posTolerance) and (stateData.velocityX!! > pidController.velTolerance))
-            //What if we overshoot the target location? Will the aircraft back up or turn around?
-            Log.d("PachControlAction", "wp: $lat, $lon")
-            Log.v("PachControlAction", "Distance: $distance")
-            val yError = computeLatDistance(lat)
-            val xError = computeLonDistance(lon)
-            Log.v("PachControlAction", "Y Error: $yError | X Error: $xError | Distance: $distance")
-            val xVel = pidController.getControl(xError)
-            val yVel = pidController.getControl(yError)
-            val clippedXvel = xVel.coerceIn(-pidController.maxVelocity, pidController.maxVelocity)
-            val clippedYvel = yVel.coerceIn(-pidController.maxVelocity, pidController.maxVelocity)
-
-            Log.v("PachControlAction", "Commanded Yaw: $yaw | Commanded Altitude: $alt | xvel: $xVel | yvel: $yVel")
-            // command drone x & y velocity to move to target location with a defined yaw
-            if (!telemService.isAlertAction) {
-                if (safetyChecks()) {
-                    controller.sendVirtualStickVelocityGround(clippedYvel, clippedXvel, yaw, alt)
-                } else {
-                    Log.v("PachKeyManager", "Safety Check Failed")
-                    break
-                }
-            } else {
-                Log.v("PachKeyManager", "Alerted Operator")
-                break
-            }
-            delay(50L)
-            distance = computeLatLonDistance(lat, lon)
-        }
-        pidController.resetIntegral()
-    }
 
     suspend fun flyHippo() {
         // Function will fly using the HIPPO decision making framework.
         // This will fly to a given waypoint and continue along to the following waypoint unless
         // a specific decision making flag has been raised.
         // When called, this function will make the aircraft go to a series of locations
-        // Edge Cases:
-        // What if drone is already flying?
-        // What if drone loses connection or GPS signal?
-        // What if remote controller is disconnected?
-        // What if drone is already at the location?
-        // What if the operator takes control of the aircraft?
 
         // compute distance to target location using lat and lon
         var waypoint = getNewDirection()
         var waypointID = telemService.nextWaypointID
+        Log.v("PachKeyManager", "Waypoint Mode")
         sendAutonomyStatus("waypoint-reached")
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
 
-        while (safetyChecks()) {
+        while (safetyChecks() && telemService.flightMode == "waypoint") {
             // Handle logic for action execution
             if (this@PachKeyManager.decisionChecks()) {
                 Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
@@ -975,6 +654,7 @@ class PachKeyManager() : IVehicleController {
             }
             this@PachKeyManager.actionState.action = "" // if no action is taken, reset action to empty string
         }
+        Log.v("PachKeyManagerHIPPO", "Flight Mode Change")
         controller.endVirtualStick()
     }
 
@@ -994,27 +674,90 @@ class PachKeyManager() : IVehicleController {
         return waypoint
     }
 
-    private suspend fun followWaypoints(wpList: List<Coordinate>){
+    private suspend fun followPath(wpList: List<Coordinate>){
         // When called, this function will make the aircraft follow a list of waypoints
         // Figure out if the latest state is given
-
+        Log.v("PachKeyManager", "Path Mode")
+        this@PachKeyManager.actionState.action = "Following Path"
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
 
-        for (wp in wpList){
-            if (safetyChecks()) {
-                this@PachKeyManager.sendWaypointToMap(DJILatLng(wp.lat, wp.lon))
-                goToLocationForward(wp.lat, wp.lon, wp.alt)
+        while (telemService.flightMode == "waypoint") {
+            for (wp in wpList) {
+                if (safetyChecks()) {
+                    this@PachKeyManager.sendWaypointToMap(DJILatLng(wp.lat, wp.lon))
+                    goToLocationForward(wp.lat, wp.lon, wp.alt)
 
-            } else{
-                Log.v("SafetyChecks", "Safety Check Failed")
-                break
+                } else {
+                    Log.v("SafetyChecks", "Safety Check Failed")
+                    break
+                }
             }
         }
-
         controller.endVirtualStick()
     }
-    
+
+    suspend fun userJoystickControl(){
+        //Function will take in the modified user joystick information and send it to the aircraft.
+        // Check to see that advanced virtual stick is enabled
+        controller.ensureAdvancedVirtualStickMode()
+        Log.v("PachKeyManager", "User Joystick Control")
+        this@PachKeyManager.actionState.action = "Joystick Control"
+        val yawDiff = 5.0
+        while (safetyChecks() && telemService.flightMode=="joystick") {
+            Log.v("PachKeyManager", telemService.userJoystickInput.toString())
+            val x = telemService.userJoystickInput.x
+            val y = telemService.userJoystickInput.y
+            val yaw = telemService.userJoystickInput.yaw
+            val alt = telemService.userJoystickInput.alt
+            when (yaw) {
+                1 -> {
+                    val yawR = if (stateData.yaw!! + yawDiff > 180.0) {
+                        stateData.yaw!! + yawDiff - 360.0
+                    } else {
+                        stateData.yaw!! + yawDiff
+                    }
+                    controller.sendVirtualStickVelocityBody(
+                        0.0,
+                        0.0,
+                        yawR,
+                        alt
+                    )
+                }
+
+                -1 -> {
+                    val yawL = if (stateData.yaw!! - yawDiff < -180.0) {
+                        stateData.yaw!! - yawDiff + 360.0
+                    } else {
+                        stateData.yaw!! - yawDiff
+                    }
+                    controller.sendVirtualStickVelocityBody(
+                        0.0,
+                        0.0,
+                        yawL,
+                        alt
+                    )
+                }
+
+                else -> {
+                    controller.sendVirtualStickVelocityBody(
+                        y.toDouble()*telemService.maxVelocity,
+                        x.toDouble()*telemService.maxVelocity,
+                        stateData.yaw!!,
+                        alt
+                    )
+                }
+            }
+            delay(50L)
+        }
+        Log.v("PachKeyManagerHIPPO", "Flight Mode Change")
+        controller.endVirtualStick()
+    }
+
+    override fun userJoystickInput(x: Float, y: Float, yaw: Int) {
+        // Function will take in user joystick input and send it to the aircraft
+        // Check to see that advanced virtual stick is enabled
+    }
 
     suspend fun flyOrbitPath(center:Coordinate, radius:Double=10.0) {
         // When called, this function will make the aircraft fly in a circle around a point
@@ -1026,10 +769,7 @@ class PachKeyManager() : IVehicleController {
         val yawVel = 2 * Math.PI / radius * -1 // rad/s
         val tanVel = yawVel * radius * -1 // m/s
         // Head to the top of the circle
-        goToLocationForward(
-            topOfCircle.lat,
-            topOfCircle.lon,
-            topOfCircle.alt)
+        goToLocationForward( topOfCircle.lat, topOfCircle.lon, topOfCircle.alt)
         // go do some location north of the current location with yaw directed towards the center
 //        goToLocationFixedYaw(topOfCircle.lat, topOfCircle.lon, topOfCircle.alt, 180.0, tolerence = pidController.posTolerance / 3) // go to the top of the circle
         while (!leftCircleOrigin || (computeLatLonDistance(topOfCircle.lat, topOfCircle.lon) > pidController.posTolerance)) {
@@ -1085,51 +825,6 @@ class PachKeyManager() : IVehicleController {
         Log.v("PachKeyManager", "Yawing Right to $yawR")
         goToYawAngle(yawR)
         delay(500L)
-    }
-
-
-
-    override fun userJoystickInput(x: Float, y: Float, yaw: Int) {
-        // Function will take in user joystick input and send it to the aircraft
-        // Check to see that advanced virtual stick is enabled
-        val yawDiff = 5.0
-        controller.ensureAdvancedVirtualStickMode()
-        when (yaw) {
-            1 -> {
-                val yawR = if (stateData.yaw!! + yawDiff > 180.0) {
-                    stateData.yaw!! + yawDiff - 360.0
-                } else {
-                    stateData.yaw!! + yawDiff
-                }
-                controller.sendVirtualStickVelocityBody(
-                    x.toDouble(),
-                    y.toDouble(),
-                    yawR,
-                    stateData.altitude!!
-                )
-            }
-            -1 -> {
-                val yawL = if (stateData.yaw!! - yawDiff<-180.0) {
-                    stateData.yaw!! - yawDiff + 360.0
-                } else {
-                    stateData.yaw!! - yawDiff
-                }
-                controller.sendVirtualStickVelocityBody(
-                    x.toDouble(),
-                    y.toDouble(),
-                    yawL,
-                    stateData.altitude!!
-                )
-            }
-            else -> {
-                controller.sendVirtualStickVelocityBody(
-                    x.toDouble(),
-                    y.toDouble(),
-                    stateData.yaw!!,
-                    stateData.altitude!!
-                )
-            }
-        }
     }
 
     // compute distance to target location using lat and lon
@@ -1206,7 +901,6 @@ class PachKeyManager() : IVehicleController {
         connectionDataProcessor.offer(connection)
     }
 
-
     fun getWaypointFlowable(): Flowable<DJILatLng> {
         return waypointDataProcessor.onBackpressureBuffer()
     }
@@ -1220,5 +914,276 @@ class PachKeyManager() : IVehicleController {
         if (Data != null) {
             waypointDataProcessor.offer(Data)
         }
+    }
+
+    // Holder function that registers all necessary keys and handles their operation during changes
+    private fun registerKeys(){
+        // Setup PachKeyManager and define the keys that we want to listen to
+        Log.v("PachKeyManager", "Registering Keys")
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyAircraftLocation3D)
+        ) {
+            stateData = stateData.copy(
+                latitude = it.latitude,
+                longitude = it.longitude,
+                altitude = it.altitude
+            )
+            sendState(stateData)
+            Log.v("PachTelemetry", "KeyAircraftLocation $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyAircraftAttitude)
+        ) {
+            stateData = stateData.copy(
+                roll = it.roll,
+                pitch = it.pitch,
+                yaw = it.yaw)
+            sendState(stateData)
+            Log.d("PachTelemetry", "KeyAircraftAttitude $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyAircraftVelocity)
+        ) {
+            stateData = stateData.copy(
+                velocityX = it.x,
+                velocityY = it.y,
+                velocityZ = it.z)
+            sendState(stateData)
+            Log.d("PachTelemetry", "AircraftVelocity $it")
+            if (sartopo.isURLValid()) {
+                sartopo.sendGetRequest(stateData.longitude!!, stateData.latitude!!)
+            } else {
+                Log.e("Sartopo", "Sartopo URL is not valid\n" +
+                        "Base: ${sartopo.getBaseURL()}\n" +
+                        "Access: ${sartopo.getAccessURL()}\n" +
+                        "ID: ${sartopo.getDeviceID()}\n")
+            }
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyWindSpeed)
+        ) {
+            stateData = stateData.copy(windSpeed = it)
+            sendState(stateData)
+            Log.d("PachTelemetry", "WindSpeed $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyWindDirection)
+        ) {
+            stateData = stateData.copy(windDirection = it.toString())
+            sendState(stateData)
+            Log.d("PachTelemetry", "WindDirection $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyIsFlying)
+        ) {
+            stateData = stateData.copy(isFlying = it)
+            sendState(stateData)
+            Log.d("PachTelemetry", "IsFlying $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyConnection)
+        ) {
+            statusData = statusData.copy(connected = it)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "Connection $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(BatteryKey.KeyChargeRemainingInPercent)
+        ) {
+            statusData = statusData.copy(battery = it)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "Battery Level $it")
+        }
+
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyGPSSatelliteCount)
+        )    {
+            statusData = statusData.copy(gps = it)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "GPSSatelliteCount $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyGPSSignalLevel)
+        ) {
+            statusData = statusData.copy(gpsSignal = it.value())
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "GPSSignalLevel $it")
+        }
+
+
+        registerKey(
+            KeyTools.createKey(AirLinkKey.KeySignalQuality)
+        ) {
+            statusData = statusData.copy(signalQuality = it)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "SignalQuality $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyGoHomeState)
+        ) {
+            statusData = statusData.copy(goHomeState = it.toString())
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "GoHomeState $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyFlightModeString)
+        ) {
+            statusData = statusData.copy(flightMode = it)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "FlightMode $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyAreMotorsOn)
+        ) {
+            statusData = statusData.copy(motorsOn = it)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "MotorsOn $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyHomeLocation)
+        ) {
+            statusData =
+                statusData.copy(
+                    homeLocationLat = it.latitude,
+                    homeLocationLong = it.longitude)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "HomeLocation $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(GimbalKey.KeyGimbalAttitude)
+        ) {
+            statusData = statusData.copy(gimbalAngle = it.pitch)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "GimbalPitch $it")
+        }
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyGoHomeState)
+        ){
+            statusData = statusData.copy(goHomeStatus = it.toString())
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "GoHomeStatus $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(FlightControllerKey.KeyTakeoffLocationAltitude)
+        ){
+            statusData = statusData.copy(takeoffAltitude = it)
+            sendStatus(statusData)
+            Log.d("PachTelemetry", "TakeoffAltitude $it")
+        }
+
+        // TuskControllerKeys Setup
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyBatteryInfo)
+        ) {
+            controllerStatus = controllerStatus.copy(battery = it.batteryPercent)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachTelemetry", "ControllerBattery $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyPauseButtonDown)
+        ){
+            controllerStatus = controllerStatus.copy(pauseButton = it)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachTelemetry", "PauseButton $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyGoHomeButtonDown)
+        ){
+            controllerStatus = controllerStatus.copy(goHomeButton = it)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachTelemetry", "GoHomeButton $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyStickLeftHorizontal)
+        ){
+            controllerStatus = controllerStatus.copy(leftStickX = it)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachTelemetry", "StickLeftHorizontal $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyStickLeftVertical)
+        ){
+            controllerStatus = controllerStatus.copy(leftStickY = it)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachTelemetry", "StickLeftVertical $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyStickRightHorizontal)
+        ){
+            controllerStatus = controllerStatus.copy(rightStickX = it)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachTelemetry", "StickRightHorizontal $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyStickLeftVertical)
+        ){
+            controllerStatus = controllerStatus.copy(rightStickY = it)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachTelemetry", "StickRightVertical $it")
+        }
+
+        registerKey(
+            KeyTools.createKey(RemoteControllerKey.KeyFiveDimensionPressedStatus)
+        ){
+            controllerStatus = controllerStatus.copy(
+                fiveDUp = it.upwards,
+                fiveDDown = it.downwards,
+                fiveDLeft = it.leftwards,
+                fiveDRight = it.rightwards,
+                fiveDPress = it.middlePressed)
+            sendControllerStatus(controllerStatus)
+            Log.d("PachKeyManager", "FiveDButton $it")
+        }
+
+        keyDisposables?.add( // dji key does not work in this instance
+            streamDataProcessor
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    Log.v("PachKeyManager", "is Streaming: $it")
+                    statusData = statusData.copy(isStreaming = it)
+                    sendStatus(statusData)
+                }, {
+                    Log.e("PachKeyManager", "Stream URL Error: $it")
+                })
+
+        )
+        // Continue to do this for the other required keys...
+    }
+
+    private fun initializeFlightParameters() {
+        // Function initializes any static parameters prior to flight
+        // Set battery warning threshold to 30%
+        val batteryWarningValue = 20
+        val batteryThresh = KeyTools.createKey(FlightControllerKey.KeyLowBatteryWarningThreshold)
+        KeyManager.getInstance().setValue(batteryThresh, batteryWarningValue, object : CommonCallbacks.CompletionCallback {
+            override fun onSuccess() {
+                Log.v("PachKeyManager", "Battery threshold set to $batteryWarningValue%")
+            }
+
+            override fun onFailure(error: IDJIError) {
+                Log.e("PachKeyManager", "Error: $error")
+            }
+        })
     }
 }

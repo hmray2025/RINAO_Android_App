@@ -3,10 +3,8 @@ package dji.v5.ux.cameracore.widget.cameracontrols.lenscontrol
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.util.Log
 import android.view.View
 import android.widget.Button
-import androidx.core.content.ContextCompat
 import dji.sdk.keyvalue.value.camera.CameraVideoStreamSourceType
 import dji.sdk.keyvalue.value.common.CameraLensType
 import dji.sdk.keyvalue.value.common.ComponentIndexType
@@ -18,10 +16,6 @@ import dji.v5.ux.core.base.SchedulerProvider.ui
 import dji.v5.ux.core.base.widget.ConstraintLayoutWidget
 import dji.v5.ux.core.communication.ObservableInMemoryKeyedStore
 import dji.v5.ux.databinding.UxsdkCameraLensControlWidgetBinding
-import dji.v5.ux.databinding.UxsdkPanelNdvlBinding
-//import kotlinx.android.synthetic.main.uxsdk_activity_default_layout.view.widget_lens_control
-//import kotlinx.android.synthetic.main.uxsdk_camera_lens_control_widget.view.*
-import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Class Description
@@ -112,14 +106,14 @@ open class LensControlWidget @JvmOverloads constructor(
     // only for button initialization - when camera views are available, set the button to be that camera
     private fun updateBtnView() {
         val videoSourceRange = widgetModel.properCameraVideoStreamSourceRangeProcessor.value
-        //单源
+        //Single Source
         if (videoSourceRange.size <= 1) {
             binding.firstLenBtn.visibility = INVISIBLE
             binding.secondLenBtn.visibility = INVISIBLE
             return
         }
         binding.firstLenBtn.visibility = VISIBLE
-        //双源
+        //Dual Source
         if (videoSourceRange.size == 2) {
             updateBtnText(binding.firstLenBtn, getProperVideoSource(videoSourceRange,widgetModel.cameraVideoStreamSourceProcessor.value).also {
                 firstBtnSource = it
@@ -127,20 +121,21 @@ open class LensControlWidget @JvmOverloads constructor(
             binding.secondLenBtn.visibility = INVISIBLE
             return
         }
-        //超过2个源
+        //More than 2 sources
         binding.secondLenBtn.visibility = VISIBLE
-        updateBtnText(binding.firstLenBtn, getProperVideoSource(videoSourceRange, secondBtnSource).also {
+        updateBtnText(binding.firstLenBtn, getProperVideoSource(videoSourceRange, firstBtnSource).also {
             firstBtnSource = it
         })
-        updateBtnText(binding.secondLenBtn, getProperVideoSource(videoSourceRange, firstBtnSource).also {
+        updateBtnText(binding.secondLenBtn, getProperVideoSource(videoSourceRange, secondBtnSource).also {
             secondBtnSource = it
         })
-//        updateBtnText(first_len_btn, getProperVideoSource(videoSourceRange, firstBtnSource))
-//        updateBtnText(second_len_btn, getProperVideoSource(videoSourceRange, secondBtnSource))
-//        updateBtnText(third_len_btn, getProperVideoSource(videoSourceRange, thirdBtnSource))
-//        updateBtnBackground(first_len_btn, getProperVideoSource(videoSourceRange, firstBtnSource))
-//        updateBtnBackground(second_len_btn, getProperVideoSource(videoSourceRange, secondBtnSource))
-//        updateBtnBackground(third_len_btn, getProperVideoSource(videoSourceRange, thirdBtnSource))
+        updateBtnText(binding.thirdLenBtn, getProperVideoSource(videoSourceRange, thirdBtnSource).also {
+            thirdBtnSource = it
+        })
+
+        updateBtnBackground(binding.firstLenBtn, getProperVideoSource(videoSourceRange, firstBtnSource))
+        updateBtnBackground(binding.secondLenBtn, getProperVideoSource(videoSourceRange, secondBtnSource))
+        updateBtnBackground(binding.thirdLenBtn, getProperVideoSource(videoSourceRange, thirdBtnSource))
     }
 
     private fun updateBtnBackground(button: Button, source: CameraVideoStreamSourceType) {
