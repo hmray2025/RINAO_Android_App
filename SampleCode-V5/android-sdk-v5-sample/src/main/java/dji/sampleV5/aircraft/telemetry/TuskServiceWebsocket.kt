@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import dji.sampleV5.aircraft.control.IVehicleController
 import dji.sampleV5.aircraft.util.ToastUtils
 import dji.sampleV5.modulecommon.util.ITuskServiceCallback
+import kotlinx.coroutines.delay
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
@@ -31,6 +32,28 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
     private val defaultIP: String = "ws://192.168.0.101:8084"
     private var currentIP: String = defaultIP
     private var connectionStatus: Boolean = false
+
+    private var retryCount = 0
+    private val maxRetries = 4
+    private val retryDelay = 3000L // ms
+
+
+    suspend fun ensureWebSocketConnection() {
+        if (!connectionStatus) {
+            attemptReconnect()
+        }
+    }
+
+    private suspend fun attemptReconnect() {
+        if (retryCount < maxRetries) {
+            retryCount++
+            Log.d("TuskService", "Reconnection attempt $retryCount/$maxRetries in ${retryDelay}ms")
+            delay(retryDelay)
+            connectWebSocket()
+        } else {
+            Log.e("TuskService", "Maximum retry attempts reached. Connection failed.")
+        }
+    }
 
 
     override fun callReconnectWebsocket() {
@@ -107,11 +130,13 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
             val action = jsonObject.optString("action")
             val args = jsonObject.opt("args")
             when (action) {
-                "FollowWaypoints" -> handleWaypointSet(args as JSONObject?)
+                "FlightPath" -> handleWaypointSet(args as JSONObject?)
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
                 "changeGimbalAngle" -> handleChangeGimbalAngle(args as JSONObject?)
                 "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
                 "ModeMessage" -> handleModeUpdate(args as JSONObject?)
+                "Alert" -> handleFlightAlert(args as JSONObject?)
+                "Error" -> handleError(args as JSONObject?)
                 else -> Log.d("TuskService", "Unknown action: $action")
             }
         } catch (e: Exception) {
@@ -160,14 +185,20 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
         Log.d("TuskService", "Handling GetAllAircraftStatus action")
     }
 
+    private fun handleError(args: Any?) {
+        // Handle the action here
+        Log.d("TuskService", "Handling Error action")
+    }
+
     private fun handleWaypointSet(args: Any?) {
         // Handle action "FollowWaypoints" with the waypoint list
         try {
             if (args is JSONObject) {
                 Log.v("TuskService", "Handling FollowWaypoints with message: $args")
                 val flightPathArray = args.optJSONArray("flightPath")
-                flightMode = "Path"
+                flightMode = "waypoint"
                 if (flightPathArray != null) {
+                    waypointList = listOf()
                     for (i in 0 until flightPathArray.length()) {
                         val waypointArray = flightPathArray.optJSONArray(i)
                         if (waypointArray != null && waypointArray.length() >= 2) {
@@ -176,7 +207,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                             val alt = waypointArray.optDouble(2)
                             Log.d("TuskService", "Waypoint $i - Latitude: $lat, Longitude: $long,  Altitude: $alt")
                             // Add the waypoint to the waypoint list
-                            waypointList += Coordinate(lat, long, 50.0)
+                            waypointList += Coordinate(lat, long, alt)
                         }
                     }
                 }
@@ -189,7 +220,8 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
     }
 
     private fun handleNewWaypoint(args: Any?) {
-        // Handle action "flightWaypoint" with the next waypoint
+        // Handle action "flightWaypoint" with the next waypoint. This is the Search mode where
+        // waypoints are incrementally sent.
         try {
             if (args is JSONObject) {
                 val lat = args.getDouble("latitude")
@@ -200,7 +232,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                 nextWaypointID = args.getInt("waypointID")
                 plannerAction = args.getString("plannerAction")
                 dwellTime = args.getInt("dwellTime")
-                flightMode = "waypoint"
+                flightMode = "search"
 
                 Log.d(
                     "WaypointService",
@@ -228,8 +260,19 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
         }
     }
 
-    private fun handleJoystickUpdate(args: Any?){
-        // Handle action "modeJoystick" with joystick update
+    private fun handleFlightAlert(args: Any?){
+        // Handle flight alert message
+        try {
+            if (args is JSONObject) {
+                val alert = args.getString("event")
+                Log.d("TuskService", "Alert: $alert")
+                if (alert == "alert"){
+                    isAlertAction = true
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("TuskService", "Failed to handle Alert action: ${e.message}")
+                }
 
     }
 
@@ -248,6 +291,11 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                         modeInfo.getInt("yaw"),
                         flightParams.getDouble("altitudeCeiling")
                     )
+                    maxVelocity = flightParams.getDouble("maxSpeed")
+                    maxVelocity *= (10.0 / 36.0)  // Convert from km/h to m/s
+                }
+                else if (flightMode == "search"){
+                    val flightParams = args.getJSONObject("flightParams")
                     maxVelocity = flightParams.getDouble("maxSpeed")
                     maxVelocity *= (10.0 / 36.0)  // Convert from km/h to m/s
                 }
