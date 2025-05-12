@@ -65,6 +65,13 @@ data class StreamInfo(
 
 data class Coordinate(val lat: Double, val lon: Double, var alt: Double)
 
+data class WaypointDirection(
+    val coordinate: Coordinate,
+    val action: String,
+    val dwellTime: Int,
+    val waypointID: Int)
+
+
 data class AircraftAction(
     var action: String,
     var autonomous: Boolean

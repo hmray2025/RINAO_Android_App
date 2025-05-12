@@ -10,6 +10,7 @@ import dji.sampleV5.aircraft.telemetry.TuskAircraftState
 import dji.sampleV5.aircraft.telemetry.TuskAircraftStatus
 import dji.sampleV5.aircraft.telemetry.TuskControllerStatus
 import dji.sampleV5.aircraft.telemetry.TuskServiceWebsocket
+import dji.sampleV5.aircraft.telemetry.WaypointDirection
 import dji.sampleV5.aircraft.video.StreamManager
 import dji.sdk.keyvalue.key.AirLinkKey
 import dji.sdk.keyvalue.key.BatteryKey
@@ -42,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -109,12 +111,15 @@ class PachKeyManager() : IVehicleController {
     var stateData = TuskAircraftState( 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0, windDirection = null, false)
     var statusData = TuskAircraftStatus( connected = false, battery = 0, gpsSignal = 0, gps = 0,
-        signalQuality =  0,  goHomeState = null, flightMode = null, motorsOn = false, homeLocationLat = null,
-            homeLocationLong = null, gimbalAngle = 0.0, goHomeStatus = null, takeoffAltitude = null, isStreaming = false)
+        signalQuality =  0,  goHomeState = "IDLE", flightMode = "Initializing", motorsOn = false, homeLocationLat = 40.01040,
+            homeLocationLong = -105.24425, gimbalAngle = 0.0, goHomeStatus = "IDLE", takeoffAltitude = 1602.6, isStreaming = false)
     var controllerStatus = TuskControllerStatus( battery = 0, pauseButton = false, goHomeButton = false,
             leftStickX = 0,leftStickY=0,rightStickX=0,rightStickY=0, fiveDUp = false, fiveDDown = false,
             fiveDRight = false, fiveDLeft = false, fiveDPress = false)
     val R = 6378.137 // Radius of earth in KM
+    var currentState: FlightState = FlightState.IDLE
+    var autonomyEngaged = AtomicBoolean(false)
+
 
     // Create variables here
     private var keyDisposables: CompositeDisposable? = null
@@ -232,31 +237,40 @@ class PachKeyManager() : IVehicleController {
         // If the flight mode is "Path", the function will follow the received path
 
 //        // If drone is not flying, then takeoff
-        if (stateData.isFlying!=true){
-            controller.startTakeOff()
-            delay(5000L)
-        }
-        this@PachKeyManager.actionState.autonomous = true
-        telemService.isAlertAction = false
-        telemService.ensureWebSocketConnection()
-        while (safetyChecks()) {
-            if (decisionChecks()) {
-                when (telemService.flightMode) {
-                    "search" -> flyHippo()
-                    "waypoint" -> followPath(telemService.waypointList)
-                    "joystick" -> userJoystickControl()
-                    else -> {
-                        Log.v("PachKeyManager", "No valid flight mode detected. Currently in ${telemService.flightMode}")
-                    }
-                }
-            }else{
-                Log.v("PachKeyManager", "Decision Checks Failed")
-                break
+        if (autonomyEngaged.compareAndSet(false, true)) {
+            if (stateData.isFlying != true) {
+                controller.startTakeOff()
+                delay(5000L)
             }
+            this@PachKeyManager.actionState.autonomous = true
+            telemService.isAlertAction = false
+            telemService.ensureWebSocketConnection()
+            while (safetyChecks()) {
+                if (decisionChecks()) {
+                    when (telemService.flightMode) {
+                        "search" -> flyHippo()
+                        "waypoint" -> followPath(telemService.waypointList)
+                        "joystick" -> userJoystickControl()
+                        else -> {
+                            Log.v(
+                                "PachKeyManager",
+                                "No valid flight mode detected. Currently in ${telemService.flightMode}"
+                            )
+                        }
+                    }
+                } else {
+                    Log.v("PachKeyManager", "Decision Checks Failed")
+                    break
+                }
+            }
+            controller.endVirtualStick()
+            this@PachKeyManager.sendWaypointToMap(DJILatLng(0.0, 0.0))
+            this@PachKeyManager.actionState.autonomous = false
+            autonomyEngaged.set(false)
         }
-        controller.endVirtualStick()
-        this@PachKeyManager.sendWaypointToMap(DJILatLng(0.0,0.0))
-        this@PachKeyManager.actionState.autonomous = false
+        else{
+            Log.v("PachKeyManager", "Autonomy already engaged")
+            }
     }
 
     private fun sendState(telemetry: TuskAircraftState) {
@@ -310,7 +324,7 @@ class PachKeyManager() : IVehicleController {
                         false, // Pitch ignored
                         false, // Roll ignored
                         false, // Yaw ignored
-                        2.0,   // Rotation time
+                        1.0,   // Rotation time
                         false, // Joint reference
                         0      // Timeout
                 ),
@@ -450,6 +464,24 @@ class PachKeyManager() : IVehicleController {
         return true
     }
 
+    private fun checkFlightState(): FlightState {
+        // Function checks to see if any key decision points have been reached
+        if (telemService.isAlertAction) {
+            Log.v("PachKeyManager", "Alert Action")
+            return FlightState.ALERTED
+        }
+        if (telemService.isGatherAction) {
+            Log.v("PachKeyManager", "Gather Action")
+            return FlightState.GATHERING
+        }
+        if (telemService.isStayAction){
+            Log.v("PachKeyManager", "Stay Action")
+            return FlightState.STAYING
+        }
+
+        return FlightState.SEARCHING
+    }
+
     private fun safetyChecks(): Boolean {
         // Function checks all safety information before returning a boolean for proceeding.
         // Returns true if all safety checks pass, and false if any safety check fails
@@ -549,8 +581,9 @@ class PachKeyManager() : IVehicleController {
         var distance = computeLatLonDistance(lat, lon)
         var yawAngle: Double
         var xVel = pidController.getControl(distance)
+        val flightMode = telemService.flightMode
+        var flightState = currentState
         while (distance > pidController.posTolerance) {
-            // ((distance > pidController.posTolerance) and (stateData.velocityX!! > pidController.velTolerance))
             //What if we overshoot the target location? Will the aircraft back up or turn around?
             Log.v("PachControlAction", "Distance: $distance")
             xVel = pidController.getControl(distance)
@@ -564,6 +597,34 @@ class PachKeyManager() : IVehicleController {
             Log.v("PachControlAction", "Commanded Yaw: $yawAngle | Commanded Altitude: $alt | xvel: $xVel | clippedXvel: $clippedXvel")
 
             // command drone x velocity to move to target location
+//            flightState = decisionChecks()
+//            when (flightState){
+//                FlightState.ALERTED -> {
+//                    Log.v("PachControlAction", "Alerted Operator")
+//                    break
+//                }
+//                FlightState.IDLE -> {
+//                    Log.v("PachControlAction", "Idle")
+//                    break
+//                }
+//                FlightState.SEARCHING -> {
+//                    if (safetyChecks()) {
+//                        Log.v("PachControlAction", "Searching")
+//                        controller.sendVirtualStickVelocityBody(clippedXvel, 0.0, yawAngle, alt)
+//                    } else {
+//                        Log.v("PachKeyManager", "Safety Check Failed")
+//                        break
+//                    }
+//                }
+//                FlightState.GATHERING -> {
+//                    Log.v("PachControlAction", "Gathering")
+//                    engageGatherAction()
+//                    break
+//                }
+//                FlightState.STAYING -> {
+//                    break
+//                }
+//            }
             if (decisionChecks()) {
                 if (safetyChecks()) {
                     controller.sendVirtualStickVelocityBody(clippedXvel, 0.0, yawAngle, alt)
@@ -582,36 +643,38 @@ class PachKeyManager() : IVehicleController {
                     break
                 }
             }
+            if (flightMode != telemService.flightMode) {
+                Log.v("PachKeyManager", "Flight Mode Change")
+                break
+            }
             delay(100L)
         }
         pidController.resetIntegral()
     }
 
 
-    suspend fun flyHippo() {
+    private suspend fun flyHippo() {
         // Function will fly using the HIPPO decision making framework.
         // This will fly to a given waypoint and continue along to the following waypoint unless
         // a specific decision making flag has been raised.
         // When called, this function will make the aircraft go to a series of locations
 
         // compute distance to target location using lat and lon
-        var waypoint = getNewDirection()
-        var waypointID = this@PachKeyManager.telemService.nextWaypointID
+        var direction = this@PachKeyManager.getNewDirection()
         Log.v("PachKeyManager", "Waypoint Mode")
-        sendAutonomyStatus("waypoint-reached")
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
 
         while (safetyChecks() && telemService.flightMode == "search") {
             // Handle logic for action execution
             if (this@PachKeyManager.decisionChecks()) {
-                Log.v("PachKeyManagerHIPPO", "Going to Waypoint: $waypoint")
-                this@PachKeyManager.sendWaypointToMap(DJILatLng(waypoint.lat, waypoint.lon))
+                Log.v("PachKeyManagerHIPPO", "Going to Waypoint: ${direction.coordinate}")
+                this@PachKeyManager.sendWaypointToMap(DJILatLng(direction.coordinate.lat, direction.coordinate.lon))
                 this@PachKeyManager.actionState.action = "Conducting Search"
                 goToLocationForward(
-                    waypoint.lat,
-                    waypoint.lon,
-                    waypoint.alt)
+                    direction.coordinate.lat,
+                    direction.coordinate.lon,
+                    direction.coordinate.alt)
             } else if (this@PachKeyManager.telemService.isAlertAction) {
                 // Alert action stops the aircraft's movement
                 telemService.isAlertAction = false
@@ -641,18 +704,21 @@ class PachKeyManager() : IVehicleController {
                 break
             }
             else {
-                if (telemService.plannerAction == "stay" && telemService.isStayAction){
-                    Log.v("PachKeyManagerHIPPO", "Staying at Waypoint: $waypoint")
+                if (direction.action == "stay" && telemService.isStayAction){
+                    Log.v("PachKeyManagerHIPPO", "Staying at Waypoint: $direction.coordinate")
                     this@PachKeyManager.actionState.action = "Holding position"
                     delay(telemService.dwellTime.toLong())
                     telemService.isStayAction = false // reset flag to false so stay action is not taken
                 }
-                else if (waypointID != telemService.nextWaypointID) {
-                    waypoint = getNewDirection()
-                    waypointID = telemService.nextWaypointID
-                    sendAutonomyStatus("waypoint-reached")
-                    Log.v("PachKeyManagerHIPPO", "Waypoint Updated: ID$waypointID with action ${telemService.plannerAction}")
-                    delay(100L)
+                else if (direction.waypointID != telemService.nextWaypointID) {
+                    synchronized(this) {
+                        direction =  this@PachKeyManager.getNewDirection()
+                        Log.v(
+                            "PachKeyManagerHIPPO",
+                            "Waypoint Updated: ID${direction.waypointID} with action ${telemService.plannerAction}"
+                        )
+                    }
+                    delay(50L)
                 } else {
                     delay(100L)
                     Log.v("PachKeyManagerHIPPO", "Waypoint Not Updated")
@@ -665,7 +731,23 @@ class PachKeyManager() : IVehicleController {
 //        controller.endVirtualStick()
     }
 
-    private fun getNewDirection(): Coordinate {
+//    private fun getNewDirection(): Coordinate {
+//        // Function will update flight parameters based on the external information
+//        // Copy next waypoint variable to new variable
+//        val newAlt : Double = adjustAltForTerrain(telemService.nextWaypoint.alt)
+//        val waypoint = Coordinate(
+//            telemService.nextWaypoint.lat,
+//            telemService.nextWaypoint.lon,
+//            newAlt
+//        )
+//        if (telemService.plannerAction == "stay"){
+//            telemService.isStayAction = true
+//        }
+//        pidController.maxVelocity = telemService.maxVelocity
+//        return waypoint
+//    }
+
+    private fun getNewDirection(): WaypointDirection {
         // Function will update flight parameters based on the external information
         // Copy next waypoint variable to new variable
         val newAlt : Double = adjustAltForTerrain(telemService.nextWaypoint.alt)
@@ -678,7 +760,13 @@ class PachKeyManager() : IVehicleController {
             telemService.isStayAction = true
         }
         pidController.maxVelocity = telemService.maxVelocity
-        return waypoint
+        sendAutonomyStatus("waypoint-reached")
+
+        return WaypointDirection(
+            waypoint,
+            telemService.plannerAction,
+            telemService.dwellTime,
+            telemService.nextWaypointID)
     }
 
     private suspend fun followPath(wpList: List<Coordinate>){
@@ -686,25 +774,35 @@ class PachKeyManager() : IVehicleController {
         // Figure out if the latest state is given
         Log.v("PachKeyManager", "Path Mode with path $wpList")
         this@PachKeyManager.actionState.action = "Following Path"
+        val lenList = wpList.size  // Uses length as a proxy to determine if the list has changed
+        // Check to see if the list is empty
+        if (lenList == 0) {
+            Log.v("PachKeyManager", "No Waypoints Received")
+            return
+        }
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
-        val lenList = wpList.size  // Uses length as a proxy to determine if the list has changed
-        for (wp in wpList) {
+        var localCounter = telemService.wpCounter.get()
+        for (wp in wpList.subList(localCounter, wpList.size)) {
+            Log.v("PachKeyManager", "Going to Waypoint: $wp, ID: ${telemService.wpCounter}")
             telemService.ensureWebSocketConnection()
             val telemListLen = telemService.waypointList.size
-            if (safetyChecks() && telemService.flightMode == "waypoint" && telemListLen == lenList) {
+            if (safetyChecks() && telemService.flightMode == "waypoint" && telemListLen == lenList && decisionChecks()) {
                 this@PachKeyManager.sendWaypointToMap(DJILatLng(wp.lat, wp.lon))
-                goToLocationForward(wp.lat, wp.lon, wp.alt)
-
+                val updatedAlt = adjustAltForTerrain(wp.alt)
+                goToLocationForward(wp.lat, wp.lon, updatedAlt)
+                localCounter = telemService.wpCounter.incrementAndGet()
+                if (localCounter == telemListLen-1) {
+                    telemService.wpCounter.set(0)
+                }
             } else {
                 Log.v("PachKeyManager", "Path Mode Ended")
                 break
             }
         }
-//        controller.endVirtualStick()
     }
 
-    suspend fun userJoystickControl(){
+    private suspend fun userJoystickControl(){
         //Function will take in the modified user joystick information and send it to the aircraft.
         // Check to see that advanced virtual stick is enabled
         controller.ensureAdvancedVirtualStickMode()
@@ -1194,4 +1292,13 @@ class PachKeyManager() : IVehicleController {
             }
         })
     }
+}
+
+// Using a state machine concept
+enum class FlightState {
+    IDLE,
+    SEARCHING,
+    ALERTED,
+    GATHERING,
+    STAYING
 }

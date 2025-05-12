@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import okhttp3.*
 import okio.ByteString
 import org.json.JSONObject
+import java.util.concurrent.atomic.AtomicInteger
 
 class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServiceCallback{
     private val client: OkHttpClient = OkHttpClient()
@@ -24,6 +25,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
     var plannerAction = "idle"
     var dwellTime = 0
     var flightMode = "idle"
+    var wpCounter = AtomicInteger(0)
 
     var speed = 0.0
     var userJoystickInput = JoystickInput(0.0, 0.0, 0, 0.0)
@@ -40,21 +42,16 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
 
     suspend fun ensureWebSocketConnection() {
         if (!connectionStatus) {
-            attemptReconnect()
+            if (retryCount < maxRetries) {
+                retryCount++
+                Log.d("TuskService", "Reconnection attempt $retryCount/$maxRetries in ${retryDelay}ms")
+                delay(retryDelay)
+                connectWebSocket()
+            } else {
+                Log.e("TuskService", "Maximum retry attempts reached. Connection failed.")
+            }
         }
     }
-
-    private suspend fun attemptReconnect() {
-        if (retryCount < maxRetries) {
-            retryCount++
-            Log.d("TuskService", "Reconnection attempt $retryCount/$maxRetries in ${retryDelay}ms")
-            delay(retryDelay)
-            connectWebSocket()
-        } else {
-            Log.e("TuskService", "Maximum retry attempts reached. Connection failed.")
-        }
-    }
-
 
     override fun callReconnectWebsocket() {
         connectWebSocket()
@@ -210,6 +207,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                             waypointList += Coordinate(lat, long, alt)
                         }
                     }
+                    wpCounter.set(0)
                 }
             } else {
                 Log.d("TuskService", "Invalid args format for FollowWaypoints action")
@@ -280,9 +278,10 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
         // Handle action "ModeMessage" with mode update
         try {
             if (args is JSONObject) {
-                flightMode = args.getString("mode")
+                val messageMode = args.getString("mode")
                 Log.d("TuskService", "Mode: $flightMode")
-                if (flightMode == "joystick") {
+                if (messageMode == "joystick") {
+                    flightMode = "joystick"
                     val modeInfo = args.getJSONObject("modeInfo")
                     val flightParams = args.getJSONObject("flightParams")
                     userJoystickInput = JoystickInput(
@@ -294,7 +293,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                     maxVelocity = flightParams.getDouble("maxSpeed")
                     maxVelocity *= (10.0 / 36.0)  // Convert from km/h to m/s
                 }
-                else if (flightMode == "search"){
+                else if (messageMode == "search"){
                     val flightParams = args.getJSONObject("flightParams")
                     maxVelocity = flightParams.getDouble("maxSpeed")
                     maxVelocity *= (10.0 / 36.0)  // Convert from km/h to m/s
