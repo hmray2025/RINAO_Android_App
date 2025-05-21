@@ -530,12 +530,12 @@ class PachKeyManager() : IVehicleController {
         val lonError = statusData.homeLocationLong?.minus(aeroBackyard.lon)
         if ((latError != null) && (lonError != null)) {
             if (latError <= 0.001 && lonError <= 0.001) {
-                return alt.minus(aeroBackyard.alt)
+                return alt.minus(aeroBackyard.alt).plus(telemService.aglAltitude)
             } else {
-                return alt - statusData.takeoffAltitude!!
+                return alt - statusData.takeoffAltitude!! + telemService.aglAltitude
             }
         }
-        return alt - statusData.takeoffAltitude!!
+        return alt - statusData.takeoffAltitude!! + telemService.aglAltitude
     }
 
     suspend fun goToYawAngle(angle: Double){
@@ -585,6 +585,7 @@ class PachKeyManager() : IVehicleController {
         var flightState = currentState
         while (distance > pidController.posTolerance) {
             //What if we overshoot the target location? Will the aircraft back up or turn around?
+            pidController.maxVelocity = telemService.maxVelocity
             Log.v("PachControlAction", "Distance: $distance")
             xVel = pidController.getControl(distance)
             val clippedXvel = xVel.coerceIn(-pidController.maxVelocity, pidController.maxVelocity)
@@ -596,35 +597,6 @@ class PachKeyManager() : IVehicleController {
 
             Log.v("PachControlAction", "Commanded Yaw: $yawAngle | Commanded Altitude: $alt | xvel: $xVel | clippedXvel: $clippedXvel")
 
-            // command drone x velocity to move to target location
-//            flightState = decisionChecks()
-//            when (flightState){
-//                FlightState.ALERTED -> {
-//                    Log.v("PachControlAction", "Alerted Operator")
-//                    break
-//                }
-//                FlightState.IDLE -> {
-//                    Log.v("PachControlAction", "Idle")
-//                    break
-//                }
-//                FlightState.SEARCHING -> {
-//                    if (safetyChecks()) {
-//                        Log.v("PachControlAction", "Searching")
-//                        controller.sendVirtualStickVelocityBody(clippedXvel, 0.0, yawAngle, alt)
-//                    } else {
-//                        Log.v("PachKeyManager", "Safety Check Failed")
-//                        break
-//                    }
-//                }
-//                FlightState.GATHERING -> {
-//                    Log.v("PachControlAction", "Gathering")
-//                    engageGatherAction()
-//                    break
-//                }
-//                FlightState.STAYING -> {
-//                    break
-//                }
-//            }
             if (decisionChecks()) {
                 if (safetyChecks()) {
                     controller.sendVirtualStickVelocityBody(clippedXvel, 0.0, yawAngle, alt)
@@ -647,7 +619,7 @@ class PachKeyManager() : IVehicleController {
                 Log.v("PachKeyManager", "Flight Mode Change")
                 break
             }
-            delay(100L)
+            delay(25L)
         }
         pidController.resetIntegral()
     }
@@ -942,8 +914,8 @@ class PachKeyManager() : IVehicleController {
         val dLon = lon2 * Math.PI / 180.0 - lon1 * Math.PI / 180.0
         val a = sin(dLat/2) * sin(dLat/2) +
                 cos(lat1 * Math.PI / 180) * cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2)
-        val d = 2.0 * atan2(Math.sqrt(a), sqrt(1-a)) * R * 1000.0
+                sin(dLon/2) * sin(dLon/2)
+        val d = 2.0 * atan2(sqrt(a), sqrt(1-a)) * R * 1000.0
         return d // meters
     }
 
@@ -983,10 +955,10 @@ class PachKeyManager() : IVehicleController {
         val yDiff = lat - stateData.latitude!!
         val xDiff = lon - stateData.longitude!!
         val res = atan2(yDiff, xDiff) *(180 / PI)
-        if ((yDiff<0.0) && (xDiff<0.0)) {
-            return -(270.0+res)
+        return if ((yDiff<0.0) && (xDiff<0.0)) {
+            -(270.0+res)
         }else{
-            return 90-res
+            90-res
         }
     }
 

@@ -26,6 +26,7 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
     var dwellTime = 0
     var flightMode = "idle"
     var wpCounter = AtomicInteger(0)
+    var aglAltitude = 0.0
 
     var speed = 0.0
     var userJoystickInput = JoystickInput(0.0, 0.0, 0, 0.0)
@@ -130,6 +131,8 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                 "FlightPath" -> handleWaypointSet(args as JSONObject?)
                 "FlightWaypoint" -> handleNewWaypoint(args as JSONObject?)
                 "changeGimbalAngle" -> handleChangeGimbalAngle(args as JSONObject?)
+                "changeAircraftSpeed" -> handleChangeAircraftSpeed(args as JSONObject?)
+                "changeAircraftAltitude" -> handleChangeAircraftAltitude(args as JSONObject?)
                 "Investigate" -> handleFlightStatusUpdate(args as JSONObject?)
                 "ModeMessage" -> handleModeUpdate(args as JSONObject?)
                 "Alert" -> handleFlightAlert(args as JSONObject?)
@@ -258,6 +261,30 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
         }
     }
 
+    private fun handleChangeAircraftSpeed(args: Any?) {
+        // Handle action "changeAircraftSpeed" with the new maxVelocity
+        try {
+            if (args is JSONObject) {
+                val speedObject = args.getJSONObject("speed")
+                maxVelocity = speedObject.getDouble("speed")
+            }
+        } catch (e: Exception) {
+            Log.e("TuskService", "Failed to handle changeGimbalAngle action: ${e.message}")
+        }
+    }
+
+    private fun handleChangeAircraftAltitude(args: Any?) {
+        // Handle action "changeAircraftAltitude" with the new AGL altitude
+        try {
+            if (args is JSONObject) {
+                val altObject = args.getJSONObject("altitude")
+                 aglAltitude = altObject.getDouble("altitude")
+            }
+        } catch (e: Exception) {
+            Log.e("TuskService", "Failed to handle changeGimbalAngle action: ${e.message}")
+        }
+    }
+
     private fun handleFlightAlert(args: Any?){
         // Handle flight alert message
         try {
@@ -295,6 +322,12 @@ class TuskServiceWebsocket(private val vehicle: IVehicleController?) : ITuskServ
                 }
                 else if (messageMode == "search"){
                     val flightParams = args.getJSONObject("flightParams")
+                    maxVelocity = flightParams.getDouble("maxSpeed")
+                    maxVelocity *= (10.0 / 36.0)  // Convert from km/h to m/s
+                }
+                else {
+                    val flightParams = args.getJSONObject("flightParams")
+                    aglAltitude = flightParams.getDouble("altitudeCeiling")
                     maxVelocity = flightParams.getDouble("maxSpeed")
                     maxVelocity *= (10.0 / 36.0)  // Convert from km/h to m/s
                 }
